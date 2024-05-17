@@ -1,5 +1,7 @@
 # Basic packages
 IMAGE_INSTALL_append = " \
+    kernel-image \
+    kernel-devicetree \
     bash \
     v4l-utils \
     v4l2-init \
@@ -9,7 +11,7 @@ IMAGE_INSTALL_append = " \
 
 update_issue() {
     # Set BSP version
-    BSP_VERSION="3.0.3"
+    BSP_VERSION="3.0.5"
 
     # Set SoC and Board info
     case "${MACHINE}" in
@@ -53,6 +55,14 @@ update_issue() {
       BSP_SOC="RZFive"
       BSP_BOARD="RZFive-DEV"
       ;;
+    rzv2m)
+      BSP_SOC="RZV2M"
+      BSP_BOARD="RZV2M Evaluation Board Kit"
+      ;;
+    rzv2ma)
+      BSP_SOC="RZV2MA"
+      BSP_BOARD="RZV2MA Evaluation Board Kit"
+      ;;
     hihope-rzg2h)
       BSP_SOC="RZG2H"
       BSP_BOARD="HIHOPE-RZG2H"
@@ -69,7 +79,34 @@ update_issue() {
       BSP_SOC="RZG2E"
       BSP_BOARD="EK874"
       ;;
-
+    iwg20m-g1m)
+      BSP_SOC="RZG1M"
+      BSP_BOARD="iWave RZ/G1M-PF Development Kit"
+      ;;
+    skrzg1m)
+      BSP_SOC="RZG1M"
+      BSP_BOARD="RZG1M-SK"
+      ;;
+    iwg20m-g1n)
+      BSP_SOC="RZG1N"
+      BSP_BOARD="iWave RZ/G1N-PF Development Kit"
+      ;;
+    iwg21m)
+      BSP_SOC="RZG1H"
+      BSP_BOARD="iWave RZ/G1H-PF Development Kit"
+      ;;
+    iwg22m)
+      BSP_SOC="RZG1E"
+      BSP_BOARD="iWave RZ/G1E-PF Development Kit"
+      ;;
+    skrzg1e)
+      BSP_SOC="RZG1E"
+      BSP_BOARD="RZG1E-SK"
+      ;;
+    iwg23s)
+      BSP_SOC="RZG1C"
+      BSP_BOARD="iWave RZ/G1C-PF Development Kit"
+      ;;
     esac
 
     # Make issue file
@@ -117,7 +154,19 @@ IMAGE_INSTALL_append = " \
     packagegroup-docker \
 "
 
+# Remove since RZG1 don't support LTTNG
+IMAGE_INSTALL_remove_rzg1 = " \
+  lttng-tools \
+  lttng-modules \
+  lttng-ust \
+"
+
 # Environment setup, support building kernel modules with kernel src in SDK
 export KERNELSRC="$SDKTARGETSYSROOT/usr/src/kernel"
 export KERNELDIR="$SDKTARGETSYSROOT/usr/src/kernel"
 export HOST_EXTRACFLAGS="-I${OECORE_NATIVE_SYSROOT}/usr/include/ -L${OECORE_NATIVE_SYSROOT}/usr/lib"
+
+# WKS setup
+WKS_DEFAULT_FILE ?= "rz-image-bootpart-mmc1.wks"
+WKS_DEFAULT_FILE_ek874 ?= "rz-image-bootpart-mmc0.wks"
+WKS_FILE = "${@oe.utils.conditional("WKS_SUPPORT", "1", "${WKS_DEFAULT_FILE}", "", d)}"

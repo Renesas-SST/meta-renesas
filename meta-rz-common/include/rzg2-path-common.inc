@@ -1,1 +1,1 @@
-RENESAS_DATADIR ?= "/usr/local"
+rz-path-common.inc
