@@ -1,0 +1,35 @@
+From 10899016dd6192a50425c95ebbb60f257344ef70 Mon Sep 17 00:00:00 2001
+From: Tendai Makumire <tendai.makumire@imd-tec.com>
+Date: Wed, 22 May 2024 10:05:40 +0100
+Subject: [PATCH] Modified makefile to support non-IMX platform
+
+Upstream-Status: Pending
+---
+ mxm_wifiex/wlan_src/Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/mxm_wifiex/wlan_src/Makefile b/mxm_wifiex/wlan_src/Makefile
+index c5bd3b1..b482e04 100644
+--- a/mxm_wifiex/wlan_src/Makefile
++++ b/mxm_wifiex/wlan_src/Makefile
+@@ -93,7 +93,7 @@ CONFIG_BIG_ENDIAN=n
+ 
+ #ifdef SDIO_MMC
+ # SDIO suspend/resume
+-CONFIG_SDIO_SUSPEND_RESUME=y
++CONFIG_SDIO_SUSPEND_RESUME=n
+ #endif
+ 
+ # DFS testing support
+@@ -125,7 +125,7 @@ ccflags-y += -DLINUX
+ 
+ 
+ ARCH ?= arm64
+-CONFIG_IMX_SUPPORT=y
++CONFIG_IMX_SUPPORT=n
+ ifeq ($(CONFIG_IMX_SUPPORT),y)
+ ccflags-y += -DIMX_SUPPORT
+ ifneq ($(ANDROID_PRODUCT_OUT),)
+-- 
+2.34.1
+

@@ -1,0 +1,13 @@
+[Match]
+Name=end1
+
+[Network]
+Address=172.16.20.100/24
+DHCPServer=true
+IPMasquerade=ipv4
+
+[DHCPServer]
+PoolOffset=200
+PoolSize=32
+EmitDNS=no
+EmitRouter=no

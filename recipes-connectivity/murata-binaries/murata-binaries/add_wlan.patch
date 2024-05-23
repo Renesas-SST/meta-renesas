@@ -1,0 +1,17 @@
+Upstream-Status: Pending
+
+diff --git a/murata/files/wifi_mod_para_murata.conf b/murata/files/wifi_mod_para_murata.conf
+index 45b3e69..e4fec54 100644
+--- a/murata/files/wifi_mod_para_murata.conf
++++ b/murata/files/wifi_mod_para_murata.conf
+@@ -159,7 +159,9 @@ SDIW416 = {
+ 	auto_ds=1
+ 	host_mlme=1
+ 	fw_name=nxp/sdiouartiw416_combo_v0.bin
+-	txpwrlimit_cfg=nxp/txpower_US.bin
++	txpwrlimit_cfg=nxp/txpower_EU.bin
++	init_hostcmd_cfg=nxp/ed_mac.bin
++	sta_name=wlan
+ }
+ 
+ SD8801 = {
