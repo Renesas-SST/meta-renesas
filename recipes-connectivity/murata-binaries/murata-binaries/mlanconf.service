@@ -1,0 +1,11 @@
+[Unit]
+Description=Pre-Device Tree Script for mlan
+Before=sysinit.target
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/switch_regions.sh
+
+[Install]
+WantedBy=sysinit.target
