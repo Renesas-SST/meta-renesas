@@ -18,6 +18,24 @@ IMAGE_INSTALL:append = " \
     libgpiod \
     libgpiod-tools \
     libgpiod-dev \
+    imdt-can-utils \
+    imdt-ethernet-utils \
+    imdt-wifi-utils \
+    imdt-pico-modem \
+    iw \
+    kernel-module-nxp-wlan \
+    murata-binaries \
+    udev-extraconf \
+    wireless-tools \
+    dhcpcd \
+    hostapd \
+"
+
+# Add necessary firmware packages
+IMAGE_INSTALL:append = " \
+    linux-firmware-ap1302 \
+    linux-firmware-sdiouartiw416 \
+    firmwared \
 "
 
 IMAGE_INSTALL:append:rz-cmn = " uenv"
