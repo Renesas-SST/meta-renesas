@@ -84,8 +84,8 @@ SRC_URI = " \
         git://git@github.com/Renesas-SST/rz-atf.git;branch=${BRANCH};protocol=ssh \
         git://github.com/ARMmbed/mbedtls.git;branch=${BRANCH_mbedtls};name=mbedtls;destsuffix=mbedtls \
 "
-BRANCH = "v2.9/rz-sbc-release4"
-SRCREV = "e3496376057cdfb0c828849ac522ffe53d9564d5"
+BRANCH = "develop/rzsbc"
+SRCREV = "e6f020d12deaabe967182e2346ae98f30d21f18e"
 PV = "v2.9+git"
 
 COMPATIBLE_MACHINE_rzg2l = "(smarc-rzg2l|rzg2l-dev|smarc-rzg2lc|rzg2lc-dev|smarc-rzg2ul|rzg2ul-dev|smarc-rzv2l|rzv2l-dev|rzpi)"

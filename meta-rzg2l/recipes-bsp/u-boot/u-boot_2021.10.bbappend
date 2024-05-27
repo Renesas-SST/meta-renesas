@@ -41,5 +41,5 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 
 UBOOT_URL = "git://git@github.com/Renesas-SST/u-boot.git"
 SRC_URI = "${UBOOT_URL};protocol=ssh;branch=${BRANCH}"
-BRANCH = "v2021.10/rz-sbc-release4"
-SRCREV = "66c29125b0c5001ca8b970fde8b7da9b8a5fce4e"
+BRANCH = "rz-sbc"
+SRCREV = "d9dfaef946f9299983302fa2ad10543db35aaade"

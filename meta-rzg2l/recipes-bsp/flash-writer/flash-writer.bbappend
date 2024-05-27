@@ -6,9 +6,9 @@ DEPENDS_append = " \
 "
 
 FLASH_WRITER_URL = "git://git@github.com/Renesas-SST/flash-writer.git"
-BRANCH = "rz_g2l-dev-sbc"
+BRANCH = "rz_g2l"
 SRC_URI = "${FLASH_WRITER_URL};protocol=ssh;branch=${BRANCH}"
-SRCREV = "ed335aebf06c8d66f42785c0760bd45b0089fd33"
+SRCREV = "8e5919a314673217d93dbb34227b8c22d71d681b"
 
 BUILD_TBB_DIR = "${S}/build_tbb"
 PMIC_BUILD_TBB_DIR = "${S}/build_pmic_tbb"
