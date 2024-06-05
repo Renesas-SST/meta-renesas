@@ -102,7 +102,7 @@ DISTRO ?= "poky"
 #  - 'package_rpm' for rpm style packages
 # E.g.: PACKAGE_CLASSES ?= "package_rpm package_deb package_ipk"
 # We default to rpm:
-PACKAGE_CLASSES ?= "package_rpm"
+PACKAGE_CLASSES ?= "package_rpm package_deb"
 
 #
 # SDK target architecture
@@ -137,7 +137,7 @@ PACKAGE_CLASSES ?= "package_rpm"
 # There are other application targets that can be used here too, see
 # meta/classes/image.bbclass and meta/classes/core-image.bbclass for more details.
 # We default to enabling the debugging tweaks.
-EXTRA_IMAGE_FEATURES ?= "debug-tweaks"
+EXTRA_IMAGE_FEATURES ?= " debug-tweaks package-management "
 
 #
 # Additional image features
@@ -336,6 +336,8 @@ IMAGE_INSTALL_append = " \
 				ethtool \
 				iperf3 \
 				tcpdump \
+				apt \
+				dpkg \
 			"
                                            
                                            
