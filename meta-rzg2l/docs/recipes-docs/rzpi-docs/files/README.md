@@ -20,7 +20,6 @@ This release provides the following features:
 Known issues:
 
  - Only support for 48 Khz audio sampling rate family.
- - Audio capture does not work properly.
 
 ## Building
 Step 1: Prepare environment for building package
@@ -482,7 +481,8 @@ root@rzpi:~# ifconfig eth1 down
 
 ### On-board Audio Codec with Stereo Jack Analog Audio IO configurations
 
-Currently, we can only play audio files on RZG2L-SBC.
+RZG2L-SBC has an On-board Audio Codec - DA7219. It is the default audio device of RZG2L-SBC
+and it will be enabled automatically when the system comes up.
 
 Before playing an audio file, connect an audio device such as 3.5mm headset to J8.
 
@@ -496,6 +496,32 @@ root@rzpi:~# gst-play-1.0 /home/root/audios/COMMON6_MPEG2_L3_24KHZ_160_2.mp3
 `aplay` command supports `wav` format audio files
 
 `gst-play-1.0` command supports `wav`, `mp3` and `aac` formats
+
+To perform a recording, run the following command to record audio to an `audio_capture.wav` file:
+
+```
+root@rzpi:~# arecord -f S16_LE -r 48000 audio_capture.wav
+```
+
+Press Ctrl+C if you want to stop recording.
+
+In the above command:
+
+-f S16_LE : audio format
+
+-r 48000  : sample rate of the audio file (48KHz)
+
+To verify the recorded file, you can play it by the following command:
+
+```
+root@rzpi:~# aplay audio_capture.wav
+```
+
+To adjust the level of the audio record/playback, use the following command to open the ALSA mixer GUI:
+
+```
+root@rzpi:~# alsamixer
+```
 
 ### MIPI DSI with display panels
 
@@ -542,3 +568,69 @@ Run the following to open Camera and preview the video on the screen.
 ```
 root@rzpi:~# gst-launch-1.0 v4l2src device=/dev/video0 ! videoconvert ! waylandsink
 ```
+
+### Chromium Web browser application
+
+Chromium Web browser application is supported in this VLP release for RZG2L-SBC.
+
+The following command will show how to use Chromium to access a web page on the internet.
+
+```
+root@rzpi:~# chromium --no-sandbox --in-process-gpu --use-gl=desktop https://google.com
+
+```
+
+**Please note that you must have an input device (USB mouse or touchscreen) plugged in before you start the browser. If you do not, you will get a "Segmentation fault".**
+
+### Debian package manager
+
+Debian package manager is supported in this VLP release for RZG2L-SBC.
+
+Follow the steps below to configure the Debian package repository and install packages according to your needs.
+
+#### Create `sources.list` file to address packages repository
+
+Create `sources.list` file which is located in `/etc/apt/sources.list.d` directory as follows to configure Debian package repository:
+
+```
+root@rzpi:~# vi /etc/apt/sources.list.d/sources.list
+```
+
+Next, add the below contents into `sources.list`.
+
+```
+deb [arch=arm64] http://ports.ubuntu.com/ focal main multiverse universe
+
+deb [arch=arm64] http://ports.ubuntu.com/ focal-security main multiverse universe
+
+deb [arch=arm64] http://ports.ubuntu.com/ focal-backports main multiverse universe
+
+deb [arch=arm64] http://ports.ubuntu.com/ focal-updates main multiverse universe
+
+```
+
+Then update the defined packages repository for `apt-get`.
+
+```
+root@rzpi:~# apt-get update
+```
+
+**Please make sure you have internet access before running `apt-get update`.**
+
+#### Install packages
+
+To install a package using `apt-get`, use the following command:
+
+```
+root@rzpi:~# apt-get install <package-name>
+```
+
+Alternatively, you can install a package from a `debian-file.deb` using `dpkg`. Afterward, run these commands to fix any issues related to dependencies:
+
+```
+root@rzpi:~# dpkg -i <debian-file.deb>
+root@rzpi:~# apt-get install -f
+```
+
+**Please note that this is the default Ubuntu repository configuration. You can configure the repository according to your needs.**
+
