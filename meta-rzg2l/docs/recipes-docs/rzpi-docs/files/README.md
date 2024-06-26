@@ -571,7 +571,7 @@ root@rzpi:~# gst-launch-1.0 v4l2src device=/dev/video0 ! videoconvert ! waylands
 
 ### Chromium Web browser application
 
-Chromium Web browser application is supported in this VLP release for RZG2L-SBC.
+Chromium Web browser application is supported in this package release for supported RZ based projects.
 
 The following command will show how to use Chromium to access a web page on the internet.
 
@@ -584,11 +584,13 @@ root@rzpi:~# chromium --no-sandbox --in-process-gpu --use-gl=desktop https://goo
 
 ### Debian package manager
 
-Debian package manager is supported in this VLP release for RZG2L-SBC.
+Debian package manager is supported in this package release for supported RZ based projects.
 
 Follow the steps below to configure the Debian package repository and install packages according to your needs.
 
 #### Create `sources.list` file to address packages repository
+
+`sources.list` is a critical configuration file for packages installation and updates used by package managers on Debian-based Linux distributions. The `sources.list` file contains a list of URLs or repository addresses where the package manager can find software packages. These repositories may be maintained by the Linux distribution itself or by third-party individuals or organizations.
 
 Create `sources.list` file which is located in `/etc/apt/sources.list.d` directory as follows to configure Debian package repository:
 
@@ -617,7 +619,29 @@ root@rzpi:~# apt-get update
 
 **Please make sure you have internet access before running `apt-get update`.**
 
-#### Install packages
+In the contents of `sources.list` file, you can see `[arch=arm64]` on each line. This is because the RZG2L-SBC's architecture is aarch64, as indicated by the output of the `lscpu` command:
+
+```
+root@rzpi:~# lscpu
+Architecture:                    aarch64
+CPU op-mode(s):                  32-bit, 64-bit
+Byte Order:                      Little Endian
+CPU(s):                          2
+...
+Vendor ID:                       ARM
+```
+
+So we need to specify `[arch=arm64]` in `sources.list` file to filter the binary packages in the repository.
+
+This specification is to limit the existing APT sources to arm64 only, so APT won't try to fetch packages for other architectures from the existing repository.
+
+However, if we use a repository which is already designed for ARM architectures, we don't need to specify `[arch=arm64]`. For example:
+
+```
+deb http://deb.debian.org/debian bullseye main contrib non-free
+```
+
+#### Install packages using `apt-get`
 
 To install a package using `apt-get`, use the following command:
 
@@ -625,12 +649,26 @@ To install a package using `apt-get`, use the following command:
 root@rzpi:~# apt-get install <package-name>
 ```
 
-Alternatively, you can install a package from a `debian-file.deb` using `dpkg`. Afterward, run these commands to fix any issues related to dependencies:
+#### Install packages using `dpkg`
+
+`dpkg` is the low-level package manager for Debian-based systems. It is responsible for installing, removing, and providing information about `package.deb` file. `dpkg` itself does not handle dependency resolution; that task is typically delegated to higher-level package managers like `apt`.
+
+Basic `dpkg` commands:
+
+- `dpkg -i <package.deb>`: Installs a `package.deb` package.
+- `dpkg -r <package>`: Removes a package.
+- `dpkg -l <pattern>`: Lists installed packages matching `<pattern>`.
+- `dpkg -s <package>`: Provides information about an installed package.
+
+You can install `package.deb` using `dpkg` with the following command:
 
 ```
-root@rzpi:~# dpkg -i <debian-file.deb>
+root@rzpi:~# dpkg -i <package.deb>
+```
+
+After installing a package using `dpkg`, you may need to resolve any dependency issues. Use the following command:
+
+```
 root@rzpi:~# apt-get install -f
 ```
-
-**Please note that this is the default Ubuntu repository configuration. You can configure the repository according to your needs.**
 
