@@ -81,10 +81,10 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
 SRC_URI = " \
-        git://git@github.com/Renesas-SST/rz-atf.git;branch=${BRANCH};protocol=ssh \
+        git://github.com/Renesas-SST/rz-atf.git;branch=${BRANCH};protocol=https \
         git://github.com/ARMmbed/mbedtls.git;branch=${BRANCH_mbedtls};name=mbedtls;destsuffix=mbedtls \
 "
-BRANCH = "develop/rzsbc"
+BRANCH = "dunfell/rz-sbc"
 SRCREV = "e6f020d12deaabe967182e2346ae98f30d21f18e"
 PV = "v2.9+git"
 

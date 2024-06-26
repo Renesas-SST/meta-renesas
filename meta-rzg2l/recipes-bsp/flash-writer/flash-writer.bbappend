@@ -5,9 +5,9 @@ DEPENDS_append = " \
 	${@oe.utils.conditional("TRUSTED_BOARD_BOOT", "1", "python3-pycryptodome-native python3-pycryptodomex-native secprv-native bootparameter-native", "",d)} \
 "
 
-FLASH_WRITER_URL = "git://git@github.com/Renesas-SST/flash-writer.git"
-BRANCH = "rz_g2l"
-SRC_URI = "${FLASH_WRITER_URL};protocol=ssh;branch=${BRANCH}"
+FLASH_WRITER_URL = "git://github.com/Renesas-SST/flash-writer.git"
+BRANCH = "dunfell/rz-sbc"
+SRC_URI = "${FLASH_WRITER_URL};protocol=https;branch=${BRANCH}"
 SRCREV = "8e5919a314673217d93dbb34227b8c22d71d681b"
 
 BUILD_TBB_DIR = "${S}/build_tbb"

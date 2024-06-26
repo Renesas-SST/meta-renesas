@@ -1,13 +1,11 @@
 DESCRIPTION = "Linux Kernel for RZ SBC board"
 
-BB_STRICT_CHEKSUM:forcevariable = "0"
-
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 
-KERNEL_URL = "git://git@github.com/Renesas-SST/linux-rz.git"
-BRANCH = "dunfell/rz-sbc-checked-patches"
+KERNEL_URL = "git://github.com/Renesas-SST/linux-rz.git"
+BRANCH = "dunfell/rz-sbc"
 SRCREV = "275b5dbf0931e5eefc4fc28ad88b56405d05be7a"
-SRC_URI = "${KERNEL_URL};protocol=ssh;nocheckout=1;branch=${BRANCH}"
+SRC_URI = "${KERNEL_URL};protocol=https;nocheckout=1;branch=${BRANCH}"
 
 SRC_URI_append = "\
 	file://sii.cfg \
