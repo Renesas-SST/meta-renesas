@@ -114,8 +114,14 @@ update_issue() {
     echo "LSI: ${BSP_SOC}" >> ${IMAGE_ROOTFS}/etc/issue
     echo "Version: ${BSP_VERSION}" >> ${IMAGE_ROOTFS}/etc/issue
 }
-ROOTFS_POSTPROCESS_COMMAND += "update_issue; "
+update_deb_issues() {
+	touch ${IMAGE_ROOTFS}/var/lib/dpkg/status
+	touch ${IMAGE_ROOTFS}/var/lib/dpkg/available
 
+	cp -r ${IMAGE_ROOTFS}/usr/lib64/apt/ ${IMAGE_ROOTFS}/usr/lib/apt
+}
+
+ROOTFS_POSTPROCESS_COMMAND += " update_issue; update_deb_issues; "
 # Renesas Basic packages for 32bit
 BASIC_32BIT_PKGS = " \
     lib32-coreutils \
