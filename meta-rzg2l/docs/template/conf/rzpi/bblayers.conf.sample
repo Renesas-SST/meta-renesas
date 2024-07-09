@@ -27,4 +27,7 @@ BBLAYERS ?= " \
   ${@'${TOPDIR}/../meta-openembedded/meta-networking' if '${VIRTUALIZATION_LAYER}' == 'True' else ''} \
   ${@'${TOPDIR}/../meta-virtualization' if '${VIRTUALIZATION_LAYER}' == 'True' else ''} \
   ${TOPDIR}/../meta-summit-radio/meta-summit-radio-pre-3.4 \
+  ${TOPDIR}/../meta-clang \
+  ${TOPDIR}/../meta-browser/meta-chromium \
   "
+
