@@ -379,3 +379,6 @@ PACKAGECONFIG_append_pn-python3 = " tk"
 
 # Ignore vte-local-en-gb package because it has incompatible license GPL-3.0
 BAD_RECOMMENDATIONS += " vte-locale-en-gb"
+
+# Add default apt configuration sources
+IMAGE_INSTALL_append += " apt-sources-config "
