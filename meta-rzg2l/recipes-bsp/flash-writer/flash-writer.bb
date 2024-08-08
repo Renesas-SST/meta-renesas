@@ -49,11 +49,9 @@ do_compile() {
 do_install[noexec] = "1"
 
 do_deploy() {
-        install -d ${DEPLOYDIR}
-        install -m 644 ${S}/AArch64_output/*.mot ${DEPLOYDIR}
-        if [ "${PMIC_SUPPORT}" = "1" ]; then
-        	install -m 644 ${PMIC_BUILD_DIR}/*.mot ${DEPLOYDIR}
-	fi
+    install -d ${DEPLOYDIR}/target/images
+    install -m 0644 ${S}/AArch64_output/Flash_Writer_SCIF_${MACHINE}.mot ${DEPLOYDIR}/target/images
 }
+
 PARALLEL_MAKE = "-j 1"
 addtask deploy after do_compile

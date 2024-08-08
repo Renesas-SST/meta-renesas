@@ -7,24 +7,24 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 S = "${WORKDIR}"
 
 SRC_URI = " \
-    file://rzpi-uEnv.txt \
-    file://readme.txt \
+    file://uEnv.txt \
+    file://Readme.md \
 "
 
 FILES_${PN} += "/boot"
 
 do_install () {
     install -d ${D}/boot
-    install -m 0644 ${S}/rzpi-uEnv.txt ${D}/boot/uEnv.txt
-    install -m 0644 ${S}/readme.txt ${D}/boot/readme.txt
+    install -m 0644 ${S}/uEnv.txt ${D}/boot/uEnv.txt
+    install -m 0644 ${S}/Readme.md ${D}/boot/Readme.md
 }
 
 inherit deploy
 addtask deploy after do_install
 
 do_deploy () {
-    install -m 0644 ${D}/boot/uEnv.txt ${DEPLOYDIR}
-    install -m 0644 ${D}/boot/readme.txt ${DEPLOYDIR}
+    install -d ${DEPLOYDIR}/target/env
+    install -m 0644 ${D}/boot/uEnv.txt ${DEPLOYDIR}/target/env
 }
 
 COMPATIBLE_MACHINE = "(rzpi)"

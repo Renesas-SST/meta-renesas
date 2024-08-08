@@ -352,17 +352,41 @@ IMAGE_FSTYPES_append = " wic "
 # Remove unused rootfs types
 IMAGE_FSTYPES_remove = " tar.gz ext4 "
 
-# SD Card flashing utility
-EXTRA_IMAGEDEPENDS += " sdflash-util "
-
 # Linux bootloader flashing utility
-EXTRA_IMAGEDEPENDS += " bootloaderflash-linux-util "
+EXTRA_IMAGEDEPENDS += " bootloader-flasher-linux "
 
 # Windows bootloader flashing utility
-EXTRA_IMAGEDEPENDS += " bootloaderflash-win-util "
+EXTRA_IMAGEDEPENDS += " bootloader-flasher-win "
 
-# Windows bootloader flashing utility
-EXTRA_IMAGEDEPENDS += " filesystemflash-win-util "
+# Windows bootloader flashing readme
+EXTRA_IMAGEDEPENDS += " bootloader-flasher-readme "
+
+# Linux sd-creator-linux
+EXTRA_IMAGEDEPENDS += " sd-creator-linux "
+
+# Windows sd-creator-win
+EXTRA_IMAGEDEPENDS += " sd-creator-win "
+
+# sd-creator-readme
+EXTRA_IMAGEDEPENDS += " sd-creator-readme "
+
+# Linux uload-bootloader-linux
+EXTRA_IMAGEDEPENDS += " uload-bootloader-linux "
+
+# Windows uload-bootloader-win
+EXTRA_IMAGEDEPENDS += " uload-bootloader-win "
+
+# uload-bootloader-readme
+EXTRA_IMAGEDEPENDS += " uload-bootloader-readme "
+
+# uEnv.txt
+EXTRA_IMAGEDEPENDS += " uenv "
+
+# host-readme
+EXTRA_IMAGEDEPENDS += " host-readme "
+
+# host-tools-readme
+EXTRA_IMAGEDEPENDS += " host-tools-readme "
 
 # Readme documentation
 EXTRA_IMAGEDEPENDS += " readme "

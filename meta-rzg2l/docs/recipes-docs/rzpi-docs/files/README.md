@@ -50,6 +50,7 @@ Then create a workspace folder (example: `~/Yocto`) for the build and put the do
 $ mkdir ~/Yocto
 $ cp *.zip ~/Yocto
 $ cp rzsbc_yocto.sh ~/Yocto
+$ cp site.conf ~/Yocto
 ```
 
 Step 3: Build package
@@ -69,91 +70,102 @@ After building Yocto, the output folder should be `~/Yocto/yocto_rzsbc_board/bui
 The output folder outline:
 ```
 rzpi
-├── bl2_bp-rzpi.bin
-├── bl2_bp-rzpi.srec
-├── bl2-rzpi.bin
-├── bootloader_flash.py                            <---- Bootloader flashing script on Linux
-├── bootloader-windows-script                      <---- Bootloader flashing script package folder on Windows
-│   ├── config.ini
-│   ├── flash_bootloader.bat                       <---- Bootloader flashing script on Windows
-│   ├── images
-│   │   ├── bl2_bp-rzpi.srec
-│   │   ├── fip-rzpi.srec
-│   │   └── Flash_Writer_SCIF_rzpi.mot
-│   ├── Readme.txt                                 <---- Bootloader flashing script on Windows guideline
-│   └── tools
-│       ├── cygterm.cfg
-│       ├── flash_bootloader.ttl
-│       ├── TERATERM.INI
-│       ├── ttermpro.exe
-│       ├── ttpcmn.dll
-│       ├── ttpfile.dll
-│       ├── ttpmacro.exe
-│       ├── ttpset.dll
-│       └── ttxssh.dll
-├── core-image-qt.env
-├── core-image-qt-rzpi-20231221134812.rootfs.manifest
-├── core-image-qt-rzpi-20231221134812.rootfs.tar.bz2
-├── core-image-qt-rzpi-20231221134812.rootfs.wic
-├── core-image-qt-rzpi-20231221134812.testdata.json
-├── core-image-qt-rzpi.manifest -> core-image-qt-rzpi-20231221134812.rootfs.manifest
-├── core-image-qt-rzpi.tar.bz2 -> core-image-qt-rzpi-20231221134812.rootfs.tar.bz2
-├── core-image-qt-rzpi.testdata.json -> core-image-qt-rzpi-20231221134812.testdata.json
-├── core-image-qt-rzpi.wic -> core-image-qt-rzpi-20231221134812.rootfs.wic
-├── filesystem-windows-script                      <---- SD card flashing script package folder on Windows
-│   ├── config.ini
-│   ├── flash_filesystem.bat                       <---- SD card flashing script on Windows
-│   ├── images
-│   │   └── core-image-qt-rzpi.wic
-│   ├── README.md                                  <---- SD card flashing guideline on Windows
-│   └── tools
-│       ├── AdbWinApi.dll
-│       ├── cygterm.cfg
-│       ├── fastboot.bat
-│       ├── fastboot.exe
-│       ├── flash_system_image.ttl
-│       ├── TERATERM.INI
-│       ├── ttermpro.exe
-│       ├── ttpcmn.dll
-│       ├── ttpfile.dll
-│       ├── ttpmacro.exe
-│       ├── ttpset.dll
-│       └── ttxssh.dll
-├── fip-rzpi.bin
-├── fip-rzpi.srec
-├── Flash_Writer_SCIF_rzpi.mot
-├── Image -> Image--5.10.184-cip36+gitAUTOINC+a090a5a9e4-r1-rzpi-20231221134812.bin
-├── Image--5.10.184-cip36+gitAUTOINC+a090a5a9e4-r1-rzpi-20231221134812.bin
-├── overlays
-│   ├── rzpi-can.dtbo
-│   ├── rzpi-dsi.dtbo
-│   ├── rzpi-ext-i2c.dtbo
-│   ├── rzpi-ext-spi.dtbo
-│   └── rzpi-ov5640.dtbo
-├── README.md                                      <---- This document
-├── rzpi--5.10.184-cip36+gitAUTOINC+a090a5a9e4-r1-rzpi-20231221134812.dtb
-├── rzpi.dtb -> rzpi--5.10.184-cip36+gitAUTOINC+a090a5a9e4-r1-rzpi-20231221134812.dtb
-├── sd_flash.sh                                    <---- SD card flashing script on Linux
-├── uEnv.txt
-└── uload-bootloader                               <---- Bootloader flashing from U-Boot console package folder
-    ├── bl2_bp-rzpi.bin
-    ├── fip-rzpi.bin
-    ├── uload_bootloader_flash.py                  <---- Bootloader flashing from U-Boot console script on Linux
-    ├── uload-bootloader-windows-script            <---- Bootloader flashing from U-Boot console script package on Windows
-    │   ├── config.ini
-    │   ├── Readme.txt                             <---- Bootloader flashing from U-Boot console guideline on Windows
-    │   ├── tools
-    │   │   ├── cygterm.cfg
-    │   │   ├── TERATERM.INI
-    │   │   ├── ttermpro.exe
-    │   │   ├── ttpcmn.dll
-    │   │   ├── ttpfile.dll
-    │   │   ├── ttpmacro.exe
-    │   │   ├── ttpset.dll
-    │   │   ├── ttxssh.dll
-    │   │   └── uload-flash_bootloader.ttl
-    │   └── uload-flash_bootloader.bat             <---- Bootloader flashing from U-Boot console script on Windows
-    └── uload-readme.txt                           <---- This document
+├── host
+│   ├── build
+│   │   ├── core-image-qt-rzpi-20240717204209.rootfs.manifest
+│   │   ├── core-image-qt-rzpi-20240717204209.testdata.json
+│   │   ├── core-image-qt-rzpi.manifest -> core-image-qt-rzpi-20240717204209.rootfs.manifest
+│   │   └── core-image-qt-rzpi.testdata.json -> core-image-qt-rzpi-20240717204209.testdata.json
+│   ├── Readme.md
+│   └── tools
+│       ├── bootloader-flasher
+│       │   ├── linux                                                    <---- Bootloader flashing script package folder on Linux
+│       │   │   ├── bootloader_flash.py                                  <---- Bootloader flashing script on Linux
+│       │   │   └── Readme.md                                            <---- Bootloader flashing script on Linux guideline
+│       │   ├── Readme.md
+│       │   └── windows                                                  <---- Bootloader flashing script package folder on Windows
+│       │       ├── config.ini
+│       │       ├── flash_bootloader.bat                                 <---- Bootloader flashing script on Windows
+│       │       ├── Readme.md                                            <---- Bootloader flashing script on Windows guideline
+│       │       └── tools
+│       │           ├── cygterm.cfg
+│       │           ├── flash_bootloader.ttl
+│       │           ├── TERATERM.INI
+│       │           ├── ttermpro.exe
+│       │           ├── ttpcmn.dll
+│       │           ├── ttpfile.dll
+│       │           ├── ttpmacro.exe
+│       │           ├── ttpset.dll
+│       │           └── ttxssh.dll
+│       ├── Readme.md
+│       ├── sd-creator
+│       │   ├── linux                                                    <---- SD card flashing script package folder on Linux
+│       │   │   ├── sd_flash.sh                                          <---- SD card flashing script on Linux
+│       │   │   └── Readme.md                                            <---- SD card flashing guideline on Linux
+│       │   ├── Readme.md
+│       │   └── windows                                                  <---- SD card flashing script package folder on Windows
+│       │       └── fastboot-udp-sd-flasher
+│       │           ├── config.ini
+│       │           ├── flash_filesystem.bat                             <---- SD card flashing script on Windows
+│       │           ├── Readme.md                                        <---- SD card flashing guideline on Windows
+│       │           └── tools
+│       │               ├── AdbWinApi.dll
+│       │               ├── cygterm.cfg
+│       │               ├── fastboot.bat
+│       │               ├── fastboot.exe
+│       │               ├── flash_system_image.ttl
+│       │               ├── TERATERM.INI
+│       │               ├── ttermpro.exe
+│       │               ├── ttpcmn.dll
+│       │               ├── ttpfile.dll
+│       │               ├── ttpmacro.exe
+│       │               ├── ttpset.dll
+│       │               └── ttxssh.dll
+│       └── uload-bootloader
+│           ├── linux                                                    <---- Bootloader flashing from U-Boot console script package on Linux
+│           │   ├── uload_bootloader_flash.py                            <---- Bootloader flashing from U-Boot console script on Linux
+│           │   └── Readme.md                                            <---- Bootloader flashing from U-Boot console guideline on Linux
+│           ├── Readme.md
+│           └── windows                                                  <---- Bootloader flashing from U-Boot console script package on Windows
+│               ├── config.ini
+│               ├── Readme.md                                            <---- Bootloader flashing from U-Boot console guideline on Windows
+│               ├── tools
+│               │   ├── cygterm.cfg
+│               │   ├── TERATERM.INI
+│               │   ├── ttermpro.exe
+│               │   ├── ttpcmn.dll
+│               │   ├── ttpfile.dll
+│               │   ├── ttpmacro.exe
+│               │   ├── ttpset.dll
+│               │   ├── ttxssh.dll
+│               │   └── uload-flash_bootloader.ttl
+│               └── uload-flash_bootloader.bat                           <---- Bootloader flashing from U-Boot console script on Windows
+├── README.md                                                            <---- This document
+└── target                                                               <---- Holds images for bootloader, kernel, rootfs, and device tree
+    ├── env                                                              <---- Contains environment configuration files for booting and system setup
+    │   ├── core-image-qt.env
+    │   └── uEnv.txt
+    └── images
+        ├── bl2_bp-rzpi.bin
+        ├── bl2_bp-rzpi.srec
+        ├── bl2-rzpi.bin
+        ├── core-image-qt-rzpi.rootfs.wic
+        ├── dtbs                                                          <---- The dtbs folder contains compiled device tree blobs
+        │   ├── overlays
+        │   │   ├── rzpi-can.dtbo
+        │   │   ├── rzpi-dsi.dtbo
+        │   │   ├── rzpi-ext-i2c.dtbo
+        │   │   ├── rzpi-ext-spi.dtbo
+        │   │   └── rzpi-ov5640.dtbo
+        │   ├── rzpi--5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240717204209.dtb
+        │   └── rzpi.dtb > rzpi-5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240717204209.dtb
+        ├── fip-rzpi.bin
+        ├── fip-rzpi.srec
+        ├── Flash_Writer_SCIF_rzpi.mot
+        ├── Image > Image-5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240717204209.bin
+        ├── Image--5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240717204209.bin
+        └── rootfs                                                        <--- Root filesystem folder
+            └── core-image-qt-rzpi.tar.bz2
 ```
 
 ## Programming/Flashing images for RZG2L-SBC
@@ -577,47 +589,39 @@ The following command will show how to use Chromium to access a web page on the 
 
 ```
 root@rzpi:~# chromium --no-sandbox --in-process-gpu --use-gl=desktop https://google.com
-
 ```
 
 **Please note that you must have an input device (USB mouse or touchscreen) plugged in before you start the browser. If you do not, you will get a "Segmentation fault".**
 
-### Debian package manager
+### Package Management
 
-Debian package manager is supported in this package release for supported RZ based projects.
+The distribution comes with Debian package manager `apt-get` and `dpkg` for binary package handling. 
 
-Follow the steps below to configure the Debian package repository and install packages according to your needs.
-
-#### Create `sources.list` file to address packages repository
-
-`sources.list` is a critical configuration file for packages installation and updates used by package managers on Debian-based Linux distributions. The `sources.list` file contains a list of URLs or repository addresses where the package manager can find software packages. These repositories may be maintained by the Linux distribution itself or by third-party individuals or organizations.
-
-Create `sources.list` file which is located in `/etc/apt/sources.list.d` directory as follows to configure Debian package repository:
-
-```
-root@rzpi:~# vi /etc/apt/sources.list.d/sources.list
-```
-
-Next, add the below contents into `sources.list`.
+#### Setting up Debian as a backend source
+The default configuration for the `sources.list` file, which defines the package repositories, is as follows:
 
 ```
 deb [arch=arm64] http://ports.ubuntu.com/ focal main multiverse universe
-
 deb [arch=arm64] http://ports.ubuntu.com/ focal-security main multiverse universe
-
 deb [arch=arm64] http://ports.ubuntu.com/ focal-backports main multiverse universe
-
 deb [arch=arm64] http://ports.ubuntu.com/ focal-updates main multiverse universe
-
 ```
 
-Then update the defined packages repository for `apt-get`.
+#### Configuring the Debian package repository
+
+`sources.list` is a critical configuration file for packages installation and updates used by package managers on Debian-based Linux distributions. The `sources.list` file contains a list of URLs or repository addresses where the package manager can find software packages. These repositories may be maintained by the Linux distribution itself or by third-party individuals or organizations.
+
+The file is located at `/etc/apt/sources.list.d/sources.list`. You can modify it to add or change the repositories according to your needs.
+
+After configuring the APT repositories, refresh the package database by running:
 
 ```
 root@rzpi:~# apt-get update
 ```
 
 **Please make sure you have internet access before running `apt-get update`.**
+
+This command refreshes the package database and ensures that your system is aware of the latest available packages from the configured repositories.
 
 In the contents of `sources.list` file, you can see `[arch=arm64]` on each line. This is because the RZG2L-SBC's architecture is aarch64, as indicated by the output of the `lscpu` command:
 
@@ -641,7 +645,11 @@ However, if we use a repository which is already designed for ARM architectures,
 deb http://deb.debian.org/debian bullseye main contrib non-free
 ```
 
-#### Install packages using `apt-get`
+Remember that sources doesn’t have to be a single origin. It's very common to add multiple repositories and sources for packages and manage them using keys.
+
+The source management is beyond the scope of this document.
+
+#### Using `apt-get` to install packages
 
 To install a package using `apt-get`, use the following command:
 
@@ -649,9 +657,9 @@ To install a package using `apt-get`, use the following command:
 root@rzpi:~# apt-get install <package-name>
 ```
 
-#### Install packages using `dpkg`
+#### Using `DPKG` to install packages
 
-`dpkg` is the low-level package manager for Debian-based systems. It is responsible for installing, removing, and providing information about `package.deb` file. `dpkg` itself does not handle dependency resolution; that task is typically delegated to higher-level package managers like `apt`.
+The utility `dpkg` is the low-level package manager for Debian-based systems. It is the local systemwide package manager. It handles installation, removal, provisioning about package.deb file, indexing and other aspects of packages installed on the system. However, it does not perform any cloud operations. Dpkg also doesn’t handle dependency resolution. This is another task handled by a high-level manager like `apt-get`. In fact, `dpkg` is the backend for `apt-get`. While `apt-get` handles fetching and indexing, the local installations and management of the packages are performed by the `dpkg` manager.
 
 Basic `dpkg` commands:
 
@@ -666,9 +674,8 @@ You can install `package.deb` using `dpkg` with the following command:
 root@rzpi:~# dpkg -i <package.deb>
 ```
 
-After installing a package using `dpkg`, you may need to resolve any dependency issues. Use the following command:
+After installing a package using dpkg, if you need to resolve dependency issues, use the following command:
 
 ```
 root@rzpi:~# apt-get install -f
 ```
-

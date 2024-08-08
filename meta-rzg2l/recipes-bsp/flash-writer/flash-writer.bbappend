@@ -68,15 +68,6 @@ do_compile_append() {
 	fi
 }
 
-do_deploy_append() {
-	if [ "${TRUSTED_BOARD_BOOT}" = "1" ]; then
-		install -m 644 ${BUILD_TBB_DIR}/tbb/*.mot ${DEPLOYDIR}
-		if [ "${PMIC_SUPPORT}" = "1" ]; then
-				install -m 644 ${PMIC_BUILD_TBB_DIR}/tbb/*.mot ${DEPLOYDIR}
-		fi
-	fi
-}
-
 # Support for RZ SBC board
 do_compile_prepend() {
 	if [ "${MACHINE}" = "rzpi" ]; then
@@ -89,4 +80,3 @@ do_compile_append() {
 	mv ${S}/AArch64_output/Flash_Writer*${BOARD}*.mot ${S}/AArch64_output/Flash_Writer_SCIF_${MACHINE}.mot
 	mv ${S}/build_pmic/Flash_Writer*${PMIC_BOARD}*.mot ${S}/build_pmic/Flash_Writer_SCIF_${MACHINE}_PMIC.mot
 }
-

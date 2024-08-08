@@ -29,8 +29,14 @@ do_compile_append() {
 }
 
 do_deploy_append(){
-    install -d ${DEPLOYDIR}/overlays
-    cp ${B}/arch/arm64/boot/dts/renesas/overlays/* ${DEPLOYDIR}/overlays
+    install -d ${DEPLOYDIR}/target/images/dtbs/overlays
+    install -m 0644 ${B}/arch/arm64/boot/dts/renesas/overlays/* ${DEPLOYDIR}/target/images/dtbs/overlays
+
+    install -m 0644 ${B}/arch/arm64/boot/Image ${DEPLOYDIR}/target/images/${base_name}.bin
+    ln -sf ${base_name}.bin ${DEPLOYDIR}/target/images/Image
+
+    install -m 0644 ${B}/arch/arm64/boot/dts/renesas/rzpi.dtb ${DEPLOYDIR}/target/images/dtbs/$dtb_base_name-${KERNEL_DTB_NAME}.$dtb_ext
+    ln -sf $dtb_base_name-${KERNEL_DTB_NAME}.$dtb_ext ${DEPLOYDIR}/target/images/dtbs/rzpi.dtb
 }
 
 do_populate_sysroot () {
