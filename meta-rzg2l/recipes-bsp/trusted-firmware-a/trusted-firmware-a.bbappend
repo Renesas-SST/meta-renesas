@@ -70,6 +70,9 @@ do_install() {
 }
 
 do_deploy_append() {
+	install -d ${DEPLOYDIR}/target/images
+	install -m 0644 ${D}/boot/bl2-${MACHINE}.bin ${DEPLOYDIR}/target/images/bl2-${MACHINE}.bin
+
 	if [ "${PMIC_SUPPORT}" = "1" ]; then
 		install -m 0644 ${PMIC_BUILD_DIR}/bl2.bin ${DEPLOYDIR}/bl2-${MACHINE}_pmic.bin
 		install -m 0644 ${PMIC_BUILD_DIR}/bl31.bin ${DEPLOYDIR}/bl31-${MACHINE}_pmic.bin

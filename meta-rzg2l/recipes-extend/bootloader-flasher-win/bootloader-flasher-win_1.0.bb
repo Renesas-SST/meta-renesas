@@ -17,19 +17,19 @@ FILES_${PN} += "/util"
 do_install () {
     install -d ${D}/util
     install -m 0755 ${S}/bootloader-windows-script.zip ${D}/util/bootloader-windows-script.zip
+    cd ${D}/util/
+    unzip -o bootloader-windows-script.zip
 }
 
 inherit deploy
 addtask deploy after do_install
 
 do_deploy () {
-    install -m 0755 ${D}/util/bootloader-windows-script.zip ${DEPLOYDIR}
-    cd ${DEPLOYDIR}
-    unzip -o bootloader-windows-script.zip
-    cp ${DEPLOY_DIR_IMAGE}/Flash_Writer_SCIF_rzpi.mot bootloader-windows-script/images
-    cp ${DEPLOY_DIR_IMAGE}/bl2_bp-rzpi.srec bootloader-windows-script/images
-    cp ${DEPLOY_DIR_IMAGE}/fip-rzpi.srec bootloader-windows-script/images
-    rm -f bootloader-windows-script.zip
+    install -d ${DEPLOYDIR}/host/tools/bootloader-flasher/windows/tools
+    install -m 0755 ${D}/util/bootloader-windows-script/config.ini ${DEPLOYDIR}/host/tools/bootloader-flasher/windows
+    install -m 0755 ${D}/util/bootloader-windows-script/flash_bootloader.bat ${DEPLOYDIR}/host/tools/bootloader-flasher/windows
+    install -m 0755 ${D}/util/bootloader-windows-script/Readme.md ${DEPLOYDIR}/host/tools/bootloader-flasher/windows
+    install -m 0755 ${D}/util/bootloader-windows-script/tools/* ${DEPLOYDIR}/host/tools/bootloader-flasher/windows/tools
 }
 
 COMPATIBLE_MACHINE = "(rzpi)"

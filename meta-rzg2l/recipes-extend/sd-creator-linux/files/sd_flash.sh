@@ -1,15 +1,14 @@
 #!/bin/bash
 
-
 function chelp() {
 	echo "------------------------------------------------------"
 	echo "Command format:"
-	echo "    sd_flash.sh <device> <location of yocto directory>"
-	echo "    Example: sd_flash.sh /dev/sda ~/yocto"
+	echo "    sd_flash.sh <device> <location of the root filesystem image>"
+	echo "    Example: sd_flash.sh /dev/sda <path/to/your/images.tar.bz2>"
 	echo "------------------------------------------------------"
 }
 
-
+rootfs_image_path="../../../../target/images/rootfs/core-image-qt-rzpi.tar.bz2"
 if [ $# -eq 0 ]
   then
     echo "No arguments supplied"
@@ -21,6 +20,10 @@ if [ $# -lt 1 ]
     echo "Missing arguments."
     chelp
     exit 0
+fi
+
+if [ $# -eq 2 ]; then
+    rootfs_image_path=$2
 fi
 
 sd_dev=$1
@@ -83,7 +86,7 @@ then
 		partprobe
 		echo "-----------------------------------------------------------------------------"
 		sleep 1
-	
+
 		# Formatting is not needed as parted will create a formatted partition
 		echo "Formatting partitions"
 		mkfs -t vfat ${sd_dev}1
@@ -111,7 +114,7 @@ then
 		echo "Changing to ${PWD}"
 		echo "Listing rootfs partition:"
 		ls -l
-		tar -xvjf core-image-qt-rzpi-*.rootfs.tar.bz2 -C /tmp/rz_sdm2/
+		tar -xvjf ${rootfs_image_path} -C /tmp/rz_sdm2/
 		#cp rzpi.dtb /tmp/rz_sdm2/boot/
 		#ls -l /tmp/rz_sdm2/
 		cd /tmp/rz_sdm2/boot
@@ -135,4 +138,3 @@ then
 	fi
 fi
 echo "exiting"
-

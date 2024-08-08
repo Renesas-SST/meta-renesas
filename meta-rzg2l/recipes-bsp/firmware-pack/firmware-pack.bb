@@ -56,26 +56,13 @@ do_compile () {
 
 do_deploy () {
 	# Create deploy folder
-	install -d ${DEPLOYDIR}
+	install -d ${DEPLOYDIR}/target/images
 
 	# Copy fip images
-	install -m 0644 ${S}/bl2_bp.bin ${DEPLOYDIR}/bl2_bp-${MACHINE}.bin
-	install -m 0644 ${S}/bl2_bp.srec ${DEPLOYDIR}/bl2_bp-${MACHINE}.srec
-	install -m 0644 ${S}/fip.bin ${DEPLOYDIR}/fip-${MACHINE}.bin
-	install -m 0644 ${S}/fip.srec ${DEPLOYDIR}/fip-${MACHINE}.srec
-
-	# Copy fip image for eSD boot
-	install -m 0644 ${S}/bl2_bp_esd.bin ${DEPLOYDIR}/bl2_bp_esd-${MACHINE}.bin
-
-	if [ "${PMIC_SUPPORT}" = "1" ]; then
-		install -m 0644 ${S}/bl2_bp_pmic.bin ${DEPLOYDIR}/bl2_bp-${MACHINE}_pmic.bin
-		install -m 0644 ${S}/bl2_bp_pmic.srec ${DEPLOYDIR}/bl2_bp-${MACHINE}_pmic.srec
-		install -m 0644 ${S}/fip_pmic.bin ${DEPLOYDIR}/fip-${MACHINE}_pmic.bin
-		install -m 0644 ${S}/fip_pmic.srec ${DEPLOYDIR}/fip-${MACHINE}_pmic.srec
-
-		# Copy fip image for eSD boot
-		install -m 0644 ${S}/bl2_bp_esd_pmic.bin ${DEPLOYDIR}/bl2_bp_esd-${MACHINE}_pmic.bin
-	fi
+	install -m 0644 ${S}/bl2_bp.bin ${DEPLOYDIR}/target/images/bl2_bp-${MACHINE}.bin
+	install -m 0644 ${S}/bl2_bp.srec ${DEPLOYDIR}/target/images/bl2_bp-${MACHINE}.srec
+	install -m 0644 ${S}/fip.bin ${DEPLOYDIR}/target/images/fip-${MACHINE}.bin
+	install -m 0644 ${S}/fip.srec ${DEPLOYDIR}/target/images/fip-${MACHINE}.srec
 }
 
 addtask deploy before do_build after do_compile
