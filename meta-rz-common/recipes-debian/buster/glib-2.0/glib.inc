@@ -16,7 +16,7 @@ SECTION = "libs"
 
 CVE_PRODUCT = "glib"
 
-BBCLASSEXTEND = "native nativesdk"
+BBCLASSEXTEND = "native"
 
 DEPENDS = "glib-2.0-native \
            virtual/libintl \

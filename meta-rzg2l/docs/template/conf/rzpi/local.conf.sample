@@ -382,3 +382,6 @@ BAD_RECOMMENDATIONS += " vte-locale-en-gb"
 
 # Add default apt configuration sources
 IMAGE_INSTALL_append += " apt-sources-config "
+
+# Add Windows SDKMACHINE
+SDKMACHINE = "x86_64-mingw32"
