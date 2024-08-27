@@ -12,12 +12,16 @@ SRC_URI = " \
 COMPATIBLE_MACHINE = "(rzpi)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-FILES_${PN} += ""
-AKKOW_EMPTY_${PN} = "1"
+FILES_${PN} += "/docs"
 
-do_deploy () {
-	install -d ${DEPLOY_DIR_IMAGE}
-	install -m 0755 ${S}/README.md ${DEPLOY_DIR_IMAGE}
+do_install () {
+    install -d ${D}/docs
+    install -m 0644 ${S}/README.md ${D}/docs/README.md
 }
 
+do_deploy () {
+    install -m 0644 ${D}/docs/README.md ${DEPLOYDIR}
+}
+
+inherit deploy
 addtask deploy after do_install
