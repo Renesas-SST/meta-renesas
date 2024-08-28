@@ -311,9 +311,9 @@ System uses /sys/class/gpio to control the GPIO pin, please refer to the followi
 /-----------|---------------|-------|-----|-----------|-----|-------|---------------|-------------\
 |   pinum   |   Function    | group | pin |   J3 PIN  | pin | group |   Function    |   pinum     |
 |-----------|---------------|-------|-----|-----------|-----|-------|---------------|-------------|
-|           |   3.3V        |       |     |   1   2   |     |       |   5V          |             |
-|   490     |   RIIC3 SDA   |   46  |  2  |   3   4   |     |       |   5V          |             |
-|   491     |   RIIC3 SCL   |   46  |  3  |   5   6   |     |       |   GND         |             |
+|           |   3.3V        |       |     |   1   2   |     |       |   5V          |             |
+|   490     |   RIIC3 SDA   |   46  |  2  |   3   4   |     |       |   5V          |             |
+|   491     |   RIIC3 SCL   |   46  |  3  |   5   6   |     |       |   GND         |             |
 |   304     |   GPIO        |   23  |  0  |   7   8   |  0  |   38  |   SCIF0 TX    |   424       |
 |           |   GND         |       |     |   9   10  |  1  |   38  |   SCIF0 RX    |   425       |
 |   456     |   GPIO        |   42  |  0  |   11  12  |  2  |   7   |   GPIO        |   178       |
@@ -547,6 +547,20 @@ enable_overlay_dsi=1
 
 **Please note that selecting the MIPI DSI display will cause the HDMI display be disabled.**
 
+### Playing Video Files on RZ/G2L-SBC
+
+Use `gst-launch-1.0` to play the video file. The playbin element in GStreamer makes it easy to play multimedia content. Run the following command:
+
+```
+root@rzpi:~# gst-launch-1.0 playbin uri=file:///<path/to/your/video/path>
+```
+
+We have prepared some test videos in the /home/root/videos folder. You can use these for testing. For example:
+
+```
+root@rzpi:~# gst-launch-1.0 playbin uri=file:///home/root/videos/renesas-bigideasforeveryspace.mp4
+```
+
 ### MIPI CSI2 with Arducam 5MP MIPI Camera
 
 RZG2L-SBC supports the MIPI CSI-2 camera interface and the Arducam 5MP MIPI Camera (OV5640 image sensor) is enabled and tested.
@@ -556,24 +570,49 @@ You should edit `uEnv.txt` as follows to enable MIPI CSI-2 interface with the ca
 ```
 enable_overlay_csi_ov5640=1
 ```
-
 To use the camera, we need to enable the CSI-2 module. Run the following commands:
 
 ```
 root@rzpi:~# cd /home/root/
+root@rzpi:~# ./v4l2-init.sh <resolution>
+```
+
+The <resolution> argument specifies the resolution for the camera. Valid resolutions are:
+
+- 1280x720
+- 1280x960
+- 1600x900
+- 1920x1080
+- 1920x1200
+- 2560x1080
+
+If no resolution is specified or an invalid resolution is provided, the default resolution 1280x960 will be used. For example:
+
+When use a valid resolution:
+
+```
+root@rzpi:~# ./v4l2-init.sh 1920x1080
+Link CRU/CSI2 to ov5640 1-003c with format UYVY8_2X8 and resolution 1920x1080
+```
+
+When no resolution is specified:
+
+```
 root@rzpi:~# ./v4l2-init.sh
+No resolution specified. Using default resolution: 1280x960
 Link CRU/CSI2 to ov5640 1-003c with format UYVY8_2X8 and resolution 1280x960
-root@rzpi:~#
+```
+
+When an invalid resolution is provided:
+
+```
+root@rzpi:~# ./v4l2-init.sh 3000x2000
+Invalid resolution: 3000x2000
+Input resolution is not available. Using default resolution: 1280x960
+Link CRU/CSI2 to ov5640 1-003c with format UYVY8_2X8 and resolution 1280x960
 ```
 
 The `v4l2-init.sh` script helps to enable the CSI-2 module and select supported display resolution for the camera as well.
-
-```
-# Available resolution of OV5640.
-# Please choose one of a following resolution then comment out the rest.
-ov5640_res=1280x960
-#ov5640_res=1920x1080
-```
 
 Run the following to open Camera and preview the video on the screen.
 
@@ -588,7 +627,7 @@ Chromium Web browser application is supported in this package release for suppor
 The following command will show how to use Chromium to access a web page on the internet.
 
 ```
-root@rzpi:~# chromium --no-sandbox --in-process-gpu --use-gl=desktop https://google.com
+root@rzpi:~# chromium --no-sandbox --in-process-gpu https://google.com
 ```
 
 **Please note that you must have an input device (USB mouse or touchscreen) plugged in before you start the browser. If you do not, you will get a "Segmentation fault".**
