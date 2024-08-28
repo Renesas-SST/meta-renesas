@@ -409,6 +409,7 @@ IMAGE_INSTALL_append = " python3-numpy"
 IMAGE_INSTALL_append = " python3-pandas"
 IMAGE_INSTALL_append = " python3-pyserial"
 IMAGE_INSTALL_append = " python3-matplotlib"
+IMAGE_INSTALL_append = " python3-pip"
 
 # Add default apt configuration sources
 IMAGE_INSTALL_append += " apt-sources-config "
