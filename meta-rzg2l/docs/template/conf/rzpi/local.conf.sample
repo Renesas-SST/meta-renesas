@@ -390,6 +390,9 @@ EXTRA_IMAGEDEPENDS += " host-tools-readme "
 
 # Readme documentation
 EXTRA_IMAGEDEPENDS += " readme "
+EXTRA_IMAGEDEPENDS += " rzpi-docs "
+
+# Chromium web browser
 IMAGE_INSTALL_append = " chromium-ozone-wayland"
 IMAGE_INSTALL_append = " ntp"
 IMAGE_INSTALL_append = " ttf-sazanami-gothic ttf-sazanami-mincho "
