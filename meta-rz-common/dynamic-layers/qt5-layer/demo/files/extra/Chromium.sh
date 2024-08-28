@@ -1,3 +1,3 @@
 #!/bin/sh
 
-chromium --no-sandbox --in-process-gpu --use-gl=desktop https://google.com &
+chromium --no-sandbox --in-process-gpu https://google.com &
