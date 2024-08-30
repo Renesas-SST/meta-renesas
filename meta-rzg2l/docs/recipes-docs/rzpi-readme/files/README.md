@@ -51,6 +51,8 @@ $ mkdir ~/Yocto
 $ cp *.zip ~/Yocto
 $ cp rzsbc_yocto.sh ~/Yocto
 $ cp site.conf ~/Yocto
+$ cp 0001-rzsbc-summit-radio-pre-3.4-support-eSDK-build.patch ~/Yocto
+
 ```
 
 Step 3: Build package
@@ -140,7 +142,12 @@ rzpi
 │               │   ├── ttxssh.dll
 │               │   └── uload-flash_bootloader.ttl
 │               └── uload-flash_bootloader.bat                           <---- Bootloader flashing from U-Boot console script on Windows
+├── license
+│   ├── Disclaimer051.pdf
+│   └── Disclaimer052.pdf
+├── r12uz0158eu0100-rz-g2l-sbc-single-board-computer.pdf
 ├── README.md                                                            <---- This document
+├── RZG2L-SBC_Evaluation_license.pdf
 └── target                                                               <---- Holds images for bootloader, kernel, rootfs, and device tree
     ├── env                                                              <---- Contains environment configuration files for booting and system setup
     │   ├── core-image-qt.env
