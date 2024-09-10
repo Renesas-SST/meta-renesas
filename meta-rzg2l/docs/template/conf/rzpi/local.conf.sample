@@ -380,7 +380,7 @@ EXTRA_IMAGEDEPENDS += " uload-bootloader-win "
 EXTRA_IMAGEDEPENDS += " uload-bootloader-readme "
 
 # uEnv.txt
-EXTRA_IMAGEDEPENDS += " uenv "
+IMAGE_INSTALL_append = " uenv "
 
 # host-readme
 EXTRA_IMAGEDEPENDS += " host-readme "
@@ -418,4 +418,4 @@ IMAGE_INSTALL_append = " python3-matplotlib"
 IMAGE_INSTALL_append = " python3-pip"
 
 # Add default apt configuration sources
-IMAGE_INSTALL_append += " apt-sources-config "
+IMAGE_INSTALL_append = " apt-sources-config "
