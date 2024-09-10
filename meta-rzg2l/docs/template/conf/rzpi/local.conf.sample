@@ -388,6 +388,9 @@ EXTRA_IMAGEDEPENDS += " host-readme "
 # host-tools-readme
 EXTRA_IMAGEDEPENDS += " host-tools-readme "
 
+# target-readme
+EXTRA_IMAGEDEPENDS += " target-readme "
+
 # Readme documentation
 EXTRA_IMAGEDEPENDS += " readme "
 EXTRA_IMAGEDEPENDS += " rzpi-docs "
