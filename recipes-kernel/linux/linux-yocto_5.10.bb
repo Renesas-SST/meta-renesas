@@ -12,10 +12,10 @@ require recipes-kernel/linux/linux-yocto.inc
 
 KBRANCH:rzg2l-sbc  = "dunfell/rz-sbc"
 
-KMACHINE:rzg2l-sbc ?= "defconfig"
+#KMACHINE:rzg2l-sbc ?= "defconfig"
 
 # Use the following to specify an in-tree defconfig.
-# KBUILD_DEFCONFIG:rzg2l-sbc = "rzpi"
+KBUILD_DEFCONFIG:rzg2l-sbc = "defconfig"
 
 SRCREV_machine:rzg2l-sbc ?= "${AUTOREV}"
 
@@ -33,6 +33,11 @@ KERNEL_DEVICETREE_OVERLAY = " \
         renesas/overlays/rzpi-dsi.dtbo \
         renesas/overlays/rzpi-ov5640.dtbo \
 "
+
+do_configure:prepend() {
+    # Copy the custom config to the build directory
+    cp ${WORKDIR}/defconfig ${B}/.config
+}
 
 IMAGE_BOOT_FILES = " Image rzpi.dtb"
 
