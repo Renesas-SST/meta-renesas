@@ -151,28 +151,34 @@ rzpi
 └── target                                                               <---- Holds images for bootloader, kernel, rootfs, and device tree
     ├── env                                                              <---- Contains environment configuration files for booting and system setup
     │   ├── core-image-qt.env
+    │   ├── Readme.md
     │   └── uEnv.txt
-    └── images
-        ├── bl2_bp-rzpi.bin
-        ├── bl2_bp-rzpi.srec
-        ├── bl2-rzpi.bin
-        ├── core-image-qt-rzpi.rootfs.wic
-        ├── dtbs                                                          <---- The dtbs folder contains compiled device tree blobs
-        │   ├── overlays
-        │   │   ├── rzpi-can.dtbo
-        │   │   ├── rzpi-dsi.dtbo
-        │   │   ├── rzpi-ext-i2c.dtbo
-        │   │   ├── rzpi-ext-spi.dtbo
-        │   │   └── rzpi-ov5640.dtbo
-        │   ├── rzpi--5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240717204209.dtb
-        │   └── rzpi.dtb > rzpi-5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240717204209.dtb
-        ├── fip-rzpi.bin
-        ├── fip-rzpi.srec
-        ├── Flash_Writer_SCIF_rzpi.mot
-        ├── Image > Image-5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240717204209.bin
-        ├── Image--5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240717204209.bin
-        └── rootfs                                                        <--- Root filesystem folder
-            └── core-image-qt-rzpi.tar.bz2
+    ├── images                                                           <---- Contains bootloader, kernel, and root filesystem images
+    │   ├── bl2_bp-rzpi.bin
+    │   ├── bl2_bp-rzpi.srec
+    │   ├── bl2-rzpi.bin
+    │   ├── core-image-qt-rzpi.wic
+    │   ├── dtbs                                                         <---- Contains Device tree blobs (DTBs) for hardware configuration
+    │   │   ├── overlays                                                 <---- Overlays for extending device tree functionality
+    │   │   │   ├── Readme.md
+    │   │   │   ├── rzpi-can.dtbo
+    │   │   │   ├── rzpi-dsi.dtbo
+    │   │   │   ├── rzpi-ext-i2c.dtbo
+    │   │   │   ├── rzpi-ext-spi.dtbo
+    │   │   │   └── rzpi-ov5640.dtbo
+    │   │   ├── Readme.md
+    │   │   ├── rzpi--5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240910054534.dtb
+    │   │   └── rzpi.dtb -> rzpi--5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240910054534.dtb
+    │   ├── fip-rzpi.bin
+    │   ├── fip-rzpi.srec
+    │   ├── Flash_Writer_SCIF_rzpi.mot
+    │   ├── Image -> Image--5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240910054534.bin
+    │   ├── Image--5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240910054534.bin
+    │   ├── Readme.md
+    │   └── rootfs                                                       <---- Contains compressed root filesystem images
+    │       ├── core-image-qt-rzpi.tar.bz2
+    │       └── Readme.md
+    └── Readme.md
 ```
 
 ## Programming/Flashing images for RZG2L-SBC
