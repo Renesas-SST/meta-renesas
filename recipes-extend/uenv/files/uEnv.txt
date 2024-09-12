@@ -1,0 +1,14 @@
+# Refer to readme.txt for more information on setting up U-Boot Env
+        fdtfile=rzpi.dtb
+        #enable_overlay_i2c=1
+        #enable_overlay_spi=1
+        #enable_overlay_can=1
+        #enable_overlay_dsi=1
+        #enable_overlay_csi_ov5640=1
+
+        mmc_overlays=boot/overlays
+        mmc_args=setenv bootargs 'rw rootwait earlycon root=/dev/mmcblk0p2'
+        prodsdboot=run mmc_args; run mmc_image; run mmc_ovfdt;booti $image_addr - $dtb_addr;
+        mmc_image=ext4load mmc 0:2 0x48080000 boot/Image
+        mmc_fdt=ext4load mmc 0:2 0x48000000 boot/rzpi.dtb
+        mmc_ovfdt=if run mmc_fdt; then fdt addr ${dtb_addr}; fdt resize 0x10000; if env exists enable_overlay_i2c &&    test ${enable_overlay_i2c} = 1 -o ${enable_overlay_i2c} = yes ; then echo Applying DT overlay: rzpi-ext-i2c.dtbo ;ext4load mmc 0:2 ${dtbo_addr} ${mmc_overlays}/rzpi-ext-i2c.dtbo; fdt addr ${dtb_addr}; fdt apply ${dtbo_addr}; fi; if env exists enable_overlay_spi &&    test ${enable_overlay_spi} = 1 -o ${enable_overlay_spi} = yes ; then echo Applying DT overlay: rzpi-ext-spi.dtbo ;ext4load mmc 0:2 ${dtbo_addr} ${mmc_overlays}/rzpi-ext-spi.dtbo; fdt addr ${dtb_addr}; fdt apply ${dtbo_addr}; fi; if env exists enable_overlay_can &&    test ${enable_overlay_can} = 1 -o ${enable_overlay_can} = yes ; then echo Applying DT overlay: rzpi-can.dtbo ;ext4load mmc 0:2 ${dtbo_addr} ${mmc_overlays}/rzpi-can.dtbo; fdt addr ${dtb_addr}; fdt apply ${dtbo_addr}; fi; if env exists enable_overlay_dsi &&    test ${enable_overlay_dsi} = 1 -o ${enable_overlay_dsi} = yes ; then echo Applying DT overlay: rzpi-dsi.dtbo ;ext4load mmc 0:2 ${dtbo_addr} ${mmc_overlays}/rzpi-dsi.dtbo; fdt addr ${dtb_addr}; fdt apply ${dtbo_addr}; fi; if env exists enable_overlay_csi_ov5640 &&    test ${enable_overlay_csi_ov5640} = 1 -o ${enable_overlay_csi_ov5640} = yes ; then echo Applying DT overlay: rzpi-ov5640.dtbo ;ext4load mmc 0:2 ${dtbo_addr} ${mmc_overlays}/rzpi-ov5640.dtbo; fdt addr ${dtb_addr}; fdt apply ${dtbo_addr}; fi; booti ${image_addr} - ${dtb_addr}; else echo WARN: Cannot load the DT; fi;
