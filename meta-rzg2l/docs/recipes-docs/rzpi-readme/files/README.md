@@ -45,14 +45,16 @@ After preparing the host machine for building, download necessary packages (get 
 - Graphic: https://www.renesas.com/us/en/document/swo/rz-mpu-graphics-library-evaluation-version-rzg2l-and-rzg2lc-rtk0ef0045z13001zj-v112enzip
 - Codec: https://www.renesas.com/us/en/document/swo/rz-mpu-video-codec-library-evaluation-version-rzg2l-rtk0ef0045z15001zj-v110xxzip?r=1535641
 
-Then create a workspace folder (example: `~/Yocto`) for the build and put the downloaded packages and support script `rzsbc_yocto.sh` into it:
+Then create a workspace folder (example: `~/Yocto`) for the build and put the files `rzsbc_yocto.sh`, `site.conf`, `README.md`, `jq-linux-amd64` and a patch folder for eSDK build support from the release package into it.
 ```
 $ mkdir ~/Yocto
 $ cp *.zip ~/Yocto
 $ cp rzsbc_yocto.sh ~/Yocto
 $ cp site.conf ~/Yocto
-$ cp 0001-rzsbc-summit-radio-pre-3.4-support-eSDK-build.patch ~/Yocto
-
+$ cp README.md ~/Yocto
+$ cp jq-linux-amd64 ~/Yocto
+$ cp git_patch.json ~/Yocto
+$ cp -r patches ~/Yocto
 ```
 
 Step 3: Build package
@@ -79,6 +81,15 @@ rzpi
 │   │   ├── core-image-qt-rzpi.manifest -> core-image-qt-rzpi-20240717204209.rootfs.manifest
 │   │   └── core-image-qt-rzpi.testdata.json -> core-image-qt-rzpi-20240717204209.testdata.json
 │   ├── Readme.md
+│   ├── src                                                             <---- Build script packages
+│   │   ├── git_patch.json
+│   │   ├── jq-linux-amd64
+│   │   ├── patches
+│   │   │   ├── 0001-meta-classes-esdk-explicitly-address-the-location-of.patch
+│   │   │   └── 0001-rzsbc-summit-radio-pre-3.4-support-eSDK-build.patch
+│   │   ├── README.md
+│   │   ├── rzsbc_yocto.sh
+│   │   └── site.conf
 │   └── tools
 │       ├── bootloader-flasher
 │       │   ├── linux                                                    <---- Bootloader flashing script package folder on Linux
@@ -179,6 +190,8 @@ rzpi
     │       ├── core-image-qt-rzpi.tar.bz2
     │       └── Readme.md
     └── Readme.md
+
+25 directories, 91 files
 ```
 
 ## Programming/Flashing images for RZG2L-SBC
