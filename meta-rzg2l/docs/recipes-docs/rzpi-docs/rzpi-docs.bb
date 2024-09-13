@@ -8,7 +8,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 S = "${WORKDIR}"
 
 SRC_URI = " \
-    file://r12uz0158eu0100-rz-g2l-sbc-single-board-computer.pdf \
+    file://r12uz0158eu0101-rz-g2l-sbc-single-board-computer.pdf \
     file://RZG2L-SBC_Evaluation_license.pdf \
     file://Disclaimer051.pdf \
     file://Disclaimer052.pdf \
@@ -18,7 +18,7 @@ FILES_${PN} += "/util"
 
 do_install () {
     install -d ${D}/util
-    install -m 0644 ${S}/r12uz0158eu0100-rz-g2l-sbc-single-board-computer.pdf ${D}/util/r12uz0158eu0100-rz-g2l-sbc-single-board-computer.pdf
+    install -m 0644 ${S}/r12uz0158eu0101-rz-g2l-sbc-single-board-computer.pdf ${D}/util/r12uz0158eu0101-rz-g2l-sbc-single-board-computer.pdf
     install -m 0644 ${S}/RZG2L-SBC_Evaluation_license.pdf ${D}/util/RZG2L-SBC_Evaluation_license.pdf
 
     # Disclaimer files
