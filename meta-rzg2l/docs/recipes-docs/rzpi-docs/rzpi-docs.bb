@@ -32,7 +32,7 @@ addtask deploy after do_install
 do_deploy () {
     # Install the user guide into the build folder
     install -d ${DEPLOYDIR}/
-    install -m 0644 ${D}/util/r12uz0158eu0100-rz-g2l-sbc-single-board-computer.pdf ${DEPLOYDIR}/
+    install -m 0644 ${D}/util/r12uz0158eu0101-rz-g2l-sbc-single-board-computer.pdf ${DEPLOYDIR}/
     install -m 0644 ${D}/util/RZG2L-SBC_Evaluation_license.pdf ${DEPLOYDIR}/
 
     # Install license files into the license folder in the build
