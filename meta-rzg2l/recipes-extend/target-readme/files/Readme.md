@@ -9,7 +9,6 @@ This directory contains the environment setup and image files required for the t
 ```
 target
 ├── env                                                     <---- Environment setup files for configuring the bootloader
-│   ├── core-image-qt.env
 │   ├── uEnv.txt
 │   └── Readme.md
 ├── Readme.md                                               <---- This document
