@@ -9,21 +9,32 @@ S = "${WORKDIR}"
 
 SRC_URI = " \
     file://Readme.md \
+    file://tools/Readme.md \
+    file://env/Readme.md \
 "
 
 FILES_${PN} += "/util"
 
 do_install () {
-    install -d ${D}/util
+    install -d ${D}/util/tools
+    install -d ${D}/util/env
+
     install -m 0644 ${S}/Readme.md ${D}/util/Readme.md
+    install -m 0644 ${S}/tools/Readme.md ${D}/util/tools/Readme.md
+    install -m 0644 ${S}/env/Readme.md ${D}/util/env/Readme.md
 }
 
 inherit deploy
 addtask deploy after do_install
 
 do_deploy () {
-    install -d ${DEPLOYDIR}/host
+    # Install Readme files in their respective locations
+    install -d ${DEPLOYDIR}/host/tools
+    install -d ${DEPLOYDIR}/host/env
+
     install -m 0644 ${D}/util/Readme.md ${DEPLOYDIR}/host
+    install -m 0644 ${D}/util/tools/Readme.md ${DEPLOYDIR}/host/tools
+    install -m 0644 ${D}/util/env/Readme.md ${DEPLOYDIR}/host/env
 }
 
 COMPATIBLE_MACHINE = "(rzpi)"

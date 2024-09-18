@@ -73,20 +73,25 @@ After building Yocto, the output folder should be `~/Yocto/yocto_rzsbc_board/bui
 
 The output folder outline:
 ```
-rzpi
+rzpi/
 ├── host
-│   ├── build
-│   │   ├── core-image-qt-rzpi-20240717204209.rootfs.manifest
-│   │   ├── core-image-qt-rzpi-20240717204209.testdata.json
-│   │   ├── core-image-qt-rzpi.manifest -> core-image-qt-rzpi-20240717204209.rootfs.manifest
-│   │   └── core-image-qt-rzpi.testdata.json -> core-image-qt-rzpi-20240717204209.testdata.json
+│   ├── build
+│   │   ├── core-image-qt-rzpi-20240918051558.rootfs.manifest
+│   │   ├── core-image-qt-rzpi-20240918051558.testdata.json
+│   │   ├── core-image-qt-rzpi.manifest -> core-image-qt-rzpi-20240918051558.rootfs.manifest
+│   │   └── core-image-qt-rzpi.testdata.json -> core-image-qt-rzpi-20240918051558.testdata.json
+│   ├── env
+│   │   ├── Readme.md
+│   │   └── core-image-qt.env
 │   ├── Readme.md
 │   ├── src                                                             <---- Build script packages
 │   │   ├── git_patch.json
 │   │   ├── jq-linux-amd64
 │   │   ├── patches
-│   │   │   ├── 0001-meta-classes-esdk-explicitly-address-the-location-of.patch
-│   │   │   └── 0001-rzsbc-summit-radio-pre-3.4-support-eSDK-build.patch
+│   │   │   ├── meta-summit-radio
+│   │   │   │   └── 0001-rzsbc-summit-radio-pre-3.4-support-eSDK-build.patch
+│   │   │   └── poky
+│   │   │       └── 0001-meta-classes-esdk-explicitly-address-the-location-of.patch
 │   │   ├── README.md
 │   │   ├── rzsbc_yocto.sh
 │   │   └── site.conf
@@ -161,7 +166,6 @@ rzpi
 ├── RZG2L-SBC_Evaluation_license.pdf
 └── target                                                               <---- Holds images for bootloader, kernel, rootfs, and device tree
     ├── env                                                              <---- Contains environment configuration files for booting and system setup
-    │   ├── core-image-qt.env
     │   ├── Readme.md
     │   └── uEnv.txt
     ├── images                                                           <---- Contains bootloader, kernel, and root filesystem images
@@ -191,7 +195,7 @@ rzpi
     │       └── Readme.md
     └── Readme.md
 
-25 directories, 91 files
+28 directories, 92 files
 ```
 
 ## Programming/Flashing images for RZG2L-SBC

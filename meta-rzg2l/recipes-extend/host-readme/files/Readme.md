@@ -14,6 +14,9 @@ host
 │   ├── core-image-qt-rzpi.manifest -> core-image-qt-rzpi-20240717204209.rootfs.manifest        # Symlink to the root filesystem manifest
 │   └── core-image-qt-rzpi.testdata.json -> core-image-qt-rzpi-20240717204209.testdata.json     # Symlink to the test data JSON
 ├── Readme.md                                                                                   # This document
+├── env                             
+│   ├── core-image-qt.env                                                                       # Environment file specific to core-image-qt in yocto build
+│   └── Readme.md                                                                               # This document
 ├── src                                                                                         # Build script folder
 │   ├── git_patch.json
 │   ├── jq-linux-amd64

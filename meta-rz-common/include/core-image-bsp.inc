@@ -122,9 +122,9 @@ ROOTFS_POSTPROCESS_COMMAND += " add_overlays_rootfs; add_bootloader_rootfs; depl
 
 DEPENDS += " firmware-pack linux-renesas"
 
-# Install core-image-qt.env to target/env
+# Install core-image-qt.env to host/env
 python do_rootfs_wicenv_append () {
-    target_dir = os.path.join(depdir, 'target/env')
+    target_dir = os.path.join(depdir, 'host/env')
     os.makedirs(target_dir, exist_ok=True)
     bb.utils.copyfile(os.path.join(outdir, basename) + '.env', os.path.join(target_dir, basename) + '.env')
 }
