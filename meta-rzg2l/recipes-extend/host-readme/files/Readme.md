@@ -16,7 +16,7 @@ host
 ├── Readme.md                                                                                   # This document
 ├── env                             
 │   ├── core-image-qt.env                                                                       # Environment file specific to core-image-qt in yocto build
-│   └── Readme.md                                                                               # This document
+│   └── Readme.md
 ├── src                                                                                         # Build script folder
 │   ├── git_patch.json
 │   ├── jq-linux-amd64
