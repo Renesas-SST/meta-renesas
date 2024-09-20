@@ -122,23 +122,22 @@ rzpi/
 │       │   │   └── Readme.md                                            <---- SD card flashing guideline on Linux
 │       │   ├── Readme.md
 │       │   └── windows                                                  <---- SD card flashing script package folder on Windows
-│       │       └── fastboot-udp-sd-flasher
-│       │           ├── config.ini
-│       │           ├── flash_filesystem.bat                             <---- SD card flashing script on Windows
-│       │           ├── Readme.md                                        <---- SD card flashing guideline on Windows
-│       │           └── tools
-│       │               ├── AdbWinApi.dll
-│       │               ├── cygterm.cfg
-│       │               ├── fastboot.bat
-│       │               ├── fastboot.exe
-│       │               ├── flash_system_image.ttl
-│       │               ├── TERATERM.INI
-│       │               ├── ttermpro.exe
-│       │               ├── ttpcmn.dll
-│       │               ├── ttpfile.dll
-│       │               ├── ttpmacro.exe
-│       │               ├── ttpset.dll
-│       │               └── ttxssh.dll
+│       │       ├── config.ini
+│       │       ├── flash_filesystem.bat                             <---- SD card flashing script on Windows
+│       │       ├── Readme.md                                        <---- SD card flashing guideline on Windows
+│       │       └── tools
+│       │           ├── AdbWinApi.dll
+│       │           ├── cygterm.cfg
+│       │           ├── fastboot.bat
+│       │           ├── fastboot.exe
+│       │           ├── flash_system_image.ttl
+│       │           ├── TERATERM.INI
+│       │           ├── ttermpro.exe
+│       │           ├── ttpcmn.dll
+│       │           ├── ttpfile.dll
+│       │           ├── ttpmacro.exe
+│       │           ├── ttpset.dll
+│       │           └── ttxssh.dll
 │       └── uload-bootloader
 │           ├── linux                                                    <---- Bootloader flashing from U-Boot console script package on Linux
 │           │   ├── uload_bootloader_flash.py                            <---- Bootloader flashing from U-Boot console script on Linux
@@ -161,7 +160,7 @@ rzpi/
 ├── license
 │   ├── Disclaimer051.pdf
 │   └── Disclaimer052.pdf
-├── r12uz0158eu0100-rz-g2l-sbc-single-board-computer.pdf
+├── r12uz0158eu0101-rz-g2l-sbc-single-board-computer.pdf
 ├── README.md                                                            <---- This document
 ├── RZG2L-SBC_Evaluation_license.pdf
 └── target                                                               <---- Holds images for bootloader, kernel, rootfs, and device tree
