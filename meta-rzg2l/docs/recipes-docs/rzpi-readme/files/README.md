@@ -22,6 +22,8 @@ Known issues:
  - Only support for 48 Khz audio sampling rate family.
 
 ## Building
+
+### Core-image
 Step 1: Prepare environment for building package
 
 Linux Ubuntu 20.04 is recommended for Yocto build.
@@ -195,6 +197,45 @@ rzpi/
     └── Readme.md
 
 28 directories, 92 files
+```
+
+### eSDK
+
+The extensible SDK makes it easy to add new applications and libraries to an image, modify the source for an existing component, test changes on RZ/G2L-SBC, and ease integration into the rest of the OpenEmbedded Build System.
+
+The eSDK build generates an installer, which you will use to install the eSDK on the same PC where your Yocto environment is set up.
+
+Running the build script with the following option to build eSDK:
+
+```shell
+$ ./rzsbc_yocto.sh build-sdk
+```
+
+The resulting eSDK installer will be located in `~/Yocto/yocto_rzsbc_board/build/tmp/deploy/sdk`.
+The eSDK installer will have the extension “.sh”.
+
+```shell
+$ ls
+poky-glibc-x86_64-core-image-qt-aarch64-rzpi-toolchain-ext-3.1.26.sh
+poky-glibc-x86_64-core-image-qt-aarch64-rzpi-toolchain-ext-3.1.26.host.manifest
+poky-glibc-x86_64-core-image-qt-aarch64-rzpi-toolchain-ext-3.1.26.testdata.json
+poky-glibc-x86_64-core-image-qt-aarch64-rzpi-toolchain-ext-3.1.26.target.manifest
+```
+
+**The SDK build may fail depending on the build environment. At that time, please run the build again after a period of time**
+
+#### Install eSDK on your host machine
+
+The eSDK allows you to develop and test custom applications for RZG2L-SBC on different systems. This section covers setting up your development environment and with the setup, you can develop your applications that run on RZG2L-SBC.
+
+```shell
+$ sh ./build/tmp/deploy/sdk/poky-glibc-x86_64-core-image-qt-aarch64-rzpi-toolchain-ext-3.1.26.sh
+```
+
+Everytime you want to build your applications, run the environment setup script first (`~/esdk/3.1.26` is the location that the eSDK is installed):
+
+```shell
+$ source ~/esdk/3.1.26/environment-setup-aarch64-poky-linux
 ```
 
 ## Programming/Flashing images for RZG2L-SBC
@@ -1148,3 +1189,182 @@ Once OpenSSH is installed, you can generate SSH keys for secure authentication:
   ```shell
   $ systemctl restart ssh
   ```
+### Remote debugging using GDBServer on RZG2L-SBC
+
+In this section, we will use GDBServer to facilitate remote debugging on RZG2L-SBC. GDBServer allows us to run the debugging process on RZG2L-SBC (the target machine) while controlling it from a different system (the host machine) via a network connection.
+
+This setup is particularly useful for application development, as it enables us to run and debug programs on RZG2L-SBC while viewing and controlling the process from the host machine.
+
+To make sure we have enough tools/libraries for debugging. Let's prepare them on the host and target machine.
+
+#### Prepare GDB on the host machine
+
+GDB is being executed on your host system to connect to the target system. And it's always available in the eSDK. We assume that you've installed the eSDK on your host machine as described in the section `Install eSDK on your host machine` .
+To setup for GDB, simply running the poky environment script as follows:
+
+```shell
+$ source ~/esdk/3.1.26/environment-setup-aarch64-poky-linux
+```
+
+To confirm GDB is ready to use, run the following command and check the result:
+```shell
+$ echo ${GDB}
+aarch64-poky-linux-gdb
+```
+
+#### Install GDBServer on RZG2L-SBC
+
+By default, GDBServer is not installed on RZG2L-SBC, you need to install it using APT.
+Execute the following command to install GDBServer:
+
+```shell
+root@rzpi:~# apt-get update
+root@rzpi:~# apt-get install gdbserver
+```
+**Please make sure you have internet access before running `apt-get update`.**
+
+That's all for the preparation, let's move on to the remote debugging process.
+
+#### Remote Debugging Example
+
+Firstly, run GDBServer with a specific network port (`2000` is the assinged port in this case) and your program `hello-gdbserver` as a parameter on the target as follows:
+
+```shell
+root@rzpi:~# gdbserver localhost:2000 hello-gdbserver
+Process /home/root/hello-gdbserver created; pid = 358
+Listening on port 2000
+```
+
+The content before compiling of the `hello-gdbserver` program:
+```c
+#include <stdio.h>
+
+int main() {
+
+        int i;
+
+        printf("Program to demonstrate gdbserver debugging!\n");
+        printf("Print from 1 to 10\n");
+
+        for (i = 1;i <= 10;i++)
+                printf("%d\n", i);
+
+        printf("Program completed!\n");
+
+        return 0;
+}
+```
+
+You also need to know the target's IP address to use on the host later. In this example, `169.254.62.156` is the IP address that will be used.
+
+```shell
+root@rzpi:~# ifconfig eth1
+eth1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500  metric 1
+        inet 169.254.62.156  netmask 255.255.0.0  broadcast 169.254.255.255
+        inet6 fe80::1ea0:d3ff:fe20:119b  prefixlen 64  scopeid 0x20<link>
+        ether 1c:a0:d3:20:11:9b  txqueuelen 1000  (Ethernet)
+        RX packets 34497  bytes 2657706 (2.5 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 68954  bytes 97379412 (92.8 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+        device interrupt 133
+```
+
+Next, launch GDB on the host:
+
+```shell
+$ aarch64-poky-linux-gdb
+GNU gdb (GDB) 9.1
+Copyright (C) 2020 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "--host=x86_64-pokysdk-linux --target=aarch64-poky-linux".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word".
+(gdb)
+```
+
+Use `target remote` with the IP address and the assigned network port to connect to the target.
+
+```shell
+(gdb) target remote 169.254.62.156:2000
+Remote debugging using 169.254.62.156:2000
+Reading /home/root/hello-gdbserver from remote target...
+warning: File transfers from remote targets can be slow. Use "set sysroot" to access files locally instead.
+Reading /home/root/hello-gdbserver from remote target...
+Reading symbols from target:/home/root/hello-gdbserver...
+Reading /lib64/ld-linux-aarch64.so.1 from remote target...
+Reading /lib64/ld-linux-aarch64.so.1 from remote target...
+Reading symbols from target:/lib64/ld-linux-aarch64.so.1...
+Reading /lib64/ld-2.31.so from remote target...
+Reading /lib64/.debug/ld-2.31.so from remote target...
+Reading /lib64/.debug/ld-2.31.so from remote target...
+Reading symbols from target:/lib64/.debug/ld-2.31.so...
+0x0000fffff7fcd0c0 in _start () from target:/lib64/ld-linux-aarch64.so.1
+```
+
+Then, add a break point at `main` function to stop the program at that function in the next step:
+
+```shell
+(gdb) b main
+Breakpoint 1 at 0xaaaaaaaa07cc: file hello-gdbserver.c, line 7.
+```
+
+Now, you can use `continue` to jump to the main function:
+
+```shell
+(gdb) continue
+Continuing.
+Reading /lib64/libc.so.6 from remote target...
+Reading /lib64/libc-2.31.so from remote target...
+Reading /lib64/.debug/libc-2.31.so from remote target...
+Reading /lib64/.debug/libc-2.31.so from remote target...
+
+Breakpoint 1, main () at hello-gdbserver.c:7
+warning: Source file is more recent than executable.
+7               printf("Program to demonstrate gdbserver debugging!\n");
+```
+
+Then, you can type `continue` to run the rest of the program:
+
+```shell
+(gdb) continue
+Continuing.
+[Inferior 1 (process 342) exited normally]
+```
+
+Eventually, run `quit` to exit GDB and stop the debugging section.
+
+```shell
+(gdb) quit
+```
+
+In parallel, you can check the output on the target:
+
+```shell
+Remote debugging from host ::ffff:169.254.43.86, port 40666
+Program to demonstrate gdbserver debugging!
+Print from 1 to 10
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+Program completed!
+
+Child exited with status 0
+root@rzpi:~#
+```
