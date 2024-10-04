@@ -278,6 +278,10 @@ DISTRO_FEATURES_append = " pam"
 DISTRO_FEATURES_append = " wayland"
 #DISTRO_FEATURES_remove = " x11"
 
+# Uncomment the following 2 lines to enable OpenSSH and disable Dropbear
+#IMAGE_FEATURES_remove = "ssh-server-dropbear"
+#IMAGE_FEATURES_append = "ssh-server-openssh"
+
 # Add qt5 demonstration to core-image-qt or not
 QT_DEMO = "1"
 

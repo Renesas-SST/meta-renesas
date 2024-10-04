@@ -747,3 +747,404 @@ After installing a package using dpkg, if you need to resolve dependency issues,
 ```
 root@rzpi:~# apt-get install -f
 ```
+
+### Network Boot and TFTP
+This section outlines the process for network booting using TFTP (Trivial File Transfer Protocol). It includes configuration steps and commands necessary for a successful setup.
+
+Network booting allows devices to boot from an image stored on a network server, rather than relying on local storage.
+
+#### TFTP server setup
+This subsection covers the setup of a TFTP server, which is necessary for the device to retrieve the boot images over the network.
+
+- Step 1: Install a TFTP server using the following command:
+
+  ```shell
+  $ sudo apt update
+  $ sudo apt install tftpd-hpa
+  ```
+
+- Step 2: Create a TFTP directory and set the appropriate permissions.
+
+  ```shell
+  $ sudo mkdir /tftpboot
+  $ sudo chmod 755 /tftpboot
+  ```
+
+- Step 3: Edit the TFTP configuration file (typically found at /etc/default/tftpd-hpa) and set it up as follows:
+
+  ```shell
+  # /etc/default/tftpd-hpa
+  TFTP_USERNAME="<tftp_name>"
+  TFTP_DIRECTORY="</path/to/your/tftp_folder"
+  TFTP_ADDRESS="0.0.0.0:69"
+  TFTP_OPTIONS="--secure"
+  ```
+
+  For example:
+  ```shell
+  # /etc/default/tftpd-hpa
+  TFTP_USERNAME="tftp"
+  TFTP_DIRECTORY="/tftpboot"
+  TFTP_ADDRESS="0.0.0.0:69"
+  TFTP_OPTIONS="--secure"
+  ```
+
+- Step 4: Restart the TFTP service to apply the changes.
+
+  ```shell
+  $ sudo systemctl restart tftpd-hpa
+  ```
+
+  Make sure the tftpd-hpa service is running:
+
+  ```shell
+  $ sudo systemctl status tftpd-hpa
+  ```
+
+#### NFS server setup
+
+NFS (Network File System) is a protocol that allows clients to access files over a network as if they were local. It enables multiple clients to share files from a central server, simplifying file management across machines.
+
+In this setup, NFS will share the root filesystem (rootfs) with clients booting over the network. This allows client devices to dynamically retrieve their operating system files and configurations, making it ideal for embedded systems that require consistent file access without local storage.
+
+- Step 1: Install NFS server and NFS client package if it's not already installed on your host PC:
+  ```shell
+  $ sudo apt update
+  $ sudo apt install nfs-kernel-server nfs-common
+  ```
+
+- Step 2: Edit the `/etc/exports` file to specify the directories to be shared and their access permissions.
+  ```shell
+  $ vi /etc/exports
+  ```
+
+  For example, to share the `/tftpboot` directory, add the following line:
+
+  ```shell
+  /tftpboot *(rw,no_root_squash,async)
+  ```
+
+  Here, * allows access from any client. Consider replacing it with specific client IP addresses for better security.
+
+- Step 3: After editing `/etc/exports`, run the following command to export the directories:
+
+  ```shell
+  $ sudo exportfs -a
+  ```
+
+- Step 4: Start the NFS server and enable it to run at boot:
+  ```shell
+  $ sudo systemctl start nfs-kernel-server
+  $ sudo systemctl enable nfs-kernel-server
+  ```
+
+#### U-Boot DHCP IP Configuration
+In this subsection, you will configure the U-Boot environment for network settings. This includes specifying the Ethernet device and setting the server and device IP addresses.
+
+- Step 1: Enter U-Boot’s interactive command prompt for configuration.
+
+  You can achieve this by pressing any key when prompted with Hit any key to stop autoboot:
+
+  ```shell
+  U-Boot 2021.10 (May 24 2024 - 07:26:08 +0000)
+
+  CPU:   Renesas Electronics CPU rev 1.0
+  Model: RZpi
+  DRAM:  896 MiB
+  MMC:   sd@11c00000: 0
+  Loading Environment from SPIFlash... SF: Detected is25wp256 with page size 256 Bytes, erase size 4 KiB, total 32 MiB
+
+  In:    serial@1004b800
+  Out:   serial@1004b800
+  Err:   serial@1004b800
+  Net:   eth0: ethernet@11c20000, eth1: ethernet@11c30000
+  Hit any key to stop autoboot:  0
+  =>
+  =>
+  ```
+
+- Step 2: Enter Specify the Ethernet device (eth1) to use for the network connection. For example,
+
+  ```shell
+  => setenv ethact ethernet@11c30000
+  ```
+
+- Step 3: Configure server and device IPs:
+
+  ```shell
+  => setenv serverip <server_ip>
+  => setenv ipaddr <device_ip>
+  ```
+
+  For example:
+  ```shell
+  => setenv serverip 192.168.5.86
+  => setenv ipaddr 192.168.5.30
+  ```
+
+##### TFTP Boot
+
+In this subsection, you will configure the boot arguments and commands that U-Boot will use to load the kernel image and device tree from the TFTP server.
+
+Step 1: After setting up the TFTP server, you need to ensure that the necessary boot images, including the kernel image, device tree blob (DTB), device tree overlay (DTBO), and root file system, are placed in the TFTP directory.
+
+```shell
+renesas@builder-pc:/tftpboot/rzsbc/$ tree -L 2
+.
+├── Image
+├── overlays
+│   ├── rzpi-can.dtbo
+│   ├── rzpi-dsi.dtbo
+│   ├── rzpi-ext-i2c.dtbo
+│   ├── rzpi-ext-spi.dtbo
+│   └── rzpi-ov5640.dtbo
+├── rootfs
+│   ├── bin -> usr/bin
+│   ├── boot
+│   ├── dev
+│   ├── etc
+│   ├── home
+│   ├── lib -> usr/lib
+│   ├── media
+│   ├── mnt
+│   ├── opt
+│   ├── proc
+│   ├── root
+│   ├── run
+│   ├── sbin -> usr/sbin
+│   ├── snap
+│   ├── srv
+│   ├── sys
+│   ├── tmp
+│   ├── usr
+│   └── var
+└── rzpi.dtb
+```
+- Step 2: Define the boot arguments to specify the network and root file system settings:
+
+  ```shell
+  => setenv bootargs 'consoleblank=0 strict-devmem=0 ip=<device_ip>:<server_ip>::::<eth_device> root=/dev/nfs rw nfsroot=<server_ip>:</path/to/your/rootfs>,v3,tcp' 
+  ```
+
+  For example: 
+  ```shell
+  => setenv bootargs 'consoleblank=0 strict-devmem=0 ip=192.168.5.30:192.168.5.86::::eth1 root=/dev/nfs rw nfsroot=192.168.5.86:/tftpboot/rzsbc/rootfs,v3,tcp'
+  ```
+
+- Step 3: Configure the boot command to load the kernel image and device tree files.
+
+  ```shell
+  => setenv bootcmd 'tftp <load_address_kernel> <path/to/kernel_image>; tftp <load_address_dtb> <path/to/device_tree_blob>; tftp <load_address_dtbo> <path/to/dtbo file>; booti <load_address_kernel> - <load_address_dtb> - <load_address_dtbo>'
+  ```
+
+  For example load `Image`, `rzpi.dtb` and `rzpi-ext-spi.dtbo` files.
+  ```shell
+  => setenv bootcmd 'tftp 0x48080000 rzsbc/Image; tftp 0x48000000 rzsbc/rzpi.dtb; tftp 0x48010000 rzsbc/overlays/rzpi-ext-spi.dtbo; booti 0x48080000 - 0x48000000 - 0x48010000'
+  ```
+
+- Step 4: Save the changes to the environment variables so they persist across reboots:
+
+  ```shell
+  => saveenv
+  ```
+
+- Step 5: Initiate the boot progress by running bootcmd:
+
+  ```shell
+  run bootcmd
+  ```
+
+  If you set everything up correctly, you will be able to boot the images from the network.
+
+  ```
+  => run bootcmd
+  Using ethernet@11c30000 device
+  TFTP from server 192.168.5.86; our IP address is 192.168.5.30
+  Filename rzsbc/Image'.
+  Load address: 0x48080000
+  Loading: #################################################################
+          #################################################################
+          #################################################################
+          19.6 MiB/s
+  done
+  Bytes transferred = 18035200 (1133200 hex)
+  Using ethernet@11c30000 device
+  TFTP from server 192.168.5.86; our IP address is 192.168.5.30
+  Filename 'rzsbc/rzpi.dtb'.
+  Load address: 0x48000000
+  Loading: ####
+          8.6 MiB/s
+  done
+  Bytes transferred = 44855 (af37 hex)
+  Using ethernet@11c30000 device
+  TFTP from server 192.168.5.86; our IP address is 192.168.5.30
+  Filename 'rzsbc/overlays/rzpi-ext-spi.dtbo'.
+  Load address: 0x48010000
+  Loading: #
+          455.1 KiB/s
+  done
+  Bytes transferred = 932 (3a4 hex)
+  Moving Image from 0x48080000 to 0x48200000, end=493a0000
+  ## Flattened Device Tree blob at 48000000
+    Booting using the fdt blob at 0x48000000
+    Loading Device Tree to 000000007bf1a000, end 000000007bf27f36 ... OK
+
+  Starting kernel ...
+  ```
+
+### Using SSH and SCP for Remote Access and File Transfers
+
+This section outlines the use of SSH (Secure Shell) for secure remote access to devices and how to use SCP (Secure Copy Protocol) for transferring files. By default, we use Dropbear SSH, which is lightweight and suitable for embedded systems. While Dropbear is designed for resource-constrained environments, OpenSSH is more feature-rich and widely used.
+
+#### Differences Between Dropbear and OpenSSH
+- **Resource Usage**: Dropbear is optimized for lower resource usage, making it ideal for embedded systems.
+- **Feature Set**: OpenSSH has a more extensive feature set, including advanced options for authentication and configuration.
+- **Key Authentication**: OpenSSH requires the use of SSH keys for authentication, while Dropbear can operate with both keys and passwords.
+
+#### SSH Access
+
+To access the device via SSH, you can use various tools on both Windows and Linux:
+
+1. **SSH from Windows host**
+   - **Using Git Bash**:
+        - Install Git for Windows if you haven't already.
+        - Use the following command:
+            ```shell
+            $ ssh -o HostKeyAlgorithms=ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa username@<device_ip>
+            ```
+            For example:
+            ```shell
+            $ ssh -o HostKeyAlgorithms=ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa root@192.168.5.30
+            ```
+        - Type `yes` to confirm the host's authenticity when prompted.
+          ```shell
+          $ ssh -o HostKeyAlgorithms=ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa root@192.168.5.30
+          The authenticity of host '192.168.5.30 (192.168.5.30)' can't be established.
+          RSA key fingerprint is SHA256:v39PhjNp4F7HcQpwJmfNOYcC+ZZ3Yw8i1ICsL2mXUgg.
+          This key is not known by any other names.
+          Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+          Warning: Permanently added '192.168.5.30' (RSA) to the list of known hosts.
+          ```
+
+   - **Using MobaXTerm**:
+        - Download and install MobaXterm.
+        - Select "Session" > "SSH" and enter the device's IP address.
+        - Confirm the host's authenticity if prompted.
+
+2. **SSH from Linux host**
+    - Open a terminal and run
+        ```shell
+        $ ssh -o HostKeyAlgorithms=ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa username@<device_ip>
+        ```
+        For example:
+        ```shell
+        $ ssh -o HostKeyAlgorithms=ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa root@192.168.5.30
+        ```
+    - Type `yes` to confirm the host's authenticity when prompted.
+
+#### SCP (Secure Copy)
+
+To transfer files securely between local and remote systems, you can use SCP from both Windows and Linux.
+
+1. **SCP from Windows host**
+   - **Using Git Bash**:
+     - Install Git for Windows if you haven't already.
+     - Use the following command:
+       ```shell
+       $ scp -o HostKeyAlgorithms=ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa <local_file> username@<device_ip>:<remote_path>
+       ```
+       For example:
+       ```shell
+       $ scp -o HostKeyAlgorithms=ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa hello-world root@192.168.5.30:home/root
+       ```
+     - Type `yes` to confirm the host's authenticity when prompted.
+
+   - **Using WinSCP**:
+     - Open WinSCP and select "New Session"
+     - Choose SCP as protocol then enter the remote device's IP address and the user name.
+     - Click "Login" and choose yes to confirm the host's authenticity when prompted.
+     - Drag and drop files between your local machine (Left) and the target board (Right) to transfer.
+
+2. **SCP from Linux host**
+   - Use the following command:
+      ```shell
+      $ scp -o HostKeyAlgorithms=ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa <local_file> username@<device_ip>:<remote_path>
+      ```
+     For example:
+      ```shell
+      $ scp -o HostKeyAlgorithms=ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa hello-world root@192.168.5.30:home/root
+      ```
+   - Type `yes` to confirm the host's authenticity when prompted.
+
+#### Using OpenSSH
+
+OpenSSH is a widely-used, full-featured SSH implementation that provides encrypted communication between hosts. It supports advanced authentication methods and secure remote administration, making it ideal for robust network security.
+
+##### Switching from Dropbear to OpenSSH
+
+As mentioned, by default, the board uses Dropbear SSH. If you need to switch from Dropbear to OpenSSH, follow these steps to modify the local.conf:
+- Step 1: Edit the local.conf file in Yocto build configuration
+- Step 2: Uncomment the following lines in the local.conf
+
+  ```shell
+  #IMAGE_FEATURES_remove = "ssh-server-dropbear" 
+  #IMAGE_FEATURES_append = "ssh-server-openssh"
+  ```
+  This will remove Dropbear and enable OpenSSH for the board.
+
+- Step 3: Rebuild and deploy the image to apply the changes.
+
+##### Using OpenSSH
+
+By default, the board supports both password and key-based authentication. If you prefer to enforce SSH key-based login for enhanced security, follow these steps to switch to key-based authentication:
+
+Once OpenSSH is installed, you can generate SSH keys for secure authentication:
+
+- Step 1: Generate an SSH key pair on your local machine, run the following command to generate a secure SSH key pair:
+
+  ```shell
+  $ ssh-keygen -t rsa -b 4096
+  ```
+
+  - Step 2: Copying an SSH public Key to the board using SSH, transfer your public key to the board with this command:
+
+  ```shell
+  $ cat ~/.ssh/id_rsa.pub | ssh username@remote_host "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
+  ```
+  For example:
+
+  ```shell
+  $ cat ~/.ssh/id_rsa.pub | ssh root@192.168.5.30 "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
+  ```
+
+- Step 3: Authenticate using SSH keys:
+
+  ```shell
+  $ ssh root@192.168.5.30
+  ```
+
+  If this is your first time connecting to this host (if you used the last method above), you may see something like this:
+
+  ```shell
+  $ The authenticity of host 192.169.5.30 (192.168.5.30)' can't be established.
+  ED25519 key fingerprint is SHA256:esQPI0Ip9HZH9A6dvTsA9+k7eLjT4sqzpiF7znl0tyw.
+  This key is not known by any other names
+  Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+  ```
+
+  This means that your local computer does not recognize the remote host. Type yes and then press ENTER to continue.
+
+- Step 4: Disable password authentication: If you were able to login to your account using SSH without a password, you have successfully configured SSH key-based authentication to your account. However, your password-based authentication mechanism is still active, meaning that your server is still exposed to brute-force attacks.
+
+  Once the SSH connection is established, open the SSH daemon's configuration file:
+
+  ```shell
+  $ vi /etc/ssh/sshd_config
+  ```
+
+  Inside the file, search for a directive called PasswordAuthentication. This may be commented out. Uncomment the line by removing any # at the beginning of the line, and set the value to no. This will disable your ability to log in through SSH using account passwords: /etc/ssh/sshd
+
+- Step 5: Restart the SSH service to apply the changes:
+  ```shell
+  $ systemctl restart ssh
+  ```
