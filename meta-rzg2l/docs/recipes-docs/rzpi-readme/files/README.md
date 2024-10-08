@@ -13,6 +13,7 @@ This release provides the following features:
  - 40 IO expansion interface supported
  - On-board Wireless Modules enabled (only support for Wi-Fi)
  - On-board Audio Codec with Stereo Jack Analog Audio IO
+ - Generic USB Bluetooth framework supported
  - MIPI DSI enabled
  - MIPI CSI-2 enabled
  - Bootloader with U-Boot Fastboot UDP enabled.
@@ -64,10 +65,25 @@ Step 3: Build package
 Build the package by executing the following commands:
 ```
 $ cd ~/Yocto
-$ ./rzsbc_yocto.sh build
+$ IMAGE=<target_image> ./rzsbc_yocto.sh build
 ```
 
-**Please note that this build requires internet access and will take several hours.**
+<target_image>: the target Yocto build image. It can be one from the following table of supported images
+
+| Target Image               | Description                                                                                 |
+|----------------------------|---------------------------------------------------------------------------------------------|
+| core-image-minimal         | Minimal set of components                                                                   |
+| core-image-bsp             | Minimal set of components plus audio support and some useful tool                           |
+| core-image-weston          | Standard image with graphics support                                                        |
+| core-image-qt              | Enable Qt LGPL version                                                                      |
+| renesas-core-image-cli     | Renesas core image for deploying CLI apps based on core-image-bsp                           |
+| renesas-core-image-weston  | Renesas core image with Qt5 platform support (no demo apps) based on core-image-weston      |
+| renesas-quickboot-cli      | Renesas core image for Linux quickboot CLI                                                  |
+| renesas-quickboot-wayland  | Renesas core image for Linux quickboot with Wayland, QT support (no demo apps)              |
+
+**Note:**
+**(1) Please note that this build requires internet access and will take several hours.**
+**(2) If `IMAGE` is not set in the build command. The default image is `core-image-qt`.**
 
 Step 4: Collect the output
 
@@ -199,6 +215,8 @@ rzpi/
 28 directories, 92 files
 ```
 
+**The above structure is built using the target image `IMAGE=core-image-qt`. Other images will have the same structure.**
+
 ### eSDK
 
 The extensible SDK makes it easy to add new applications and libraries to an image, modify the source for an existing component, test changes on RZ/G2L-SBC, and ease integration into the rest of the OpenEmbedded Build System.
@@ -208,7 +226,7 @@ The eSDK build generates an installer, which you will use to install the eSDK on
 Running the build script with the following option to build eSDK:
 
 ```shell
-$ ./rzsbc_yocto.sh build-sdk
+$ IMAGE=<target_image> ./rzsbc_yocto.sh build-sdk
 ```
 
 The resulting eSDK installer will be located in `~/Yocto/yocto_rzsbc_board/build/tmp/deploy/sdk`.
@@ -222,7 +240,9 @@ poky-glibc-x86_64-core-image-qt-aarch64-rzpi-toolchain-ext-3.1.26.testdata.json
 poky-glibc-x86_64-core-image-qt-aarch64-rzpi-toolchain-ext-3.1.26.target.manifest
 ```
 
-**The SDK build may fail depending on the build environment. At that time, please run the build again after a period of time**
+**Note:**
+**(1) The SDK build may fail depending on the build environment. At that time, please run the build again after a period of time**
+**(2) The SDK result of the `ls` command is built using the target image `IMAGE=core-image-qt`. Other SDKs will be located in the same location `~/Yocto/yocto_rzsbc_board/build/tmp/deploy/sdk` but will have different names according to the target image.**
 
 #### Install eSDK on your host machine
 
@@ -689,6 +709,127 @@ Run the following to open Camera and preview the video on the screen.
 ```
 root@rzpi:~# gst-launch-1.0 v4l2src device=/dev/video0 ! videoconvert ! waylandsink
 ```
+
+### Generic USB Bluetooth framework
+
+The RZG2L-SBC supports the generic USB Bluetooth framework, which is back-ported from the Linux kernel mainline. TP-Link UB500 Bluetooth 5.0 Nano USB Adapter (Realtek chipset) has been tested and proven to work on the board.
+
+The following steps will guide how to enable the TP-Link UB500 adapter:
+
+- Step 1: Download the appropriate firmware for the TP-Link UB500 adapter and store it on the RZG2L-SBC. This will ensure it is loaded each time the board boots (one-time setup).
+
+```shell
+root@rzpi:~# mkdir -p /lib/firmware/rtl_bt
+root@rzpi:~# curl -s https://raw.githubusercontent.com/Realtek-OpenSource/android_hardware_realtek/rtk1395/bt/rtkbt/Firmware/BT/rtl8761b_fw -o /lib/firmware/rtl_bt/rtl8761bu_fw.bin
+```
+**Note:**
+**(1) Please make sure you have internet access before running the commands.**
+**(2) If the firmware is being downloaded for the first time, a reboot of the board is required to ensure the TP-Link UB500 adapter functions properly.**
+
+- Step 2: Verify whether the TP-Link UB500 adapter is properly attached.
+
+Run the following command to ensure that the system has recognized the TP-Link UB500 adapter:
+
+```shell
+root@rzpi:~# hciconfig hci0 -a
+hci0:   Type: Primary  Bus: USB
+        BD Address: E8:48:B8:C8:20:00  ACL MTU: 1021:5  SCO MTU: 255:11
+        UP RUNNING PSCAN
+        RX bytes:2264 acl:0 sco:0 events:211 errors:0
+        TX bytes:32795 acl:0 sco:0 commands:211 errors:0
+        Features: 0xff 0xff 0xff 0xfe 0xdb 0xfd 0x7b 0x87
+        Packet type: DM1 DM3 DM5 DH1 DH3 DH5 HV1 HV2 HV3
+        Link policy: RSWITCH HOLD SNIFF PARK
+        Link mode: SLAVE ACCEPT
+        Name: 'rzpi'
+        Class: 0x000000
+        Service Classes: Unspecified
+        Device Class: Miscellaneous,
+        HCI Version: 5.1 (0xa)  Revision: 0x9dc6
+        LMP Version: 5.1 (0xa)  Subversion: 0xd922
+        Manufacturer: Realtek Semiconductor Corporation (93)
+```
+
+The TP-Link UB500 adapter is now ready to connect.
+
+- Step 3: Connect Bluetooth Device
+
+Use `bluetoothctl` to connect Bluetooth Device:
+
+```Shell
+root@rzpi:~# bluetoothctl
+[bluetooth]# power on
+[bluetooth]# pairable on
+[bluetooth]# agent on
+[bluetooth]# default-agent
+```
+
+Set the RZG2L-SBC to be discoverable by other Bluetooth devices:
+
+```Shell
+[bluetooth]# discoverable on
+```
+
+Enable and disable scan function:
+
+```Shell
+[bluetooth]# scan on
+[bluetooth]# scan off
+```
+
+Pair and connect the device:
+
+```Shell
+[bluetooth]# pair FC:02:96:A5:80:97
+[bluetooth]# trust FC:02:96:A5:80:97
+[bluetooth]# connect FC:02:96:A5:80:97
+```
+
+`FC:02:96:A5:80:97` is the address of the Bluetooth device. Please change it to match your device’s address.
+
+Exit `bluetoothctl`.
+
+```Shell
+[Mi Sports BT]# quit
+```
+
+#### Send files over Bluetooth
+
+To share files between the RZG2L-SBC and the target Bluetooth device, run the obexctl daemon and connect:
+
+```Shell
+root@rzpi:~# export $(dbus-launch)
+root@rzpi:~# /usr/libexec/bluetooth/obexd -r /home/root -a -d & obexctl
+[1] 595
+[NEW] Client /org/bluez/obex
+[obex]#
+[obex]# connect FC:02:96:A5:80:97
+Attempting to connect to FC:02:96:A5:80:97
+[NEW] Session /org/bluez/obex/client/session0 [default]
+[NEW] ObjectPush /org/bluez/obex/client/session0
+Connection successful
+```
+
+`FC:02:96:A5:80:97` is the address of the Bluetooth device. Please change it to match your device’s address.
+
+Then, to send files, use `send` command while connected to the OBEX Object Push profile.
+
+```Shell
+[FC:02:96:A5:80:97]# send /boot/uEnv.txt
+Attempting to send /boot/uEnv.txt to /org/bluez/obex/client/session0
+[NEW] Transfer /org/bluez/obex/client/session0/transfer0
+Transfer /org/bluez/obex/client/session0/transfer0
+        Status: queued
+        Name: uEnv.txt
+        Size: 2069
+        Filename: /boot/uEnv.txt
+        Session: /org/bluez/obex/client/session0
+[CHG] Transfer /org/bluez/obex/client/session0/transfer0 Status: complete
+[DEL] Transfer /org/bluez/obex/client/session0/transfer0
+[FC:02:96:A5:80:97]# quit
+```
+
+In this example, a text file names `uEnv.txt` which is located at `/boot` is sent to the target Bluetooth device.
 
 ### Chromium Web browser application
 

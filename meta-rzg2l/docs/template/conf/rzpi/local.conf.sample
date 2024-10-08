@@ -282,9 +282,6 @@ DISTRO_FEATURES_append = " wayland"
 IMAGE_FEATURES_remove = "ssh-server-dropbear"
 IMAGE_FEATURES_append = "ssh-server-openssh"
 
-# Add qt5 demonstration to core-image-qt or not
-QT_DEMO = "1"
-
 # Select CIP Core packages by switching betwwen Buster and Bullseye.
 #  - Buster (default)  : build all supported Debian 10 Buster recipes
 #  - Bullseye          : build all supported Debian 11 Bullseye recipes
@@ -325,98 +322,21 @@ DISTRO_FEATURES_append = "${@oe.utils.conditional('VIRTUALIZATION_CHECK', 'True'
 # Remove dnf package which causes high CPU workload
 PACKAGE_INSTALL_remove = " dnf "
 
-# Rootfs RZ SBC board
-IMAGE_INSTALL_append = " mmc-utils mtd-utils memtester minicom ca-certificates openssl dtc iputils ppp traceroute"
+# Optimized Linux Kernel Support: Build with optimizations for the Linux kernel
+# Default: 0 - Disable
+# Set to : 1 - Enable
+OPTIMIZE_KERN = "0"
 
-IMAGE_INSTALL_append = " \
-				net-tools \
-				phytool \
-				lwb-fcc-firmware \
-				kernel-module-lwb-backports-summit \
-				summit-supplicant-lwb \
-				rng-tools \
-				htop \
-				iw \
-				ethtool \
-				iperf3 \
-				tcpdump \
-				apt \
-				dpkg \
-			"
-                                           
-                                           
+# Summit wireless framework provider
 PREFERRED_RPROVIDER_wpa-supplicant = "summit-supplicant-lwb"
 PREFERRED_RPROVIDER_wpa-supplicant-cli = "summit-supplicant-lwb"
 PREFERRED_RPROVIDER_wpa-supplicant-passphrase = "summit-supplicant-lwb"
 PREFERRED_RPROVIDER_wireless-regdb-static = "wireless-regdb"
 
-# Support wic image
-IMAGE_FSTYPES_append = " wic "
-
-# Remove unused rootfs types
-IMAGE_FSTYPES_remove = " tar.gz ext4 "
-
-# Linux bootloader flashing utility
-EXTRA_IMAGEDEPENDS += " bootloader-flasher-linux "
-
-# Windows bootloader flashing utility
-EXTRA_IMAGEDEPENDS += " bootloader-flasher-win "
-
-# Windows bootloader flashing readme
-EXTRA_IMAGEDEPENDS += " bootloader-flasher-readme "
-
-# Linux sd-creator-linux
-EXTRA_IMAGEDEPENDS += " sd-creator-linux "
-
-# Windows sd-creator-win
-EXTRA_IMAGEDEPENDS += " sd-creator-win "
-
-# sd-creator-readme
-EXTRA_IMAGEDEPENDS += " sd-creator-readme "
-
-# Linux uload-bootloader-linux
-EXTRA_IMAGEDEPENDS += " uload-bootloader-linux "
-
-# Windows uload-bootloader-win
-EXTRA_IMAGEDEPENDS += " uload-bootloader-win "
-
-# uload-bootloader-readme
-EXTRA_IMAGEDEPENDS += " uload-bootloader-readme "
-
-# uEnv.txt
-IMAGE_INSTALL_append = " uenv "
-
-# host-readme
-EXTRA_IMAGEDEPENDS += " host-readme "
-
-# target-readme
-EXTRA_IMAGEDEPENDS += " target-readme "
-
-# Readme documentation
-EXTRA_IMAGEDEPENDS += " readme "
-EXTRA_IMAGEDEPENDS += " rzpi-docs "
-
-# Chromium web browser
-IMAGE_INSTALL_append = " chromium-ozone-wayland"
-IMAGE_INSTALL_append = " ntp"
-IMAGE_INSTALL_append = " ttf-sazanami-gothic ttf-sazanami-mincho "
-PREFERRED_VERSION_nodejs-native = "14.%"
-DISTRO_FEATURES_append = " h264enc_lib"
-PACKAGECONFIG_pn-chromium-ozone-wayland =" proprietary-codecs"
-
-# Add tkinter by default
-IMAGE_INSTALL_append = " python3-tkinter"
-PACKAGECONFIG_append_pn-python3 = " tk"
-
-# Ignore vte-local-en-gb package because it has incompatible license GPL-3.0
-BAD_RECOMMENDATIONS += " vte-locale-en-gb"
-
-# Pre-installed Python libraries
-IMAGE_INSTALL_append = " python3-numpy"
-IMAGE_INSTALL_append = " python3-pandas"
-IMAGE_INSTALL_append = " python3-pyserial"
-IMAGE_INSTALL_append = " python3-matplotlib"
-IMAGE_INSTALL_append = " python3-pip"
-
-# Add default apt configuration sources
-IMAGE_INSTALL_append = " apt-sources-config "
+# Uncomment the below configurations to enable Chromium web browser
+#IMAGE_INSTALL_append = " chromium-ozone-wayland"
+#IMAGE_INSTALL_append = " ntp"
+#IMAGE_INSTALL_append = " ttf-sazanami-gothic ttf-sazanami-mincho "
+#PREFERRED_VERSION_nodejs-native = "14.%"
+#DISTRO_FEATURES_append = " h264enc_lib"
+#PACKAGECONFIG_pn-chromium-ozone-wayland =" proprietary-codecs"
