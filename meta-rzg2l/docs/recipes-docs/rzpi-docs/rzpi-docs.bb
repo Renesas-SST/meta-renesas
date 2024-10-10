@@ -8,7 +8,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 S = "${WORKDIR}"
 
 SRC_URI = " \
-    file://r12uz0158eu0101-rz-g2l-sbc-single-board-computer.pdf \
+    file://r12uz0158eu0102-rz-g2l-sbc-single-board-computer.pdf \
     file://RZG2L-SBC_Evaluation_license.pdf \
     file://Disclaimer051.pdf \
     file://Disclaimer052.pdf \
@@ -18,7 +18,7 @@ FILES_${PN} += "/util"
 
 do_install () {
     install -d ${D}/util
-    install -m 0644 ${S}/r12uz0158eu0101-rz-g2l-sbc-single-board-computer.pdf ${D}/util/r12uz0158eu0101-rz-g2l-sbc-single-board-computer.pdf
+    install -m 0644 ${S}/r12uz0158eu0102-rz-g2l-sbc-single-board-computer.pdf ${D}/util/r12uz0158eu0102-rz-g2l-sbc-single-board-computer.pdf
     install -m 0644 ${S}/RZG2L-SBC_Evaluation_license.pdf ${D}/util/RZG2L-SBC_Evaluation_license.pdf
 
     # Disclaimer files
@@ -32,7 +32,7 @@ addtask deploy after do_install
 do_deploy () {
     # Install the user guide into the build folder
     install -d ${DEPLOYDIR}/
-    install -m 0644 ${D}/util/r12uz0158eu0101-rz-g2l-sbc-single-board-computer.pdf ${DEPLOYDIR}/
+    install -m 0644 ${D}/util/r12uz0158eu0102-rz-g2l-sbc-single-board-computer.pdf ${DEPLOYDIR}/
     install -m 0644 ${D}/util/RZG2L-SBC_Evaluation_license.pdf ${DEPLOYDIR}/
 
     # Install license files into the license folder in the build
@@ -43,4 +43,3 @@ do_deploy () {
 
 COMPATIBLE_MACHINE = "(rzpi)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
-
