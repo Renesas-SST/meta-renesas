@@ -25,4 +25,13 @@ IMAGE_ROOTFS_EXTRA_SPACE = "1048576"
 # The alignment of the root filesystem image in kilobytes
 IMAGE_ROOTFS_ALIGNMENT = "16"
 
-DEPENDS += " linux-yocto"
+# Move images to boot partition
+IMAGE_BOOT_FILES:rzg2l-sbc = " \
+    target/images/dtbs/rzpi.dtb;dtb/renesas/rzpi.dtb \
+    target/images/dtbs/overlays/*;dtb/renesas/overlays/ \
+    target/images/Image;Image \
+    target/env/uEnv.txt;uEnv.txt \
+    target/env/Readme.md;Readme.md \
+"
+
+DEPENDS += " linux-yocto uenv"
