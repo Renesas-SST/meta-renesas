@@ -288,6 +288,7 @@ PACKAGECONFIG:append:pn-qemu-system-native = " sdl"
 CONF_VERSION = "2"
 
 IMAGE_FSTYPES:append = " tar.bz2"
+IMAGE_FSTYPES:append = " wic"
 
 # Override the oldest kernel
 OLDEST_KERNEL = "5.10"

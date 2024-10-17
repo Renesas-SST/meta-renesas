@@ -17,4 +17,12 @@ IMAGE_INSTALL:append = " \
 # Install uEnv.txt to /boot
 IMAGE_INSTALL:append:rzg2l-sbc = " uenv"
 
+WKS_FILE = "rzg2l-sbc-image-bootpart-mmc0.wks"
+
+# Rootfs partition space created in Kbytes
+IMAGE_ROOTFS_EXTRA_SPACE = "1048576"
+
+# The alignment of the root filesystem image in kilobytes
+IMAGE_ROOTFS_ALIGNMENT = "16"
+
 DEPENDS += " linux-yocto"
