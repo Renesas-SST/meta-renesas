@@ -9,3 +9,12 @@ require include/core-image-renesas-qt.inc
 SUMMARY = "Renesas core image for Linux quickboot with Wayland, QT support"
 
 IMAGE_INSTALL_append = " packagegroup-qt5 "
+
+IMAGE_FEATURES += " \
+    dev-pkgs tools-sdk \
+    tools-debug debug-tweaks \
+"
+
+ROOTFS_POSTPROCESS_COMMAND += ' sed_service_sytemd_quickboot;'
+
+ROOTFS_POSTPROCESS_COMMAND += ' optimize_service_sytemd_wayland;'
