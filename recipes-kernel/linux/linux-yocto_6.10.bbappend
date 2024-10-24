@@ -17,10 +17,10 @@ SRC_URI:append:rzg2l-sbc =	"\
 					file://sii.cfg		\
 					file://laird.cfg	\
 					file://touch.cfg	\
+					file://peripherals.cfg	\
 				"
 
-KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg"
-KMACHINE:rzg2l-sbc ?= "genericarm64"
+KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg peripherals.cfg"
 
 KCONFIG_MODE:rzg2l-sbc = "alldefconfig"
 #KMACHINE:rzg2l-sbc ?= "rzg2l-sbc"
@@ -31,6 +31,4 @@ KBUILD_DEFCONFIG:rzg2l-sbc ?= "defconfig"
 
 SRCREV_machine:rzg2l-sbc ?= "${AUTOREV}"
 
-
-LINUX_VERSION:rzg2l-sbc = "6.10.13"
-
+LINUX_VERSION:rzg2l-sbc = "6.10.14"
