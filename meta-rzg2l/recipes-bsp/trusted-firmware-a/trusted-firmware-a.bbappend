@@ -87,7 +87,7 @@ SRC_URI = " \
         git://github.com/Renesas-SST/rz-atf.git;branch=${BRANCH};protocol=https \
         git://github.com/ARMmbed/mbedtls.git;branch=${BRANCH_mbedtls};name=mbedtls;destsuffix=mbedtls \
 "
-BRANCH = "dunfell/rz-sbc"
+BRANCH = "dunfell/rz-sbc-distro#1"
 SRCREV = "${AUTOREV}"
 PV = "v2.9+git"
 
