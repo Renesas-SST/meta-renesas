@@ -3,8 +3,13 @@
 COMPATIBLE_MACHINE:rzg2l-sbc = "(rzg2l-sbc)"
 COMPATIBLE_MACHINE = "^(aarch64|rzg2l-sbc)$"
 
-#inherit kernel
+# Tell the kernel class to install the DTBs to /boot/dtb
+KERNEL_DTBDEST = "${KERNEL_IMAGEDEST}/dtb"
+KERNEL_DTBVENDORED = "1"
+
+inherit kernel
 #require recipes-kernel/linux/linux-yocto-inc
+inherit kernel-devicetree
 
 KBRANCH:rzg2l-sbc  = "v6.10/standard/base"
 
@@ -18,9 +23,16 @@ SRC_URI:append:rzg2l-sbc =	"\
 					file://laird.cfg	\
 					file://touch.cfg	\
 					file://peripherals.cfg	\
+					file://da7219.cfg \
+					file://drm_panel_ili9881c.cfg \
+					file://ov5640.cfg \
 				"
+# Apply patches for novtech board
+SRC_URI:append:rzg2l-sbc = "\
+                    file://dts-patches/0001-arm64-dts-renesas-Refactor-RZ-SBC-device-tree-and-re.patch \
+                "
 
-KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg peripherals.cfg"
+KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg peripherals.cfg da7219.cfg drm_panel_ili9881c.cfg ov5640.cfg"
 
 KCONFIG_MODE:rzg2l-sbc = "alldefconfig"
 #KMACHINE:rzg2l-sbc ?= "rzg2l-sbc"
@@ -29,6 +41,33 @@ KBUILD_DEFCONFIG:rzg2l-sbc ?= "defconfig"
 # Use the following to specify an in-tree defconfig.
 # KBUILD_DEFCONFIG:rzg2l-sbc = "rzpi"
 
-SRCREV_machine:rzg2l-sbc ?= "${AUTOREV}"
+# Supported device tree and device tree overlays
+KERNEL_DEVICETREE:rzg2l-sbc = " \
+        renesas/rzpi.dtb \
+"
 
-LINUX_VERSION:rzg2l-sbc = "6.10.14"
+KERNEL_DEVICETREE:append:rzg2l-sbc = " \
+        renesas/overlays/rzpi-can.dtbo \
+        renesas/overlays/rzpi-ext-i2c.dtbo \
+        renesas/overlays/rzpi-ext-spi.dtbo \
+        renesas/overlays/rzpi-dsi.dtbo \
+        renesas/overlays/rzpi-ov5640.dtbo \
+"
+
+# Override the dtc flags to support dtbo build in kernel-devicetree.bbclass
+KERNEL_DTC_FLAGS = "-@"
+
+# Install overlays folder and kernel images to target/images in build folder
+do_deploy:append:rzg2l-sbc(){
+    install -d ${DEPLOYDIR}/target/images/dtbs/overlays
+    install -m 0644 ${B}/arch/arm64/boot/dts/renesas/overlays/* ${DEPLOYDIR}/target/images/dtbs/overlays
+
+    install -m 0644 ${B}/arch/arm64/boot/Image ${DEPLOYDIR}/target/images/${KERNEL_IMAGETYPE}-${KERNEL_ARTIFACT_NAME}.bin
+    ln -sf ${KERNEL_IMAGETYPE}-${KERNEL_ARTIFACT_NAME}.bin ${DEPLOYDIR}/target/images/Image
+
+    install -m 0644 ${B}/arch/arm64/boot/dts/renesas/rzpi.dtb ${DEPLOYDIR}/target/images/dtbs/rzpi-${KERNEL_DTB_NAME}.$dtb_ext
+    ln -sf rzpi-${KERNEL_DTB_NAME}.$dtb_ext ${DEPLOYDIR}/target/images/dtbs/rzpi.dtb
+}
+
+SRCREV_machine:rzg2l-sbc ?= "${AUTOREV}"
+LINUX_VERSION:rzg2l-sbc ?= "6.10.14"

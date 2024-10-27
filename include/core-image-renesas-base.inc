@@ -1,5 +1,7 @@
 # Basic packages/tools
 IMAGE_INSTALL:append = " \
+    kernel-image \
+    kernel-devicetree \
     bash \
     coreutils \
     can-utils \
