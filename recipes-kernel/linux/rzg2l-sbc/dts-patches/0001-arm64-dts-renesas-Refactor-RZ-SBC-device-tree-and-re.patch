@@ -1,0 +1,1519 @@
+From d63aaa66f31f3fb38d91a0a93a393ae15fbdc1e5 Mon Sep 17 00:00:00 2001
+From: Vu Dang <vu.dang.te@renesas.com>
+Date: Thu, 23 May 2024 21:14:33 +0700
+Subject: [PATCH] arm64: dts: renesas: Refactor RZ SBC device tree and related
+ changes
+
+This commit combines changes from multiple commits:
+    - The RZ SBC device tree is refactored from Linux version 5.10.184.
+    - Add dts for the Novtech rzpi a.k.a Renesas rz-sbc and overlays.
+    - Update Makefile for dtb and dtbo build.
+
+Notes:
+    - Uses Yocto .cfg to add configurations, leaving the default
+      defconfig unchanged.
+    - Audio functionality is not included.
+    - DSI work is on-going.
+
+Upstream-Status: Pending
+
+Signed-off-by: Tien Nguyen <tien.nguyen.uh@renesas.com>
+---
+ Makefile                                      |   1 +
+ arch/arm64/boot/dts/renesas/Makefile          |   4 +
+ arch/arm64/boot/dts/renesas/overlays/Makefile |  10 +
+ .../boot/dts/renesas/overlays/rzpi-can.dts    |  41 +
+ .../boot/dts/renesas/overlays/rzpi-dsi.dts    |  23 +
+ .../dts/renesas/overlays/rzpi-ext-i2c.dts     |  24 +
+ .../dts/renesas/overlays/rzpi-ext-spi.dts     |  36 +
+ .../boot/dts/renesas/overlays/rzpi-ov5640.dts |  15 +
+ arch/arm64/boot/dts/renesas/r9a07g044.dtsi    | 274 ++++++
+ arch/arm64/boot/dts/renesas/rzpi.dts          | 850 ++++++++++++++++++
+ scripts/Makefile.lib                          |   9 +
+ sound/soc/codecs/Kconfig                      |   2 +-
+ sound/soc/codecs/da7219.c                     |  48 +
+ 13 files changed, 1336 insertions(+), 1 deletion(-)
+ create mode 100644 arch/arm64/boot/dts/renesas/overlays/Makefile
+ create mode 100644 arch/arm64/boot/dts/renesas/overlays/rzpi-can.dts
+ create mode 100644 arch/arm64/boot/dts/renesas/overlays/rzpi-dsi.dts
+ create mode 100644 arch/arm64/boot/dts/renesas/overlays/rzpi-ext-i2c.dts
+ create mode 100644 arch/arm64/boot/dts/renesas/overlays/rzpi-ext-spi.dts
+ create mode 100755 arch/arm64/boot/dts/renesas/overlays/rzpi-ov5640.dts
+ create mode 100644 arch/arm64/boot/dts/renesas/rzpi.dts
+
+diff --git a/Makefile b/Makefile
+index a345e919091f..6181e477103f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1947,6 +1947,7 @@ clean: $(clean-dirs)
+ 		-o -name '*.dtb.S' -o -name '*.dtbo.S' \
+ 		-o -name '*.dt.yaml' -o -name 'dtbs-list' \
+ 		-o -name '*.dwo' -o -name '*.lst' \
++		-o -name '*.dtbo' \
+ 		-o -name '*.su' -o -name '*.mod' \
+ 		-o -name '.*.d' -o -name '.*.tmp' -o -name '*.mod.c' \
+ 		-o -name '*.lex.c' -o -name '*.tab.[ch]' \
+diff --git a/arch/arm64/boot/dts/renesas/Makefile b/arch/arm64/boot/dts/renesas/Makefile
+index fbd214a1a638..f1461b3281e1 100644
+--- a/arch/arm64/boot/dts/renesas/Makefile
++++ b/arch/arm64/boot/dts/renesas/Makefile
+@@ -128,6 +128,10 @@ dtb-$(CONFIG_ARCH_R9A07G044) += r9a07g044l2-smarc-cru-csi-ov5645.dtbo
+ r9a07g044l2-smarc-cru-csi-ov5645-dtbs := r9a07g044l2-smarc.dtb r9a07g044l2-smarc-cru-csi-ov5645.dtbo
+ dtb-$(CONFIG_ARCH_R9A07G044) += r9a07g044l2-smarc-cru-csi-ov5645.dtb
+ 
++DTC_FLAGS_rzpi += -@
++dtb-$(CONFIG_ARCH_R9A07G044) += rzpi.dtb
++subdir-$(CONFIG_ARCH_R9A07G044) += overlays
++
+ dtb-$(CONFIG_ARCH_R9A07G054) += r9a07g054l2-smarc.dtb
+ dtb-$(CONFIG_ARCH_R9A07G054) += r9a07g054l2-smarc-cru-csi-ov5645.dtbo
+ r9a07g054l2-smarc-cru-csi-ov5645-dtbs := r9a07g054l2-smarc.dtb r9a07g054l2-smarc-cru-csi-ov5645.dtbo
+diff --git a/arch/arm64/boot/dts/renesas/overlays/Makefile b/arch/arm64/boot/dts/renesas/overlays/Makefile
+new file mode 100644
+index 000000000000..e6a0d59e40ce
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/overlays/Makefile
+@@ -0,0 +1,10 @@
++# SPDX-License-Identifier: GPL-2.0
++
++# required for overlay support
++DTC_FLAGS += -@
++
++dtb-y += rzpi-ext-i2c.dtbo
++dtb-y += rzpi-ext-spi.dtbo
++dtb-y += rzpi-can.dtbo
++dtb-y += rzpi-ov5640.dtbo
++dtb-y += rzpi-dsi.dtbo
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzpi-can.dts b/arch/arm64/boot/dts/renesas/overlays/rzpi-can.dts
+new file mode 100644
+index 000000000000..e61fd7ca2831
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/overlays/rzpi-can.dts
+@@ -0,0 +1,41 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2023 Renesas Electronics Corporation
++ */
++
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
++
++/* 40-pin extended GPIO, expanded into UART, SPI, I2C, PWM and other interfaces */
++&pinctrl {
++	can0_pins: can0 {
++		pinmux = <RZG2L_PORT_PINMUX(42, 1, 3)>, /* TX */
++			 <RZG2L_PORT_PINMUX(11, 0, 2)>; /* RX */
++	};
++
++	can1_pins: can1 {
++		pinmux = <RZG2L_PORT_PINMUX(46, 0, 3)>, /* TX */
++			 <RZG2L_PORT_PINMUX(46, 1, 3)>; /* RX */
++	};
++};
++
++&canfd {
++	pinctrl-0 = <&can0_pins>, <&can1_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	/* Default set as Classical CAN(CAN 2.0) mode, remove to enable CAN FD mode */
++	renesas,no-can-fd;
++
++	/* CAN on 40pin header without transceiver */
++	channel0 {
++		status = "okay";
++	};
++
++	/* CAN on J18 with transceiver */
++	channel1 {
++		status = "okay";
++	};
++};
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzpi-dsi.dts b/arch/arm64/boot/dts/renesas/overlays/rzpi-dsi.dts
+new file mode 100644
+index 000000000000..b4ba27c1854e
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/overlays/rzpi-dsi.dts
+@@ -0,0 +1,23 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2023 Renesas Electronics Corporation
++ */
++
++/dts-v1/;
++/plugin/;
++
++&dsi {
++	status = "okay";
++};
++
++&mipi_panel {
++	status = "okay";
++};
++
++&gpt5 {
++	status = "okay";
++};
++
++&backlight {
++	status = "okay";
++};
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzpi-ext-i2c.dts b/arch/arm64/boot/dts/renesas/overlays/rzpi-ext-i2c.dts
+new file mode 100644
+index 000000000000..9de37b59f9f8
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/overlays/rzpi-ext-i2c.dts
+@@ -0,0 +1,24 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2023 Renesas Electronics Corporation
++ */
++
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
++
++/* 40-pin extended GPIO, expanded into UART, SPI, I2C, PWM and other interfaces */
++&pinctrl {
++	i2c3_pins: i2c3 {
++		pinmux = <RZG2L_PORT_PINMUX(46, 2, 4)>, /* SDA */
++			 <RZG2L_PORT_PINMUX(46, 3, 4)>; /* SCL */
++	};
++};
++
++&i2c3 {
++	pinctrl-0 = <&i2c3_pins>;
++	pinctrl-names = "default";
++	clock-frequency = <400000>;
++	status = "okay";
++};
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzpi-ext-spi.dts b/arch/arm64/boot/dts/renesas/overlays/rzpi-ext-spi.dts
+new file mode 100644
+index 000000000000..a7ffbae2f444
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/overlays/rzpi-ext-spi.dts
+@@ -0,0 +1,36 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2023 Renesas Electronics Corporation
++ */
++
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
++
++/* 40-pin extended GPIO, expanded into UART, SPI, I2C, PWM and other interfaces */
++&pinctrl {
++	spi0_pins: spi0 {
++		pinmux = <RZG2L_PORT_PINMUX(43, 0, 1)>, /* CK */
++			 <RZG2L_PORT_PINMUX(43, 1, 1)>, /* MOSI */
++			 <RZG2L_PORT_PINMUX(43, 2, 1)>, /* MISO */
++			 <RZG2L_PORT_PINMUX(43, 3, 1)>; /* SSL */
++	};
++};
++
++&spi0 {
++	pinctrl-0 = <&spi0_pins>;
++	pinctrl-names = "default";
++	dmas = <&dmac 0x2e95>, <&dmac 0x2e96>;
++	dma-names = "tx", "rx";
++	status = "okay";
++
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	spidev@0 {
++		compatible = "semtech,sx1301";
++		reg = <0>;
++		spi-max-frequency = <2000000>;
++	};
++};
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzpi-ov5640.dts b/arch/arm64/boot/dts/renesas/overlays/rzpi-ov5640.dts
+new file mode 100755
+index 000000000000..5226d431e0e0
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/overlays/rzpi-ov5640.dts
+@@ -0,0 +1,15 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2023 Renesas Electronics Corporation
++ */
++
++/dts-v1/;
++/plugin/;
++
++&csi2 {
++	status = "okay";
++};
++
++&ov5640 {
++	status = "okay";
++};
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044.dtsi b/arch/arm64/boot/dts/renesas/r9a07g044.dtsi
+index 960537e401f4..2069ecc15117 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g044.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g044.dtsi
+@@ -496,6 +496,46 @@ sci1: serial@1004d400 {
+ 			resets = <&cpg R9A07G044_SCI1_RST>;
+ 			status = "disabled";
+ 		};
++    
++		poega: poega@10048800 {
++			compatible = "renesas,poeg-r9a07g044";
++			reg = <0 0x10048800 0 0x04>;
++			interrupts = <GIC_SPI 322 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G044_POEG_A_CLKP>;
++			power-domains = <&cpg>;
++			resets =  <&cpg R9A07G044_POEG_A_RST>;
++			status = "disabled";
++		};
++
++		poegb: poegb@10048C00 {
++			compatible = "renesas,poeg-r9a07g044";
++			reg = <0 0x10048C00 0 0x04>;
++			interrupts = <GIC_SPI 323 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G044_POEG_B_CLKP>;
++			power-domains = <&cpg>;
++			resets =  <&cpg R9A07G044_POEG_B_RST>;
++			status = "disabled";
++		};
++
++		poegc: poegc@10049000 {
++			compatible = "renesas,poeg-r9a07g044";
++			reg = <0 0x10049000 0 0x04>;
++			interrupts = <GIC_SPI 324 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G044_POEG_C_CLKP>;
++			power-domains = <&cpg>;
++			resets =  <&cpg R9A07G044_POEG_C_RST>;
++			status = "disabled";
++		};
++
++		poegd: poegd@10049400 {
++			compatible = "renesas,poeg-r9a07g044";
++			reg = <0 0x10049400 0 0x04>;
++			interrupts = <GIC_SPI 325 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G044_POEG_D_CLKP>;
++			power-domains = <&cpg>;
++			resets =  <&cpg R9A07G044_POEG_D_RST>;
++			status = "disabled";
++		};
+ 
+ 		canfd: can@10050000 {
+ 			compatible = "renesas,r9a07g044-canfd", "renesas,rzg2l-canfd";
+@@ -688,6 +728,225 @@ sbc: spi@10060000 {
+ 			status = "disabled";
+ 		};
+ 
++		gpt0: gpt@10048000 {
++			compatible = "renesas,gpt-r9a07g044";
++			reg = <0 0x10048000 0 0xa4>;
++			#pwm-cells = <2>;
++			interrupts = <GIC_SPI 218 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 219 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 220 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 221 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 222 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 223 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 224 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 225 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 226 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 227 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 228 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 229 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 230 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "gtcia", "gtcib", "gtcic", "gtcid",
++				"gtcie", "gtcif", "gtciada", "gtciadb",
++				"gtciv", "gtciu", "gtcih", "gtcil",
++				"gtdei";
++			clocks = <&cpg CPG_MOD R9A07G044_GPT_PCLK>;
++			power-domains = <&cpg>;
++			resets =  <&cpg R9A07G044_GPT_RST_C>;
++			status = "disabled";
++		};
++
++		gpt1: gpt@10048100 {
++			compatible = "renesas,gpt-r9a07g044";
++			reg = <0 0x10048100 0 0xa4>;
++			#pwm-cells = <2>;
++			interrupts = <GIC_SPI 231 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 232 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 233 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 234 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 235 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 236 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 237 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 238 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 239 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 240 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 241 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 242 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 243 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "gtcia", "gtcib", "gtcic", "gtcid",
++				"gtcie", "gtcif", "gtciada", "gtciadb",
++				"gtciv", "gtciu", "gtcih", "gtcil",
++				"gtdei";
++			clocks = <&cpg CPG_MOD R9A07G044_GPT_PCLK>;
++			power-domains = <&cpg>;
++			resets =  <&cpg R9A07G044_GPT_RST_C>;
++			status = "disabled";
++		};
++
++		gpt2: gpt@10048200 {
++			compatible = "renesas,gpt-r9a07g044";
++			reg = <0 0x10048200 0 0xa4>;
++			#pwm-cells = <2>;
++			interrupts = <GIC_SPI 244 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 245 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 246 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 247 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 248 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 249 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 250 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 251 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 252 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 253 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 254 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 255 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 256 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "gtcia", "gtcib", "gtcic", "gtcid",
++				"gtcie", "gtcif", "gtciada", "gtciadb",
++				"gtciv", "gtciu", "gtcih", "gtcil",
++				"gtdei";
++			clocks = <&cpg CPG_MOD R9A07G044_GPT_PCLK>;
++			power-domains = <&cpg>;
++			resets =  <&cpg R9A07G044_GPT_RST_C>;
++			status = "disabled";
++		};
++
++
++		gpt3: gpt@10048300 {
++			compatible = "renesas,gpt-r9a07g044";
++			reg = <0 0x10048300 0 0xa4>;
++			#pwm-cells = <2>;
++			interrupts = <GIC_SPI 257 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 258 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 259 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 260 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 261 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 262 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 263 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 264 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 265 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 266 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 267 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 268 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 269 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "gtcia", "gtcib", "gtcic", "gtcid",
++				"gtcie", "gtcif", "gtciada", "gtciadb",
++				"gtciv", "gtciu", "gtcih", "gtcil",
++				"gtdei";
++			clocks = <&cpg CPG_MOD R9A07G044_GPT_PCLK>;
++			power-domains = <&cpg>;
++			resets =  <&cpg R9A07G044_GPT_RST_C>;
++			status = "disabled";
++		};
++
++		gpt4: gpt@10048400 {
++			compatible = "renesas,gpt-r9a07g044";
++			reg = <0 0x10048400 0 0xa4>;
++			#pwm-cells = <2>;
++			interrupts = <GIC_SPI 270 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 271 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 272 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 273 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 274 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 275 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 276 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 277 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 278 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 279 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 280 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 281 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 282 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "gtcia", "gtcib", "gtcic", "gtcid",
++				"gtcie", "gtcif", "gtciada", "gtciadb",
++				"gtciv", "gtciu", "gtcih", "gtcil",
++				"gtdei";
++			clocks = <&cpg CPG_MOD R9A07G044_GPT_PCLK>;
++			power-domains = <&cpg>;
++			resets =  <&cpg R9A07G044_GPT_RST_C>;
++			status = "disabled";
++		};
++
++
++		gpt5: gpt@10048500 {
++			compatible = "renesas,gpt-r9a07g044";
++			reg = <0 0x10048500 0 0xa4>;
++			#pwm-cells = <2>;
++			interrupts = <GIC_SPI 283 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 284 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 285 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 286 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 287 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 288 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 289 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 290 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 291 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 292 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 293 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 294 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 295 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "gtcia", "gtcib", "gtcic", "gtcid",
++				"gtcie", "gtcif", "gtciada", "gtciadb",
++				"gtciv", "gtciu", "gtcih", "gtcil",
++				"gtdei";
++			clocks = <&cpg CPG_MOD R9A07G044_GPT_PCLK>;
++			power-domains = <&cpg>;
++			resets =  <&cpg R9A07G044_GPT_RST_C>;
++			status = "disabled";
++		};
++
++		gpt6: gpt@10048600 {
++			compatible = "renesas,gpt-r9a07g044";
++			reg = <0 0x10048600 0 0xa4>;
++			#pwm-cells = <2>;
++			interrupts = <GIC_SPI 296 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 297 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 298 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 299 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 300 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 301 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 302 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 303 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 304 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 305 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 306 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 307 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 308 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "gtcia", "gtcib", "gtcic", "gtcid",
++				"gtcie", "gtcif", "gtciada", "gtciadb",
++				"gtciv", "gtciu", "gtcih", "gtcil",
++				"gtdei";
++			clocks = <&cpg CPG_MOD R9A07G044_GPT_PCLK>;
++			power-domains = <&cpg>;
++			resets =  <&cpg R9A07G044_GPT_RST_C>;
++			status = "disabled";
++		};
++
++		gpt7: gpt@10048700 {
++			compatible = "renesas,gpt-r9a07g044";
++			reg = <0 0x10048700 0 0xa4>;
++			#pwm-cells = <2>;
++			interrupts = <GIC_SPI 309 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 310 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 311 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 312 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 313 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 314 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 315 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 316 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 317 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 318 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 319 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 320 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 321 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "gtcia", "gtcib", "gtcic", "gtcid",
++				"gtcie", "gtcif", "gtciada", "gtciadb",
++				"gtciv", "gtciu", "gtcih", "gtcil",
++				"gtdei";
++			clocks = <&cpg CPG_MOD R9A07G044_GPT_PCLK>;
++			power-domains = <&cpg>;
++			resets =  <&cpg R9A07G044_GPT_RST_C>;
++			status = "disabled";
++		};
++
++
+ 		cru: video@10830000 {
+ 			compatible = "renesas,r9a07g044-cru", "renesas,rzg2l-cru";
+ 			reg = <0 0x10830000 0 0x400>;
+@@ -1264,6 +1523,21 @@ wdt1: watchdog@12800c00 {
+ 			status = "disabled";
+ 		};
+ 
++		wdt2: watchdog@12800400 {
++			compatible = "renesas,r9a07g044-wdt",
++				     "renesas,rzg2l-wdt";
++			reg = <0 0x12800400 0 0x400>;
++			clocks = <&cpg CPG_MOD R9A07G044_WDT2_PCLK>,
++				 <&cpg CPG_MOD R9A07G044_WDT2_CLK>;
++			clock-names = "pclk", "oscclk";
++			interrupts = <GIC_SPI 53 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 54 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "wdt", "perrout";
++			resets = <&cpg R9A07G044_WDT2_PRESETN>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++        
+ 		ostm0: timer@12801000 {
+ 			compatible = "renesas,r9a07g044-ostm",
+ 				     "renesas,ostm";
+diff --git a/arch/arm64/boot/dts/renesas/rzpi.dts b/arch/arm64/boot/dts/renesas/rzpi.dts
+new file mode 100644
+index 000000000000..bbf478886312
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/rzpi.dts
+@@ -0,0 +1,850 @@
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++/*
++ * Device Tree Source for the RZ/G2L SBC board
++ *
++ * Copyright (C) 2023 Renesas Electronics Corp.
++ */
++
++/dts-v1/;
++#include "r9a07g044l2.dtsi"
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
++
++/ {
++	compatible = "rzpi", "renesas,r9a07g044l2", "renesas,r9a07g044";
++	model = "Renesas RZG2L SBC board";
++
++	aliases {
++		ethernet0 = &eth0;
++		ethernet1 = &eth1;
++		i2c0 = &i2c0;
++		i2c1 = &i2c1;
++		mmc0 = &sdhi0;
++		mmc1 = &sdhi1;
++		serial0 = &scif0;
++		serial2 = &scif2;
++	};
++
++	chosen {
++		bootargs = "ignore_loglevel rw root=/dev/nfs ip=on";
++		stdout-path = "serial0:115200n8";
++	};
++
++	memory@48000000 {
++		device_type = "memory";
++		reg = <0x0 0x48000000 0x0 0x38000000>;
++	};
++
++	reserved-memory {
++		#address-cells = <0x2>;
++		#size-cells = <0x2>;
++		ranges;
++
++		global_cma: linux,cma@58000000 {
++			compatible = "shared-dma-pool";
++			linux,cma-default;
++			reusable;
++			reg = <0x0 0x58000000 0x0 0x8000000>;
++		};
++
++		mmp_reserved: linux,multimedia {
++			compatible = "shared-dma-pool";
++			reusable;
++			reg = <0x0 0x60000000 0x0 0x8000000>;
++		};
++	};
++
++	mmngr {
++		compatible = "renesas,mmngr";
++		memory-region = <&mmp_reserved>;
++	};
++
++	mmngrbuf {
++		compatible = "renesas,mmngrbuf";
++	};
++
++	vspm_if {
++		compatible = "renesas,vspm_if";
++	};
++
++	reg_1p8v: regulator0 {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-1.8V";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	reg_3p3v: regulator1 {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-3.3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	reg_1p1v: regulator-vdd-core {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-1.1V";
++		regulator-min-microvolt = <1100000>;
++		regulator-max-microvolt = <1100000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	vccq_sdhi0: regulator-vccq-sdhi0 {
++		compatible = "regulator-gpio";
++
++		regulator-name = "SDHI0 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++		states = <3300000 1>, <1800000 0>;
++		regulator-boot-on;
++		gpios = <&pinctrl RZG2L_GPIO(39, 0) GPIO_ACTIVE_HIGH>;
++		regulator-always-on;
++	};
++
++	regulator-usb0-vbus-otg {
++		compatible = "regulator-fixed";
++		regulator-name = "USB0_VBUS_OTG";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++	};
++
++	vccq_sdhi1: regulator-vccq-sdhi1 {
++		compatible = "regulator-gpio";
++		regulator-name = "SDHI1 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++		gpios-states = <1>;
++		gpios = <&pinctrl RZG2L_GPIO(39, 1) GPIO_ACTIVE_HIGH>;
++		states = <3300000 1>, <1800000 0>;
++	};
++
++	ov5645_vdddo_1v8: 1p8v {
++		compatible = "regulator-fixed";
++		regulator-name = "camera_vdddo";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-always-on;
++	};
++
++	ov5645_vdda_2v8: 2p8v {
++		compatible = "regulator-fixed";
++		regulator-name = "camera_vdda";
++		regulator-min-microvolt = <2800000>;
++		regulator-max-microvolt = <2800000>;
++		regulator-always-on;
++	};
++
++	ov5645_vddd_1v5: 1p5v {
++		compatible = "regulator-fixed";
++		regulator-name = "camera_vddd";
++		regulator-min-microvolt = <1500000>;
++		regulator-max-microvolt = <1500000>;
++		regulator-always-on;
++	};
++
++	hdmi-out {
++		compatible = "hdmi-connector";
++		type = "a";
++
++		status = "okay";
++
++		port {
++			hdmi_con_out: endpoint {
++				remote-endpoint = <&sii9022_out>;
++			};
++		};
++	};
++
++	/* brightness control */
++	backlight: backlight {
++		compatible = "pwm-backlight";
++		pwms = <&gpt5 0 40000 0>;
++		brightness-levels = <0 8 32 64 96 128 160 192 224 255>;
++		default-brightness-level = <8>;
++		status = "disabled";
++	};
++
++	audio_rzg2l: audio_mclock {
++		compatible = "fixed-clock";
++		#clock-cells = <0x0>;
++		clock-frequency = <0xac4400>;
++	};
++
++	snd_rzg2l: sound {
++		compatible = "simple-audio-card";
++		simple-audio-card,format = "i2s";
++		simple-audio-card,bitclock-master = <&cpu_dai>;
++		simple-audio-card,frame-master = <&cpu_dai>;
++		simple-audio-card,mclk-fs = <0x100>;
++		simple-audio-card,widgets = "Microphone", "Microphone Jack";
++		simple-audio-card,routing = "L2", "Mic Bias", "R2", "Mic Bias", \
++						"Mic Bias", "Microphone Jack";
++
++		cpu_dai: simple-audio-card,cpu {
++		};
++
++		simple-audio-card,codec {
++			clocks = <&audio_rzg2l>;
++			sound-dai = <&wm8978>;
++		};
++	};
++
++	sound_card {
++	};
++
++	clk_ext_camera: clk_ext_camera {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <24000000>;
++	};
++
++	ov5640_vdddo_1v8: 1p8v {
++		compatible = "regulator-fixed";
++		regulator-name = "camera_vdddo";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-always-on;
++	};
++
++	ov5640_vdda_2v8: 2p8v {
++		compatible = "regulator-fixed";
++		regulator-name = "camera_vdda";
++		regulator-min-microvolt = <2800000>;
++		regulator-max-microvolt = <2800000>;
++		regulator-always-on;
++	};
++
++	ov5640_vddd_1v5: 1p5v {
++		compatible = "regulator-fixed";
++		regulator-name = "camera_vddd";
++		regulator-min-microvolt = <1500000>;
++		regulator-max-microvolt = <1500000>;
++		regulator-always-on;
++	};
++
++};
++
++&pinctrl {
++	pinctrl-0 = <&sound_clk_pins>;
++	pinctrl-names = "default";
++
++	adc_pins: adc {
++		pinmux = <RZG2L_PORT_PINMUX(9, 0, 2)>; /* ADC_TRG */
++	};
++
++	du_pins: du {
++		pinmux = <RZG2L_PORT_PINMUX(6, 0, 1)>, /* CLK */
++			 <RZG2L_PORT_PINMUX(6, 1, 1)>, /* HSYNC */
++			 <RZG2L_PORT_PINMUX(7, 0, 1)>, /* VSYNC */
++			 <RZG2L_PORT_PINMUX(7, 1, 1)>, /* DE */
++			 <RZG2L_PORT_PINMUX(8, 1, 1)>,
++			 <RZG2L_PORT_PINMUX(8, 2, 1)>,
++			 <RZG2L_PORT_PINMUX(9, 0, 1)>,
++			 <RZG2L_PORT_PINMUX(9, 1, 1)>,
++			 <RZG2L_PORT_PINMUX(10, 0, 1)>,
++			 <RZG2L_PORT_PINMUX(10, 1, 1)>,
++			 <RZG2L_PORT_PINMUX(12, 0, 1)>,
++			 <RZG2L_PORT_PINMUX(12, 1, 1)>,
++			 <RZG2L_PORT_PINMUX(13, 0, 1)>,
++			 <RZG2L_PORT_PINMUX(13, 1, 1)>,
++			 <RZG2L_PORT_PINMUX(13, 2, 1)>,
++			 <RZG2L_PORT_PINMUX(14, 0, 1)>,
++			 <RZG2L_PORT_PINMUX(15, 1, 1)>,
++			 <RZG2L_PORT_PINMUX(16, 0, 1)>,
++			 <RZG2L_PORT_PINMUX(16, 1, 1)>,
++			 <RZG2L_PORT_PINMUX(17, 0, 1)>,
++			 <RZG2L_PORT_PINMUX(17, 1, 1)>,
++			 <RZG2L_PORT_PINMUX(17, 2, 1)>;
++	};
++
++	eth0_pins: eth0 {
++		pinmux = <RZG2L_PORT_PINMUX(27, 1, 1)>, /* ET0_MDC */
++			 <RZG2L_PORT_PINMUX(28, 0, 1)>, /* ET0_MDIO */
++			 <RZG2L_PORT_PINMUX(20, 0, 1)>, /* ET0_TXC */
++			 <RZG2L_PORT_PINMUX(20, 1, 1)>, /* ET0_TX_CTL */
++			 <RZG2L_PORT_PINMUX(20, 2, 1)>, /* ET0_TXD0 */
++			 <RZG2L_PORT_PINMUX(21, 0, 1)>, /* ET0_TXD1 */
++			 <RZG2L_PORT_PINMUX(21, 1, 1)>, /* ET0_TXD2 */
++			 <RZG2L_PORT_PINMUX(22, 0, 1)>, /* ET0_TXD3 */
++			 <RZG2L_PORT_PINMUX(24, 0, 1)>, /* ET0_RXC */
++			 <RZG2L_PORT_PINMUX(24, 1, 1)>, /* ET0_RX_CTL */
++			 <RZG2L_PORT_PINMUX(25, 0, 1)>, /* ET0_RXD0 */
++			 <RZG2L_PORT_PINMUX(25, 1, 1)>, /* ET0_RXD1 */
++			 <RZG2L_PORT_PINMUX(26, 0, 1)>, /* ET0_RXD2 */
++			 <RZG2L_PORT_PINMUX(26, 1, 1)>; /* ET0_RXD3 */
++	};
++
++	eth1_pins: eth1 {
++		pinmux = <RZG2L_PORT_PINMUX(29, 0, 1)>, /* ET1_TXC */
++			 <RZG2L_PORT_PINMUX(29, 1, 1)>, /* ET1_TX_CTL */
++			 <RZG2L_PORT_PINMUX(30, 0, 1)>, /* ET1_TXD0 */
++			 <RZG2L_PORT_PINMUX(30, 1, 1)>, /* ET1_TXD1 */
++			 <RZG2L_PORT_PINMUX(31, 0, 1)>, /* ET1_TXD2 */
++			 <RZG2L_PORT_PINMUX(31, 1, 1)>, /* ET1_TXD3 */
++			 <RZG2L_PORT_PINMUX(33, 1, 1)>, /* ET1_RXC */
++			 <RZG2L_PORT_PINMUX(34, 0, 1)>, /* ET1_RX_CTL */
++			 <RZG2L_PORT_PINMUX(34, 1, 1)>, /* ET1_RXD0 */
++			 <RZG2L_PORT_PINMUX(35, 0, 1)>, /* ET1_RXD1 */
++			 <RZG2L_PORT_PINMUX(35, 1, 1)>, /* ET1_RXD2 */
++			 <RZG2L_PORT_PINMUX(36, 0, 1)>; /* ET1_RXD3 */
++	};
++
++	i2c0_pins: i2c0 {
++		pins = "RIIC0_SDA", "RIIC0_SCL";
++		input-enable;
++	};
++
++	i2c1_pins: i2c1 {
++		pins = "RIIC1_SDA", "RIIC1_SCL";
++		input-enable;
++	};
++
++	scif0_pins: scif0 {
++		pinmux = <RZG2L_PORT_PINMUX(38, 0, 1)>, /* TxD */
++			 <RZG2L_PORT_PINMUX(38, 1, 1)>; /* RxD */
++	};
++
++	scif2_pins: scif2 {
++		pinmux = <RZG2L_PORT_PINMUX(48, 0, 1)>, /* TxD */
++			 <RZG2L_PORT_PINMUX(48, 1, 1)>, /* RxD */
++			 <RZG2L_PORT_PINMUX(42, 3, 4)>, /* CTS# */
++			 <RZG2L_PORT_PINMUX(42, 4, 4)>; /* RTS# */
++	};
++
++	sd0-dev-sel-hog {
++		gpio-hog;
++		gpios = <RZG2L_GPIO(41, 1) GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "sd0_dev_sel";
++	};
++
++	sdhi0_emmc_pins: sd0emmc {
++		sd0_emmc_data {
++			pins = "SD0_DATA0", "SD0_DATA1", "SD0_DATA2", "SD0_DATA3",
++				"SD0_DATA4", "SD0_DATA5", "SD0_DATA6", "SD0_DATA7";
++			power-source = <1800>;
++		};
++
++		sd0_emmc_ctrl {
++			pins = "SD0_CLK", "SD0_CMD";
++			power-source = <1800>;
++		};
++
++		sd0_emmc_rst {
++			pins = "SD0_RST#";
++			power-source = <1800>;
++		};
++	};
++
++	sdhi0_pins: sd0 {
++		sd0_data {
++			pins = "SD0_DATA0", "SD0_DATA1", "SD0_DATA2", "SD0_DATA3";
++			power-source = <3300>;
++		};
++
++		sd0_ctrl {
++			pins = "SD0_CLK", "SD0_CMD";
++			power-source = <3300>;
++		};
++
++		sd0_mux {
++			pinmux = <RZG2L_PORT_PINMUX(47, 0, 2)>; /* SD0_CD */
++		};
++	};
++
++	sdhi0_pins_uhs: sd0_uhs {
++		sd0_data_uhs {
++			pins = "SD0_DATA0", "SD0_DATA1", "SD0_DATA2", "SD0_DATA3";
++			power-source = <1800>;
++		};
++
++		sd0_ctrl_uhs {
++			pins = "SD0_CLK", "SD0_CMD";
++			power-source = <1800>;
++		};
++
++		sd0_mux_uhs {
++			pinmux = <RZG2L_PORT_PINMUX(47, 0, 2)>; /* SD0_CD */
++		};
++	};
++
++	sd1-pwr-en-hog {
++		gpio-hog;
++		gpios = <RZG2L_GPIO(39, 2) GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "sd1_pwr_en";
++	};
++
++	sdhi1_pins: sd1 {
++		sd1_data {
++			pins = "SD1_DATA0", "SD1_DATA1", "SD1_DATA2", "SD1_DATA3";
++			power-source = <3300>;
++		};
++
++		sd1_ctrl {
++			pins = "SD1_CLK", "SD1_CMD";
++			power-source = <3300>;
++		};
++	};
++
++	sdhi1_pins_uhs: sd1_uhs {
++		sd1_data_uhs {
++			pins = "SD1_DATA0", "SD1_DATA1", "SD1_DATA2", "SD1_DATA3";
++			power-source = <1800>;
++		};
++
++		sd1_ctrl_uhs {
++			pins = "SD1_CLK", "SD1_CMD";
++			power-source = <1800>;
++		};
++	};
++
++	sound_clk_pins: sound_clk {
++		pins = "AUDIO_CLK1", "AUDIO_CLK2";
++		input-enable;
++	};
++
++	ssi0_pins: ssi0 {
++		pinmux = <RZG2L_PORT_PINMUX(45, 0, 1)>, /* BCK */
++			 <RZG2L_PORT_PINMUX(45, 1, 1)>, /* RCK */
++			 <RZG2L_PORT_PINMUX(45, 2, 1)>, /* TXD */
++			 <RZG2L_PORT_PINMUX(45, 3, 1)>; /* RXD */
++	};
++
++	ssi1_pins: ssi1 {
++		pinmux = <RZG2L_PORT_PINMUX(44, 0, 2)>, /* BCK */
++			 <RZG2L_PORT_PINMUX(44, 1, 2)>, /* RCK */
++			 <RZG2L_PORT_PINMUX(44, 2, 2)>, /* TXD */
++			 <RZG2L_PORT_PINMUX(44, 3, 2)>; /* RXD */
++	};
++
++	ssi2_pins: ssi2 {
++		pinmux = <RZG2L_PORT_PINMUX(5, 0, 4)>,
++			 <RZG2L_PORT_PINMUX(5, 1, 4)>,
++			 <RZG2L_PORT_PINMUX(5, 2, 4)>;
++	};
++
++	gpt4_pins: gpt4 {
++		pinmux = <RZG2L_PORT_PINMUX(43, 0, 2)>, /* Channel A */
++			 <RZG2L_PORT_PINMUX(43, 1, 2)>; /* Channel B */
++	};
++
++	gpt5_pins: gpt5 {
++		pinmux = <RZG2L_PORT_PINMUX(43, 2, 2)>; /* Channel A */
++	};
++};
++
++&adc {
++	pinctrl-0 = <&adc_pins>;
++	pinctrl-names = "default";
++	status = "disabled";
++
++	/delete-node/ channel@6;
++	/delete-node/ channel@7;
++};
++
++&audio_clk1 {
++	clock-frequency = <11289600>;
++};
++
++&audio_clk2 {
++	clock-frequency = <12288000>;
++};
++
++&cru {
++	status = "okay";
++};
++
++&csi2 {
++	status = "disabled";
++		ports {
++		port {
++			csi2_in: endpoint {
++				clock-lanes = <0>;
++				data-lanes = <1 2>;
++				remote-endpoint = <&ov5640_to_csi>;
++			};
++		};
++	};
++};
++
++&du {
++	pinctrl-0 = <&du_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	ports {
++
++		port@0 {
++			reg = <0>;
++
++			du_out_rgb: endpoint {
++				remote-endpoint = <&sii9022_in>;
++			};
++		};
++
++		port@1 {
++			reg = <1>;
++
++			du_out_dsi_port1: endpoint {
++				remote-endpoint = <&dsi0_in>;
++			};
++		};
++	};
++};
++
++&eth0 {
++	pinctrl-0 = <&eth0_pins>;
++	pinctrl-names = "default";
++	phy-handle = <&phy4>;
++	phy-mode = "rgmii-id";
++	status = "okay";
++
++	phy4: ethernet-phy@4 {
++		reg = <0x4>;
++	};
++
++	phy11: ethernet-phy@1 {
++		reg = <0x1>;
++	};
++};
++
++&eth1 {
++	pinctrl-0 = <&eth1_pins>;
++	pinctrl-names = "default";
++	phy-handle = <&phy11>;
++	phy-mode = "rgmii-id";
++	status = "okay";
++};
++
++&extal_clk {
++	clock-frequency = <24000000>;
++};
++
++&gpu {
++	mali-supply = <&reg_1p1v>;
++
++	/delete-property/power-domains;
++};
++
++&ostm1 {
++	status = "okay";
++};
++
++&ostm2 {
++	status = "okay";
++};
++
++&i2c0 {
++	pinctrl-0 = <&i2c0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++    wm8978: codec@1a {
++        compatible = "wlf,wm8978";
++        #sound-dai-cells = <0>;
++        reg = <0x1a>;
++    };
++
++	da7219: codec@1a {
++		compatible = "dlg,da7219";
++		#sound-dai-cells = <0>;
++		reg = <0x1a>;
++		status = "okay";
++
++		interrupt-parent = <&pinctrl>;
++		interrupts = <RZG2L_GPIO(47, 1) IRQ_TYPE_LEVEL_LOW>;
++
++		dlg,micbias-lvl = <2600>;
++		dlg,mic-amp-in-sel = "diff";
++		VDD-supply = <&reg_1p8v>;
++		VDDMIC-supply = <&reg_3p3v>;
++		VDDIO-supply = <&reg_3p3v>;
++		clock-names = "mclk";
++
++		da7219_aad {
++			dlg,btn-cfg = <50>;
++			dlg,mic-det-thr = <500>;
++			dlg,jack-ins-deb = <20>;
++			dlg,jack-det-rate = "32ms_64ms";
++			dlg,jack-rem-deb = <1>;
++
++			dlg,a-d-btn-thr = <0xa>;
++			dlg,d-b-btn-thr = <0x16>;
++			dlg,b-c-btn-thr = <0x21>;
++			dlg,c-mic-btn-thr = <0x3E>;
++
++			dlg,btn-avg = <4>;
++			dlg,adc-1bit-rpt = <1>;
++		};
++	};
++};
++
++&i2c1 {
++	pinctrl-0 = <&i2c1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	ov5640: camera@3c {
++		compatible = "ovti,ov5640";
++		reg = <0x3c>;
++		status = "disabled";
++
++		clock-names = "xclk";
++		clocks = <&clk_ext_camera>;
++		clock-frequency = <24000000>;
++		DOVDD-supply = <&ov5640_vdddo_1v8>;
++		DVDD-supply = <&ov5640_vddd_1v5>;
++		AVDD-supply = <&ov5640_vdda_2v8>;
++
++		powerdown-gpios = <&pinctrl RZG2L_GPIO(19, 0) GPIO_ACTIVE_LOW>;
++		reset-gpios = <&pinctrl RZG2L_GPIO(18, 1) GPIO_ACTIVE_HIGH>;
++
++		port {
++			ov5640_to_csi: endpoint {
++				clock-lanes = <0>;
++				data-lanes = <1 2>;
++				remote-endpoint = <&csi2_in>;
++			};
++		};
++	};
++
++	sii9022: hdmi@39 {
++		#sound-dai-cells = <0x0>;
++		compatible = "sil,sii9022";
++		reg = <0x39>;
++		status = "okay";
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++
++				sii9022_in: endpoint {
++					remote-endpoint = <&du_out_rgb>;
++				};
++			};
++
++			port@1 {
++				reg = <1>;
++
++				sii9022_out: endpoint {
++					remote-endpoint = <&hdmi_con_out>;
++				};
++			};
++		};
++	};
++};
++
++&mtu3 {
++	status = "okay";
++};
++
++&ehci0 {
++	memory-region = <&global_cma>;
++	dr_mode = "otg";
++	status = "okay";
++};
++
++&ohci0 {
++	memory-region = <&global_cma>;
++	dr_mode = "otg";
++	status = "okay";
++};
++
++&ehci1 {
++	memory-region = <&global_cma>;
++	status = "okay";
++};
++
++&ohci1 {
++	memory-region = <&global_cma>;
++	status = "okay";
++};
++
++&hsusb {
++	status = "disabled";
++};
++
++&phyrst {
++	status = "okay";
++};
++
++&usb2_phy0 {
++	status = "okay";
++};
++
++&usb2_phy1 {
++	status = "okay";
++};
++
++&scif0 {
++	pinctrl-0 = <&scif0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&scif2 {
++	pinctrl-0 = <&scif2_pins>;
++	pinctrl-names = "default";
++
++	uart-has-rtscts;
++	status = "okay";
++
++	bluetooth {
++		compatible = "brcm,bcm43438-bt";
++		device-wakeup-gpios = <&pinctrl RZG2L_GPIO(37, 0) GPIO_ACTIVE_LOW>;
++		host-wakeup-gpios = <&pinctrl RZG2L_GPIO(37, 1) GPIO_ACTIVE_LOW>;
++		status = "okay";
++	};
++};
++
++/* Both eMMC and external uSD card */
++&sdhi0 {
++	pinctrl-0 = <&sdhi0_emmc_pins>;
++	pinctrl-1 = <&sdhi0_emmc_pins>;
++	pinctrl-names = "default", "state_uhs";
++
++	vmmc-supply = <&reg_3p3v>;
++	vqmmc-supply = <&reg_1p8v>;
++	bus-width = <8>;
++	mmc-hs200-1_8v;
++	non-removable;
++	fixed-emmc-driver-type = <1>;
++	status = "okay";
++};
++
++&sdhi1 {
++	pinctrl-0 = <&sdhi1_pins>;
++	pinctrl-1 = <&sdhi1_pins_uhs>;
++	pinctrl-names = "default", "state_uhs";
++
++	vmmc-supply = <&reg_3p3v>;
++	vqmmc-supply = <&vccq_sdhi1>;
++	bus-width = <4>;
++	sd-uhs-sdr50;
++	sd-uhs-sdr104;
++	status = "okay";
++	#address-cells = <0x1>;
++	#size-cells = <0x0>;
++	no-1-8-v;
++	no-mmc;
++	non-removable;
++	keep-power-in-suspend;
++
++	wifi@1 {
++		reg = <0x1>;
++		compatible = "brcm,bcm4329-fmac";
++	};
++};
++
++&wdt0 {
++	status = "okay";
++	timeout-sec = <60>;
++};
++
++&wdt1 {
++	status = "okay";
++	timeout-sec = <60>;
++};
++
++&wdt2 {
++	status = "okay";
++	timeout-sec = <60>;
++};
++
++&poega {
++	status = "okay";
++};
++
++&poegb {
++	status = "okay";
++};
++
++&poegc {
++	status = "okay";
++};
++
++&poegd {
++	status = "okay";
++};
++
++&gpt4 {
++	pinctrl-0 = <&gpt4_pins>;
++	pinctrl-names = "default";
++	channel = "both_AB";
++	poeg = <&poega &poegb &poegc &poegd>;
++	status = "disabled";
++};
++
++&ssi0 {
++	pinctrl-0 = <&ssi0_pins>;
++	pinctrl-names = "default";
++
++	status = "disabled";
++};
++
++&ssi1 {
++	pinctrl-0 = <&ssi1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&gpt5 {
++	pinctrl-0 = <&gpt5_pins>;
++	pinctrl-names = "default";
++	channel="channel_A";
++	poeg = <&poegd>;
++	status = "disabled";
++};
++
++&dsi {
++	status = "disabled";
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	ports {
++		port@0 {
++			reg = <0>;
++
++			dsi0_in: endpoint {
++				remote-endpoint = <&du_out_dsi_port1>;
++			};
++		};
++
++		port@1 {
++			reg = <1>;
++
++			dsi0_out: endpoint {
++				remote-endpoint = <&panel_in>;
++				data-lanes = <1 2>;
++			};
++		};
++	};
++
++	mipi_panel: panel@0 {
++		compatible = "ilitek,ph720128t003";
++		reg = <0>;
++		power-gpios = <&pinctrl RZG2L_GPIO(4, 1) GPIO_ACTIVE_HIGH>;
++		switch-gpios = <&pinctrl RZG2L_GPIO(4, 0) GPIO_ACTIVE_HIGH>;
++		backlight = <&backlight>;
++		status = "disabled";
++
++		port {
++			panel_in: endpoint {
++				remote-endpoint = <&dsi0_out>;
++			};
++		};
++	};
++};
+diff --git a/scripts/Makefile.lib b/scripts/Makefile.lib
+index 7f8ec77bf35c..5645597f387e 100644
+--- a/scripts/Makefile.lib
++++ b/scripts/Makefile.lib
+@@ -418,6 +418,15 @@ $(multi-dtb-y): FORCE
+ 	$(call if_changed,fdtoverlay)
+ $(call multi_depend, $(multi-dtb-y), .dtb, -dtbs)
+ 
++quiet_cmd_dtco = DTCO     $@
++cmd_dtco = $(HOSTCC) -E $(dtc_cpp_flags) -x assembler-with-cpp -o $(dtc-tmp) $< ; \
++	$(DTC) -O dtb -o $@ -b 0 \
++		$(addprefix -i,$(dir $<) $(DTC_INCLUDE)) $(DTC_FLAGS) \
++		-d $(depfile).dtc.tmp $(dtc-tmp) ; \
++	cat $(depfile).pre.tmp $(depfile).dtc.tmp > $(depfile)
++$(obj)/%.dtbo: $(src)/%.dts $(DTC) FORCE
++	$(call if_changed_dep,dtco)
++           
+ ifneq ($(CHECK_DTBS),)
+ DT_CHECKER ?= dt-validate
+ DT_CHECKER_FLAGS ?= $(if $(DT_SCHEMA_FILES),-l $(DT_SCHEMA_FILES),-m)
+diff --git a/sound/soc/codecs/Kconfig b/sound/soc/codecs/Kconfig
+index 4afc43d3f71f..b65128e3ea8a 100644
+--- a/sound/soc/codecs/Kconfig
++++ b/sound/soc/codecs/Kconfig
+@@ -1068,7 +1068,7 @@ config SND_SOC_DA7218
+ 	depends on I2C
+ 
+ config SND_SOC_DA7219
+-	tristate
++    tristate "Dialog DA7219 CODEC"
+ 	depends on I2C
+ 
+ config SND_SOC_DA732X
+diff --git a/sound/soc/codecs/da7219.c b/sound/soc/codecs/da7219.c
+index 311ea7918b31..b63aedf36fc9 100644
+--- a/sound/soc/codecs/da7219.c
++++ b/sound/soc/codecs/da7219.c
+@@ -1610,6 +1610,13 @@ static int da7219_hw_params(struct snd_pcm_substream *substream,
+ 		}
+ 	}
+ 
++    /* Enable preconfigured system modes by default */
++	regmap_write(da7219->regmap, DA7219_SYSTEM_MODES_OUTPUT, 0xF1);
++	regmap_write(da7219->regmap, DA7219_SYSTEM_MODES_INPUT, 0x55);
++
++	/* Enabled DAI */
++	regmap_write(da7219->regmap, DA7219_DAI_CTRL, 0x80);
++
+ 	/*
+ 	 * If we're master, then we have a limited set of BCLK rates we
+ 	 * support. For slave mode this isn't the case and the codec can detect
+@@ -2444,6 +2451,42 @@ static struct reg_sequence da7219_rev_aa_patch[] = {
+ 	{ DA7219_REFERENCES, 0x08 },
+ };
+ 
++static struct reg_sequence da7219_mic_enable_patch[] = {
++	{ DA7219_PLL_CTRL, 0x08 },
++	{ DA7219_DAI_TDM_CTRL, 0x40 },
++	{ DA7219_MIXIN_L_GAIN, 0x0B },
++	{ DA7219_ADC_L_GAIN, 0x5F },
++	{ DA7219_MIC_1_GAIN, 0x02 },
++	{ DA7219_MICBIAS_CTRL, 0x0B },
++	{ DA7219_ADC_L_CTRL, 0x80 },
++	{ DA7219_IO_CTRL, 0x01 },
++	{ DA7219_PC_COUNT, 0x02 },
++	{ DA7219_CP_VOL_THRESHOLD1, 0x0E },
++	{ DA7219_ALC_TARGET_MIN, 0x3F },
++	{ DA7219_ALC_GAIN_LIMITS, 0xFF },
++	{ DA7219_TONE_GEN_CFG2, 0x00 },
++	{ DA7219_TONE_GEN_CYCLES, 0x00 },
++	{ DA7219_TONE_GEN_FREQ1_L, 0x55 },
++	{ DA7219_TONE_GEN_FREQ1_U, 0x15 },
++	{ DA7219_ACCDET_IRQ_MASK_B, 0xFF },
++	{ DA7219_ACCDET_CONFIG_1, 0xD7 },
++	{ DA7219_ACCDET_CONFIG_2, 0x00 },
++};
++
++static int da7219_input_path_init(struct snd_soc_component *component)
++{
++	struct da7219_priv *da7219 = snd_soc_component_get_drvdata(component);
++	int ret;
++
++	ret = regmap_register_patch(da7219->regmap, da7219_mic_enable_patch,
++					    ARRAY_SIZE(da7219_mic_enable_patch));
++
++	if (ret)
++		dev_err(component->dev, "Failed to register mic enable patch: %d\n", ret);
++
++	return ret;
++}
++
+ static int da7219_probe(struct snd_soc_component *component)
+ {
+ 	struct da7219_priv *da7219 = snd_soc_component_get_drvdata(component);
+@@ -2573,6 +2616,11 @@ static int da7219_probe(struct snd_soc_component *component)
+ 	if (ret)
+ 		goto err_free_dai_clks;
+ 
++	/* Enable Mic */
++	ret = da7219_input_path_init(component);
++	if (ret)
++		goto err_free_dai_clks;
++
+ 	return 0;
+ 
+ err_free_dai_clks:
+-- 
+2.43.0
+
