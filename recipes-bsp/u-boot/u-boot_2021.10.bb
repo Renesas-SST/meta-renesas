@@ -25,7 +25,7 @@ UBOOT_SREC_SYMLINK ?= "u-boot-elf-${MACHINE}.${UBOOT_SREC_SUFFIX}"
 
 # Copy the U-Boot file to the deployment directory and create symbolic links to easily access this file with a simpler name.
 do_deploy:append() {
-     # UBOOT_CONFIG variable is name folder stored uboot srec files. It's defined in rzg2l-sbc.conf
+    # UBOOT_CONFIG variable is name folder stored uboot srec files. It's defined in rzg2l-sbc.conf
     if [ -n "${UBOOT_CONFIG}" ]
     then
         for config in ${UBOOT_MACHINE}; do

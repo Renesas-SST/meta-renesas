@@ -288,9 +288,14 @@ PACKAGECONFIG:append:pn-qemu-system-native = " sdl"
 CONF_VERSION = "2"
 
 IMAGE_FSTYPES:append = " tar.bz2"
+IMAGE_FSTYPES:append = " wic.gz wic.bmap"
 
 # Override the oldest kernel
 OLDEST_KERNEL = "5.10"
 
 # Disable secure EFI boot
 KERNEL_DANGLING_FEATURES_WARN_ONLY = "1"
+
+# Add systemd configuration
+DISTRO_FEATURES:append = " systemd usrmerge pam"
+VIRTUAL-RUNTIME_init_manager = "systemd"
