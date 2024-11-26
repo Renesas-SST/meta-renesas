@@ -1,0 +1,1 @@
+PACKAGECONFIG:append = " faac faad"
