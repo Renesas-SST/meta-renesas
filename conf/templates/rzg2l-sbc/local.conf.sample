@@ -299,3 +299,6 @@ KERNEL_DANGLING_FEATURES_WARN_ONLY = "1"
 # Add systemd configuration
 DISTRO_FEATURES:append = " systemd usrmerge pam"
 VIRTUAL-RUNTIME_init_manager = "systemd"
+
+# Accepting commercial license flags for gstreamer build
+LICENSE_FLAGS_ACCEPTED:append = " commercial"
