@@ -122,6 +122,7 @@ optimize_service_sytemd_wayland() {
             -not -path "*systemd-sysv-install" \
             -not -name "libsystemd-shared-244.so" \
             -not -name "systemd" \
+            -not -name "systemd-modules-load" \
             -not -name "systemd-udevd" \
             -not -path "*system/*" \
             -not -path "*system" \
@@ -144,6 +145,7 @@ optimize_service_sytemd_wayland() {
            -not -name "sysinit.target" \
            -not -name "systemd-udev-trigger.service" \
            -not -name "systemd-udevd.service" \
+           -not -name "systemd-modules-load.service" \
            -not -name "weston@.service" \
            -not -path "*sysinit.target.wants/*" \
            -not -path "*sysinit.target.wants" \
@@ -163,6 +165,7 @@ optimize_service_sytemd_wayland() {
        find $target_foder -mindepth 1 \
        -not -name "systemd-udev-trigger.service" \
        -not -name "systemd-journald.service" \
+       -not -name "systemd-modules-load.service" \
        -exec rm -rf {} +
     fi
 
