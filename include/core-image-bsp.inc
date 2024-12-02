@@ -35,3 +35,4 @@ IMAGE_INSTALL:append = " \
     lttng-ust \
     tcf-agent \
 "
+
