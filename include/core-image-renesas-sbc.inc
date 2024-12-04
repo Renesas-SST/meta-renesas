@@ -1,4 +1,4 @@
-# Packages for Wi-Fi support
+# Packages for Wi-Fi and Bluetooth support
 IMAGE_INSTALL:append = " \
     net-tools \
     phytool \
@@ -8,4 +8,9 @@ IMAGE_INSTALL:append = " \
     ethtool \
     iperf3 \
     tcpdump \
+    bluez5 \
+    bluez5-dev \
+    obexftp \
 "
+
+CORE_IMAGE_EXTRA_INSTALL += " packagegroup-tools-bluetooth "
