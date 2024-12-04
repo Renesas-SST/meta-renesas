@@ -1,0 +1,36 @@
+From 8b26515e8975c787b8ecad71f10cff642ce3c5d6 Mon Sep 17 00:00:00 2001
+From: Tien Nguyen <tien.nguyen.uh@renesas.com>
+Date: Wed, 4 Dec 2024 08:47:01 +0700
+Subject: [PATCH 2/7] arm64: dts: rzpi: restore power-domains property
+
+Restores the `power-domains` property to the GPU node when
+using panfrost driver to prevent triggerring a GPU soft reset.
+
+[12.643867] panfrost 11840000.gpu: gpu sched timeout, js=0, config=0x7300, status=0x8, head=0xa0045c0, tail=0xa0045c0, sched_job=00000000175dd3e3
+[12.672055] panfrost 11840000.gpu: gpu soft reset timed out
+[12.682527] ------------[ cut here ]------------
+[12.691992] WARNING: CPU: 0 PID: 92 at drivers/gpu/drm/panfrost/panfrost_job.c:164 panfrost_job_run+0x2f4/0x310
+
+Upstream-Status: Pending
+
+Signed-off-by: Tien Nguyen <tien.nguyen.uh@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/rzpi.dts | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzpi.dts b/arch/arm64/boot/dts/renesas/rzpi.dts
+index 1afcbd56a106..f9a228065d84 100644
+--- a/arch/arm64/boot/dts/renesas/rzpi.dts
++++ b/arch/arm64/boot/dts/renesas/rzpi.dts
+@@ -529,8 +529,6 @@ &extal_clk {
+ 
+ &gpu {
+ 	mali-supply = <&reg_1p1v>;
+-
+-	/delete-property/power-domains;
+ };
+ 
+ &ostm1 {
+-- 
+2.43.0
+
