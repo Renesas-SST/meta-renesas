@@ -16,7 +16,7 @@ IMAGE_INSTALL_append = " ${@oe.utils.conditional("OPTIMIZE_KERN", "1", " \
        kernel-module-rcar-canfd \
        ", "", d)}"
 
-# Modify service  quick boot
+# Modify service quick boot
 sed_service_sytemd_quickboot() {
     target_file="${IMAGE_ROOTFS}/lib/systemd/system/basic.target"
     if [ -f "$target_file" ]; then
@@ -94,7 +94,6 @@ optimize_service_sytemd_wayland() {
         rm -rf $target_folder/"banner.service"
         rm -rf $target_folder/"ctrl-alt-del.target"
         rm -rf $target_folder/"mountall.service"
-        rm -rf $target_folder/"populate-volatile.service"
         rm -rf $target_folder/"hostname.service"
         rm -rf $target_folder/"mountnfs.service"
         rm -rf $target_folder/"read-only-rootfs-hook.service"
@@ -146,11 +145,15 @@ optimize_service_sytemd_wayland() {
            -not -name "systemd-udev-trigger.service" \
            -not -name "systemd-udevd.service" \
            -not -name "systemd-modules-load.service" \
+           -not -name "systemd-tmpfiles*" \
+           -not -name "ldconfig.service" \
            -not -name "weston@.service" \
            -not -path "*sysinit.target.wants/*" \
            -not -path "*sysinit.target.wants" \
            -not -path "*multi-user.target.wants/*" \
            -not -path "*multi-user.target.wants" \
+           -not -path "*timers.target.wants/*" \
+           -not -path "*timers.target.wants" \
            -not -name "connman.service" \
            -not -name "*network*.service" \
            -not -name "network.target" \
@@ -166,6 +169,8 @@ optimize_service_sytemd_wayland() {
        -not -name "systemd-udev-trigger.service" \
        -not -name "systemd-journald.service" \
        -not -name "systemd-modules-load.service" \
+       -not -name "systemd-tmpfiles*" \
+       -not -name "ldconfig.service" \
        -exec rm -rf {} +
     fi
 
@@ -189,7 +194,6 @@ mask_systemd_udev() {
 
     rm -f ${IMAGE_ROOTFS}/etc/systemd/system/systemd-udevd
     rm -f ${IMAGE_ROOTFS}/etc/systemd/system/systemd-udev-trigger.service
-    rm -f ${IMAGE_ROOTFS}/etc/systemd/system/systemd-udevd
 
     ln -sf /dev/null ${IMAGE_ROOTFS}/etc/systemd/system/systemd-udevd
     ln -sf /dev/null ${IMAGE_ROOTFS}/etc/systemd/system/systemd-udev-trigger.service

@@ -279,8 +279,8 @@ DISTRO_FEATURES_append = " wayland"
 #DISTRO_FEATURES_remove = " x11"
 
 # Comment the following 2 lines to enable Dropbear and disable OpenSSH
-IMAGE_FEATURES_remove = "ssh-server-dropbear"
-IMAGE_FEATURES_append = "ssh-server-openssh"
+IMAGE_FEATURES_remove = " ssh-server-dropbear"
+IMAGE_FEATURES_append = " ssh-server-openssh"
 
 # Select CIP Core packages by switching betwwen Buster and Bullseye.
 #  - Buster (default)  : build all supported Debian 10 Buster recipes
@@ -321,6 +321,9 @@ DISTRO_FEATURES_append = "${@oe.utils.conditional('VIRTUALIZATION_CHECK', 'True'
 
 # Remove dnf package which causes high CPU workload
 PACKAGE_INSTALL_remove = " dnf "
+
+# Enable tkinter installation for python3
+PACKAGECONFIG_append_pn-python3 = " tk"
 
 # Optimized Linux Kernel Support: Build with optimizations for the Linux kernel
 # Default: 0 - Disable

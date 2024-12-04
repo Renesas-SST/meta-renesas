@@ -25,3 +25,14 @@ IMAGE_INSTALL_append = " \
                        qtwebkit-examples-examples \
                        qtdemo-extrafiles \
 "
+
+export SOURCE_DIR="${THISDIR}/environment-setup"
+
+### Add application icons to weston toolbar
+weston_icon() {
+    if [ "${QT_DEMO}" = "1" ]; then
+        cat ${SOURCE_DIR}/weston-demo.ini >> ${IMAGE_ROOTFS}${sysconfdir}/xdg/weston/weston.ini
+    fi
+}
+
+ROOTFS_POSTPROCESS_COMMAND += 'weston_icon;'

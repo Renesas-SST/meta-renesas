@@ -29,58 +29,31 @@ IMAGE_INSTALL_append = " \
     python3-matplotlib \
     python3-pip \
     apt-sources-config \
+    python3-smbus \
+    python3-smbus2 \
 "
-
-PACKAGECONFIG_append_pn-python3 = " tk"
 
 # Ignore vte-local-en-gb package because it has incompatible license GPL-3.0
 BAD_RECOMMENDATIONS += " vte-locale-en-gb"
 
-# Support wic image
-IMAGE_FSTYPES_append = " wic "
-
-# Remove unused rootfs types
-IMAGE_FSTYPES_remove = " tar.gz ext4 "
-
-# Linux bootloader flashing utility
-EXTRA_IMAGEDEPENDS += " bootloader-flasher-linux "
-
-# Windows bootloader flashing utility
-EXTRA_IMAGEDEPENDS += " bootloader-flasher-win "
-
-# Windows bootloader flashing readme
-EXTRA_IMAGEDEPENDS += " bootloader-flasher-readme "
-
-# Linux sd-creator-linux
-EXTRA_IMAGEDEPENDS += " sd-creator-linux "
-
-# Windows sd-creator-win
-EXTRA_IMAGEDEPENDS += " sd-creator-win "
-
-# sd-creator-readme
-EXTRA_IMAGEDEPENDS += " sd-creator-readme "
-
-# Linux uload-bootloader-linux
-EXTRA_IMAGEDEPENDS += " uload-bootloader-linux "
-
-# Windows uload-bootloader-win
-EXTRA_IMAGEDEPENDS += " uload-bootloader-win "
-
-# uload-bootloader-readme
-EXTRA_IMAGEDEPENDS += " uload-bootloader-readme "
-
-# uEnv.txt
-IMAGE_INSTALL_append = " uenv "
-
-# host-readme
-EXTRA_IMAGEDEPENDS += " host-readme "
-
-# target-readme
-EXTRA_IMAGEDEPENDS += " target-readme "
-
-# Readme documentation
-EXTRA_IMAGEDEPENDS += " readme "
-EXTRA_IMAGEDEPENDS += " rzpi-docs "
-
 # Rootfs RZ SBC board
 IMAGE_INSTALL_append = " mmc-utils mtd-utils memtester minicom ca-certificates openssl dtc iputils ppp traceroute"
+
+# Create new files and folders for apt/dpkg to fix the following issues:
+# 1. When running APT commands like `apt-get update`, the following error occurs:
+#    "E: The method driver /usr/lib/apt/methods/http could not be found."
+#    This happens because APT requires the HTTP method driver located in
+#    `/usr/lib/apt/methods/`. However, in some cases, the driver files are installed
+#    in `/usr/lib64/apt/methods/` instead, causing APT to fail.
+# 2. Additionally, the absence of the `status` and `available` files in `/var/lib/dpkg/`
+#    causes errors such as:
+#    "E: Could not open file /var/lib/dpkg/status - open(2: No such file or directory)."
+#    Creating the `status` and `available` files is necessary to resolve this issue.
+update_deb_issues() {
+    touch ${IMAGE_ROOTFS}/var/lib/dpkg/status
+    touch ${IMAGE_ROOTFS}/var/lib/dpkg/available
+
+    cp -r ${IMAGE_ROOTFS}/usr/lib64/apt/ ${IMAGE_ROOTFS}/usr/lib/apt
+}
+
+ROOTFS_POSTPROCESS_COMMAND += " update_deb_issues; "
