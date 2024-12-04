@@ -5,9 +5,13 @@ function chelp() {
 	echo "Command format:"
 	echo "    sd_flash.sh <device> <location of the root filesystem image>"
 	echo "    Example: sd_flash.sh /dev/sda <path/to/your/images.tar.bz2>"
+	echo ""
+	echo "If no <location of the root filesystem image> is provided in the command,"
+	echo "the default location is set to core-image-qt-rzpi.tar.bz2 inside any release package"
 	echo "------------------------------------------------------"
 }
 
+# Default core-image
 rootfs_image_path="../../../../target/images/rootfs/core-image-qt-rzpi.tar.bz2"
 if [ $# -eq 0 ]
   then
