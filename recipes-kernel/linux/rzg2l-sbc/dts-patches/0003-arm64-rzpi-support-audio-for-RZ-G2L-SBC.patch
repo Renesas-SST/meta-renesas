@@ -1,0 +1,139 @@
+From 7f771e23b7cc68c879466d5716d065f243a46aec Mon Sep 17 00:00:00 2001
+From: Tien Nguyen <tien.nguyen.uh@renesas.com>
+Date: Wed, 4 Dec 2024 14:15:54 +0700
+Subject: [PATCH 3/7] arm64: rzpi: support audio for RZ/G2L-SBC
+
+Changes include:
+    - Add audio configuration in rzpi.dts.
+    - Change the interrupt trigger to falling edge instead of level low,
+      as the Renesas interrupt controller does not support clearing the
+      low-level detection interrupt, making it unsuitable
+      for use in the driver.
+
+Fixes the following error observed during boot:
+[1.751706] genirq: Setting trigger mode 8 for irq 61 failed (rzg2l_gpio_irq_set_type+0x0/0x40)
+[1.770223] da7219 0-001a: Failed to request IRQ: -22
+
+Upstream-Status: Pending
+
+Signed-off-by: Tien Nguyen <tien.nguyen.uh@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/rzpi.dts | 60 +++++++++++++++++++---------
+ sound/soc/codecs/da7219-aad.c        |  2 +-
+ 2 files changed, 42 insertions(+), 20 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzpi.dts b/arch/arm64/boot/dts/renesas/rzpi.dts
+index f9a228065d84..c6c5d7fedeea 100644
+--- a/arch/arm64/boot/dts/renesas/rzpi.dts
++++ b/arch/arm64/boot/dts/renesas/rzpi.dts
+@@ -169,34 +169,41 @@ backlight: backlight {
+ 		status = "disabled";
+ 	};
+ 
+-	audio_rzg2l: audio_mclock {
++	x1_clk: x1-clock {
+ 		compatible = "fixed-clock";
+-		#clock-cells = <0x0>;
+-		clock-frequency = <0xac4400>;
++		#clock-cells = <0>;
++		clock-frequency = <24000000>;
+ 	};
+ 
+-	snd_rzg2l: sound {
++	sound {
+ 		compatible = "simple-audio-card";
++		simple-audio-card,name = "audio-da7219";
+ 		simple-audio-card,format = "i2s";
+ 		simple-audio-card,bitclock-master = <&cpu_dai>;
+ 		simple-audio-card,frame-master = <&cpu_dai>;
+-		simple-audio-card,mclk-fs = <0x100>;
+-		simple-audio-card,widgets = "Microphone", "Microphone Jack";
+-		simple-audio-card,routing = "L2", "Mic Bias", "R2", "Mic Bias", \
+-						"Mic Bias", "Microphone Jack";
++
++		simple-audio-card,widgets =
++				"Microphone", "Microphone Jack",
++				"Headphone", "Headphone Jack";
++		simple-audio-card,routing =
++				"MIC", "Microphone Jack",
++				"Mic PGA", "ADC",
++				"Mixin PGA", "ADC",
++				"Mixout Left PGA", "HPL",
++				"Mixout Right PGA", "HPR",
++				"Headphone Jack", "HPL",
++				"Headphone Jack", "HPR";
+ 
+ 		cpu_dai: simple-audio-card,cpu {
++			sound-dai = <&ssi1>;
+ 		};
+ 
+-		simple-audio-card,codec {
+-			clocks = <&audio_rzg2l>;
+-			sound-dai = <&wm8978>;
++		codec_dai: simple-audio-card,codec {
++			clocks = <&versa3 0>;
++			sound-dai = <&da7219>;
+ 		};
+ 	};
+ 
+-	sound_card {
+-	};
+-
+ 	clk_ext_camera: clk_ext_camera {
+ 		compatible = "fixed-clock";
+ 		#clock-cells = <0>;
+@@ -545,10 +552,25 @@ &i2c0 {
+ 
+ 	status = "okay";
+ 
+-	wm8978: codec@1a {
+-		compatible = "wlf,wm8978";
+-		#sound-dai-cells = <0>;
+-		reg = <0x1a>;
++	versa3: versa3@68 {
++		compatible = "renesas,5p35023";
++		reg = <0x68>;
++		status = "okay";
++
++		#clock-cells = <1>;
++		clocks = <&x1_clk>;
++		clock-names = "x1";
++
++		renesas,settings = [
++			80 00 00 19 00 42 cc 0b 04 32 00 1a 5f 12 90 7b
++			00 32 00 00 00 00 00 00 01 24 03 b0 33 38 90 84
++			e0 c0 74 c4 96
++		];
++
++		assigned-clocks = <&versa3 0>;
++		assigned-clock-rates =	<12288000>;
++		clock-divider-read-only = <1>;
++		clock-flags = <2176>;
+ 	};
+ 
+ 	da7219: codec@1a {
+@@ -571,7 +593,7 @@ da7219_aad {
+ 			dlg,btn-cfg = <50>;
+ 			dlg,mic-det-thr = <500>;
+ 			dlg,jack-ins-deb = <20>;
+-			dlg,jack-det-rate = "32ms_64ms";
++			dlg,jack-det-rate = "32_64";
+ 			dlg,jack-rem-deb = <1>;
+ 
+ 			dlg,a-d-btn-thr = <0xa>;
+diff --git a/sound/soc/codecs/da7219-aad.c b/sound/soc/codecs/da7219-aad.c
+index 15e5e3eb592b..688f77cc95ba 100644
+--- a/sound/soc/codecs/da7219-aad.c
++++ b/sound/soc/codecs/da7219-aad.c
+@@ -1017,7 +1017,7 @@ int da7219_aad_init(struct snd_soc_component *component)
+ 
+ 	ret = request_threaded_irq(da7219_aad->irq, NULL,
+ 				   da7219_aad_irq_thread,
+-				   IRQF_TRIGGER_LOW | IRQF_ONESHOT,
++				   IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
+ 				   "da7219-aad", da7219_aad);
+ 	if (ret) {
+ 		dev_err(component->dev, "Failed to request IRQ: %d\n", ret);
+-- 
+2.43.0
+
