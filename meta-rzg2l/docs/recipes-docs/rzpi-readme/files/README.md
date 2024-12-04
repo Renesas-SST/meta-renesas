@@ -82,7 +82,9 @@ $ IMAGE=<target_image> ./rzsbc_yocto.sh build
 | renesas-quickboot-wayland  | Renesas core image for Linux quickboot with Wayland, QT support (no demo apps)              |
 
 **Note:**
+
 **(1) Please note that this build requires internet access and will take several hours.**
+
 **(2) If `IMAGE` is not set in the build command. The default image is `core-image-qt`.**
 
 Step 4: Collect the output
@@ -215,7 +217,7 @@ rzpi/
 28 directories, 92 files
 ```
 
-**The above structure is built using the target image `IMAGE=core-image-qt`. Other images will have the same structure.**
+**The above structure is an example when building using the target image `IMAGE=core-image-qt`. The compressed root filesystems and the environment artifacts will have names with the prefix `core-image-qt`. Other target images will have the same structure.**
 
 ### eSDK
 
@@ -241,7 +243,8 @@ poky-glibc-x86_64-core-image-qt-aarch64-rzpi-toolchain-ext-3.1.26.target.manifes
 ```
 
 **Note:**
-**(1) The SDK build may fail depending on the build environment. At that time, please run the build again after a period of time**
+**(1) The SDK build may fail depending on the build environment. At that time, please run the build again after a period of time.**
+
 **(2) The SDK result of the `ls` command is built using the target image `IMAGE=core-image-qt`. Other SDKs will be located in the same location `~/Yocto/yocto_rzsbc_board/build/tmp/deploy/sdk` but will have different names according to the target image.**
 
 #### Install eSDK on your host machine
@@ -724,6 +727,7 @@ root@rzpi:~# curl -s https://raw.githubusercontent.com/Realtek-OpenSource/androi
 ```
 **Note:**
 **(1) Please make sure you have internet access before running the commands.**
+
 **(2) If the firmware is being downloaded for the first time, a reboot of the board is required to ensure the TP-Link UB500 adapter functions properly.**
 
 - Step 2: Verify whether the TP-Link UB500 adapter is properly attached.
@@ -1325,8 +1329,8 @@ As mentioned, by default, RZ/G2L-SBC uses Open SSH. If you need to switch from O
 - Step 2: Comment the following lines in the `local.conf`
 
   ```shell
-  IMAGE_FEATURES_remove = "ssh-server-dropbear" 
-  IMAGE_FEATURES_append = "ssh-server-openssh"
+  IMAGE_FEATURES_remove = " ssh-server-dropbear"
+  IMAGE_FEATURES_append = " ssh-server-openssh"
   ```
   This will remove OpenSSH and enable Dropbear for the board.
 
