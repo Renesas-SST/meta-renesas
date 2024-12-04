@@ -24,15 +24,22 @@ SRC_URI:append:rzg2l-sbc =	"\
 					file://touch.cfg	\
 					file://peripherals.cfg	\
 					file://da7219.cfg \
-					file://drm_panel_ili9881c.cfg \
+					file://drm_panel.cfg \
 					file://ov5640.cfg \
+					file://panfrost.cfg \
 				"
 # Apply patches for novtech board
 SRC_URI:append:rzg2l-sbc = "\
                     file://dts-patches/0001-arm64-dts-renesas-Refactor-RZ-SBC-device-tree-and-re.patch \
+                    file://dts-patches/0002-arm64-dts-rzpi-restore-power-domains-property.patch \
+                    file://dts-patches/0003-arm64-rzpi-support-audio-for-RZ-G2L-SBC.patch \
+                    file://dts-patches/0004-media-rzg2l-cru-add-WA-to-retry-CRU-initialization-w.patch \
+                    file://dts-patches/0005-clk-renesas-add-WDT2-clocks-and-reset-support-for-r9.patch \
+                    file://dts-patches/0006-drivers-gpu-panel-add-waveshare-panel-support-for-RZ.patch \
+                    file://dts-patches/0007-drivers-rcar-du-rzg2l-add-clock-calculation-logic-fo.patch \
                 "
 
-KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg peripherals.cfg da7219.cfg drm_panel_ili9881c.cfg ov5640.cfg"
+KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg peripherals.cfg da7219.cfg drm_panel.cfg ov5640.cfg panfrost.cfg"
 
 KCONFIG_MODE:rzg2l-sbc = "alldefconfig"
 #KMACHINE:rzg2l-sbc ?= "rzg2l-sbc"

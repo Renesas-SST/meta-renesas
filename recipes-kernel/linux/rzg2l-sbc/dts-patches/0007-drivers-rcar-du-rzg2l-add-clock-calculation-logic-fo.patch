@@ -1,0 +1,301 @@
+From f6dd2c92832d9762cd9a4e8cc2e40b31382bcc32 Mon Sep 17 00:00:00 2001
+From: Long Trinh <long.trinh.rh@bp.renesas.com>
+Date: Tue, 10 Dec 2024 10:24:11 +0700
+Subject: [PATCH 7/7] drivers: rcar-du: rzg2l: add clock calculation logic for
+ DSI in DU timing driver
+
+This commit adds clock calculation logic for DSI within the DU
+timing driver, ensuring proper handling of clock settings based on DSI
+status.
+
+Upstream-Status: Pending
+
+Signed-off-by: Tien Nguyen <tien.nguyen.uh@renesas.com>
+Signed-off-by: Long Trinh <long.trinh.rh@bp.renesas.com>
+---
+ .../gpu/drm/renesas/rcar-du/rzg2l_mipi_dsi.c  |  19 ++-
+ .../gpu/drm/renesas/rcar-du/rzg2l_mipi_dsi.h  |  26 ++++
+ drivers/gpu/drm/renesas/rz-du/Makefile        |   3 +
+ drivers/gpu/drm/renesas/rz-du/rzg2l_du_crtc.c | 133 +++++++++++++++++-
+ drivers/gpu/drm/renesas/rz-du/rzg2l_du_crtc.h |  18 +++
+ 5 files changed, 194 insertions(+), 5 deletions(-)
+ create mode 100644 drivers/gpu/drm/renesas/rcar-du/rzg2l_mipi_dsi.h
+
+diff --git a/drivers/gpu/drm/renesas/rcar-du/rzg2l_mipi_dsi.c b/drivers/gpu/drm/renesas/rcar-du/rzg2l_mipi_dsi.c
+index 10febea473cd..f17967a07e95 100644
+--- a/drivers/gpu/drm/renesas/rcar-du/rzg2l_mipi_dsi.c
++++ b/drivers/gpu/drm/renesas/rcar-du/rzg2l_mipi_dsi.c
+@@ -25,6 +25,7 @@
+ #include <drm/drm_probe_helper.h>
+ 
+ #include "rzg2l_mipi_dsi_regs.h"
++#include "rzg2l_mipi_dsi.h"
+ 
+ struct rzg2l_mipi_dsi {
+ 	struct device *dev;
+@@ -286,8 +287,6 @@ static int rzg2l_mipi_dsi_startup(struct rzg2l_mipi_dsi *dsi,
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	clk_set_rate(dsi->vclk, mode->clock * 1000);
+-
+ 	ret = rzg2l_mipi_dsi_dphy_init(dsi, hsfreq);
+ 	if (ret < 0)
+ 		goto err_phy;
+@@ -602,6 +601,22 @@ static const struct drm_bridge_funcs rzg2l_mipi_dsi_bridge_ops = {
+  * Host setting
+  */
+ 
++int rzg2l_mipi_dsi_get_data_lanes(struct platform_device *pdev)
++{
++	struct rzg2l_mipi_dsi *dsi = platform_get_drvdata(pdev);
++
++	return dsi->lanes;
++}
++EXPORT_SYMBOL_GPL(rzg2l_mipi_dsi_get_data_lanes);
++
++int rzg2l_mipi_dsi_get_bpp(struct platform_device *pdev)
++{
++	struct rzg2l_mipi_dsi *dsi = platform_get_drvdata(pdev);
++
++	return mipi_dsi_pixel_format_to_bpp(dsi->format);
++}
++EXPORT_SYMBOL_GPL(rzg2l_mipi_dsi_get_bpp);
++
+ static int rzg2l_mipi_dsi_host_attach(struct mipi_dsi_host *host,
+ 				      struct mipi_dsi_device *device)
+ {
+diff --git a/drivers/gpu/drm/renesas/rcar-du/rzg2l_mipi_dsi.h b/drivers/gpu/drm/renesas/rcar-du/rzg2l_mipi_dsi.h
+new file mode 100644
+index 000000000000..043faa770096
+--- /dev/null
++++ b/drivers/gpu/drm/renesas/rcar-du/rzg2l_mipi_dsi.h
+@@ -0,0 +1,26 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * RZ/G2L MIPI DSI Encoder Header
++ *
++ * Copyright (C) 2021 Renesas Electronics Corporation
++ */
++
++#ifndef __RZG2L_MIPI_DSI_H__
++#define __RZG2L_MIPI_DSI_H__
++
++struct platform_device;
++
++#if IS_ENABLED(CONFIG_DRM_RZG2L_MIPI_DSI)
++int rzg2l_mipi_dsi_get_data_lanes(struct platform_device *pdev);
++int rzg2l_mipi_dsi_get_bpp(struct platform_device *pdev);
++#else
++static inline int rzg2l_mipi_dsi_get_data_lanes(struct platform_device *pdev)
++{
++	return 0;
++}
++static inline int rzg2l_mipi_dsi_get_bpp(struct platform_device *pdev)
++{
++	return 0;
++}
++#endif /* CONFIG_DRM_RZG2L_MIPI_DSI */
++#endif /* __RZG2L_MIPI_DSI_H__ */
+diff --git a/drivers/gpu/drm/renesas/rz-du/Makefile b/drivers/gpu/drm/renesas/rz-du/Makefile
+index 663b82a2577f..87468ca7ae2b 100644
+--- a/drivers/gpu/drm/renesas/rz-du/Makefile
++++ b/drivers/gpu/drm/renesas/rz-du/Makefile
+@@ -1,4 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
++
++CFLAGS_rzg2l_du_crtc.o := -I$(srctree)/drivers/gpu/drm/renesas/rcar-du
++
+ rzg2l-du-drm-y := rzg2l_du_crtc.o \
+ 		  rzg2l_du_drv.o \
+ 		  rzg2l_du_encoder.o \
+diff --git a/drivers/gpu/drm/renesas/rz-du/rzg2l_du_crtc.c b/drivers/gpu/drm/renesas/rz-du/rzg2l_du_crtc.c
+index 6e7aac6219be..6bb019dc6921 100644
+--- a/drivers/gpu/drm/renesas/rz-du/rzg2l_du_crtc.c
++++ b/drivers/gpu/drm/renesas/rz-du/rzg2l_du_crtc.c
+@@ -11,6 +11,8 @@
+ #include <linux/mutex.h>
+ #include <linux/platform_device.h>
+ #include <linux/reset.h>
++#include <linux/of.h>
++#include <linux/of_platform.h>
+ 
+ #include <drm/drm_atomic.h>
+ #include <drm/drm_atomic_helper.h>
+@@ -26,6 +28,7 @@
+ #include "rzg2l_du_encoder.h"
+ #include "rzg2l_du_kms.h"
+ #include "rzg2l_du_vsp.h"
++#include "rzg2l_mipi_dsi.h"
+ 
+ #define DU_MCR0			0x00
+ #define DU_MCR0_DI_EN		BIT(8)
+@@ -67,9 +70,133 @@ static void rzg2l_du_crtc_set_display_timing(struct rzg2l_du_crtc *rcrtc)
+ 	unsigned long mode_clock = mode->clock * 1000;
+ 	u32 ditr0, ditr1, ditr2, ditr3, ditr4, pbcr0;
+ 	struct rzg2l_du_device *rcdu = rcrtc->dev;
+-
+-	clk_prepare_enable(rcrtc->rzg2l_clocks.dclk);
+-	clk_set_rate(rcrtc->rzg2l_clocks.dclk, mode_clock);
++	struct device_node *dsi_node;
++	struct platform_device *pdev_dsi;
++
++	dsi_node = of_find_node_by_name(NULL, "dsi");
++	pdev_dsi = of_find_device_by_node(dsi_node);
++
++	if (of_device_is_available(dsi_node)) {
++		/* DSI handle */
++		void __iomem *cpg_base = ioremap(0x11010000, 0x1000);
++		u32 i;
++		u32 parallel_out;
++		struct cpg_param param;
++		int lanes, bpp;
++		u32 pix_clk = mode->clock * 1000;
++		unsigned long long hs_clk;
++		unsigned long long pll5_clk;
++		unsigned long long divide_val;
++		u32 dsi_div;
++
++		/* Common settings */
++		param.frequency = 0;
++		param.pl5_refdiv = 1;
++		param.pl5_divval = 0;
++		param.pl5_spread = 0x16;
++
++		lanes = rzg2l_mipi_dsi_get_data_lanes(pdev_dsi);
++		bpp = rzg2l_mipi_dsi_get_bpp(pdev_dsi);
++
++		parallel_out = 0;
++
++		/* Recommended values */
++		param.pl5_postdiv1 = 1;
++		param.pl5_postdiv2 = 1;
++
++		/* Calculate MIPI DSI High Speed clock and PLL clock(16x) */
++		hs_clk = ((long long)bpp * pix_clk) / (8 * lanes);
++		pll5_clk = hs_clk * 16;
++		if (pll5_clk > 1500000000) {
++			if (pll5_clk > 3000000000) {
++				dev_err(rcdu->dev, "Exceeded max frequency\n");
++				return;
++			}
++			param.sel_pll5_4 = 0;	/* 3.0 GHz */
++		} else {
++			param.sel_pll5_4 = 1;	/* 1.5 GHz */
++		}
++
++		/* Divide raw bit clock by source clock. */
++		/* Numerator portion (integer) */
++		divide_val = pll5_clk * param.pl5_refdiv * param.pl5_postdiv1 * param.pl5_postdiv2;
++		param.pl5_intin = divide_val / OSCLK_HZ;
++
++		/* Denominator portion (multiplied by 16k to become an integer) */
++		/* Remove integer portion */
++		divide_val = divide_val % OSCLK_HZ;
++		/* Convert from decimal to integer */
++		divide_val = divide_val * 16 * 1024 * 1024;
++		/* Now we can divide */
++		divide_val = divide_val / OSCLK_HZ;
++		param.pl5_fracin = divide_val;
++
++		/* How much we need to divide own our PLL */
++		dsi_div = pll5_clk / pix_clk;
++
++		/* Clock source is 3G or 1.5G? */
++		if (param.sel_pll5_4)
++			dsi_div /= 2;
++
++		/* Find possible clock divide ratios.
++		 * The equation is: dsi_div = (2 ^ dis_div_a) * (1 + dis_div_b)
++		 * With div_a fixed, we get: dis_div_b = (dsi_div / (2 ^ dis_div_a)) - 1
++		 *   div_a can be 0-4
++		 *   div_b can be 0-16
++		 */
++		for (i = 0; i < 4; i++) {
++			param.dsi_div_a = i;
++			param.dsi_div_b = (dsi_div / (1 << i)) - 1;
++			if (param.dsi_div_b > 16)
++				continue;
++			break;
++		}
++
++		if (i == 4) {
++			/* Could not find any combinations */
++			dev_err(rcdu->dev, "Cannot calculate frequency.\n");
++			return;
++		}
++
++		/* CPG_PLL5_STBY: RESETB=0 */
++		reg_write(cpg_base + 0x0140, 0x00150000);
++
++		/* CPG_OTHERFUNC1_REG: SEL_PLL5_3 clock (1.5GHz or 3.0GHz)*/
++		if (!parallel_out)
++			reg_write(cpg_base + 0xbe8, 0x10000 | param.sel_pll5_4);
++
++		/* CPG_PL2_DDIV: DIV_DSI_LPCLK */
++		reg_write(cpg_base + 0x0204, 0x10000000 |
++				(CPG_LPCLK_DIV << 12));
++		/* CPG_PL5_SDIV: DIV_DSI_A, DIV_DSI_B */
++		reg_write(cpg_base + 0x0420, 0x01010000 |
++				(param.dsi_div_a << 0) |
++				(param.dsi_div_b << 8));
++		/* CPG_PLL5_CLK1: POSTDIV1, POSTDIV2, REFDIV */
++		reg_write(cpg_base + 0x0144,
++				(param.pl5_postdiv1 << 0) |
++				(param.pl5_postdiv2 << 4) |
++				(param.pl5_refdiv << 8));
++		/* CPG_PLL5_CLK3: DIVVAL=6, FRACIN */
++		reg_write(cpg_base + 0x014C,
++				(param.pl5_divval << 0) |
++				(param.pl5_fracin << 8));
++		/* CPG_PLL5_CLK4: INTIN */
++		reg_write(cpg_base + 0x0150, 0x000000ff |
++				(param.pl5_intin << 16));
++		/* CPG_PLL5_CLK5: SPREAD */
++		reg_write(cpg_base + 0x0154,
++				(param.pl5_intin << 16));
++
++		/* CPG_PLL5_STBY: RESETB=1 */
++		reg_write(cpg_base + 0x0140, 0x00150001);
++
++		iounmap(cpg_base);
++		clk_prepare_enable(rcrtc->rzg2l_clocks.dclk);
++	} else {
++		clk_prepare_enable(rcrtc->rzg2l_clocks.dclk);
++		clk_set_rate(rcrtc->rzg2l_clocks.dclk, mode_clock);
++	}
+ 
+ 	ditr0 = (DU_DITR0_DEMD_HIGH
+ 	      | ((mode->flags & DRM_MODE_FLAG_PVSYNC) ? DU_DITR0_VSPOL : 0)
+diff --git a/drivers/gpu/drm/renesas/rz-du/rzg2l_du_crtc.h b/drivers/gpu/drm/renesas/rz-du/rzg2l_du_crtc.h
+index cbba38acc377..7b6f61121aff 100644
+--- a/drivers/gpu/drm/renesas/rz-du/rzg2l_du_crtc.h
++++ b/drivers/gpu/drm/renesas/rz-du/rzg2l_du_crtc.h
+@@ -62,6 +62,24 @@ struct rzg2l_du_crtc {
+ 	} rzg2l_clocks;
+ };
+ 
++struct cpg_param {
++	u32	frequency;
++	u32	pl5_refdiv;
++	u32	pl5_intin;
++	u32	pl5_fracin;
++	u32	pl5_postdiv1;
++	u32	pl5_postdiv2;
++	u32	pl5_divval;
++	u32	pl5_spread;
++	u32	dsi_div_a;
++	u32	dsi_div_b;
++	u32	sel_pll5_4;
++};
++
++#define OSCLK_HZ 24000000
++#define reg_write(x, a)		iowrite32(a, x)
++#define CPG_LPCLK_DIV		0
++
+ static inline struct rzg2l_du_crtc *to_rzg2l_crtc(struct drm_crtc *c)
+ {
+ 	return container_of(c, struct rzg2l_du_crtc, crtc);
+-- 
+2.43.0
+

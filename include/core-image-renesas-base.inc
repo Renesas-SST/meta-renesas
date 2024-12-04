@@ -6,6 +6,8 @@ IMAGE_INSTALL:append = " \
     coreutils \
     can-utils \
     i2c-tools \
+    v4l-utils \
+    v4l2-init \
     spitools \
     python3-smbus \
     python3-smbus2 \
