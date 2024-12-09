@@ -41,4 +41,7 @@ target
 
 ## Note
 
-Each of these subfolders have Readme's at the appropriate level in the file hierarchy to help you further.
+- The above structure is an example when building with the target image `IMAGE=core-image-qt`. The compressed root filesystems are `core-image-qt-rzpi.wic` (wic format) and `core-image-qt-rzpi.tar.bz2` (tar.bz2 format). Other target images will follow the same structure but with names corresponding to their respective target images.
+
+- Each of these subfolders have Readme's at the appropriate level in the file hierarchy to help you further.
+
