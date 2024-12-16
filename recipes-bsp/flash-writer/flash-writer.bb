@@ -54,15 +54,17 @@ do_compile() {
 		oe_runmake OUTPUT_DIR=${PMIC_BUILD_DIR} clean;
 		oe_runmake BOARD=${PMIC_BOARD} OUTPUT_DIR=${PMIC_BUILD_DIR};
 	fi
+	mv ${S}/AArch64_output/Flash_Writer*${BOARD}*.mot ${S}/AArch64_output/Flash_Writer_SCIF_${MACHINE}.mot
+	mv ${PMIC_BUILD_DIR}/Flash_Writer*${PMIC_BOARD}*.mot ${PMIC_BUILD_DIR}/Flash_Writer_SCIF_${MACHINE}_PMIC.mot
 }
 
 do_install[noexec] = "1"
 
 do_deploy() {
-	install -d ${DEPLOYDIR}
-	install -m 644 ${S}/AArch64_output/*.mot ${DEPLOYDIR}
+	install -d ${DEPLOYDIR}/target/images
+	install -m 644 ${S}/AArch64_output/*.mot ${DEPLOYDIR}/target/images
 	if [ "${PMIC_SUPPORT}" = "1" ]; then
-		install -m 644 ${PMIC_BUILD_DIR}/*.mot ${DEPLOYDIR}
+		install -m 644 ${PMIC_BUILD_DIR}/*.mot ${DEPLOYDIR}/target/images
 	fi
 }
 
