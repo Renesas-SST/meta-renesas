@@ -305,3 +305,6 @@ PREFERRED_RPROVIDER_wireless-regdb-static = "wireless-regdb"
 
 # Accepting commercial license flags for gstreamer build
 LICENSE_FLAGS_ACCEPTED:append = " commercial"
+
+# Disable generating JSON SPDX for images
+# INHERIT:remove = "create-spdx"

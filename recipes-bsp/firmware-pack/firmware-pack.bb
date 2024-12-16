@@ -33,13 +33,13 @@ do_compile () {
 # Install fip images to deploy folder
 do_deploy () {
     # Create deploy folder
-    install -d ${DEPLOYDIR}
+    install -d ${DEPLOYDIR}/target/images
 
     # Copy fip images
-    install -m 0644 ${S}/bl2_bp.bin ${DEPLOYDIR}/bl2_bp-${MACHINE}.bin
-    install -m 0644 ${S}/bl2_bp.srec ${DEPLOYDIR}/bl2_bp-${MACHINE}.srec
-    install -m 0644 ${S}/fip.bin ${DEPLOYDIR}/fip-${MACHINE}.bin
-    install -m 0644 ${S}/fip.srec ${DEPLOYDIR}/fip-${MACHINE}.srec
+    install -m 0644 ${S}/bl2_bp.bin ${DEPLOYDIR}/target/images/bl2_bp-${MACHINE}.bin
+    install -m 0644 ${S}/bl2_bp.srec ${DEPLOYDIR}/target/images/bl2_bp-${MACHINE}.srec
+    install -m 0644 ${S}/fip.bin ${DEPLOYDIR}/target/images/fip-${MACHINE}.bin
+    install -m 0644 ${S}/fip.srec ${DEPLOYDIR}/target/images/fip-${MACHINE}.srec
 
     # Copy fip image for eSD boot
     install -m 0644 ${S}/bl2_bp_esd.bin ${DEPLOYDIR}/bl2_bp_esd-${MACHINE}.bin
