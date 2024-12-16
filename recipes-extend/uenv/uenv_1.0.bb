@@ -27,8 +27,14 @@ addtask deploy after do_install
 do_deploy () {
     install -d ${DEPLOYDIR}/target/env
     install -m 0644 ${D}/boot/uEnv.txt ${DEPLOYDIR}/target/env
-    install -m 0644 ${D}/boot/Readme.md ${DEPLOYDIR}/target/env
+    install -m 0644 ${D}/boot/Readme.md ${DEPLOYDIR}
 }
+
+# Force the package to be redeployed for each target. This is essential
+# to ensure the Readme.md file is available in DEPLOYDIR, allowing it to be
+# installed into partition 1.
+# Without this, other targets may fail during the build process.
+do_deploy[nostamp] = "1"
 
 COMPATIBLE_MACHINE:rzg2l-sbc = "(rzg2l-sbc)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"

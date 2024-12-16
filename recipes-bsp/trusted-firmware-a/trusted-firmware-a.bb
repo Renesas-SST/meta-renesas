@@ -74,4 +74,7 @@ do_deploy() {
     install -d ${DEPLOYDIR}/target/images
     install -m 0644 ${D}/boot/bl2-${MACHINE}.bin ${DEPLOYDIR}/target/images/bl2-${MACHINE}.bin
 }
+
+addtask deploy after do_install
+
 COMPATIBLE_MACHINE = "rzg2l-sbc"
