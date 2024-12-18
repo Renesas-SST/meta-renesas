@@ -19,7 +19,6 @@ IMAGE_INSTALL:append = " \
     memtester \
     yavta \
     watchdog \
-    audio-init \
 "
 
 # Additional tools for support Tool develop

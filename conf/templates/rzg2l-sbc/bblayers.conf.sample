@@ -1,6 +1,13 @@
+# POKY_BBLAYERS_CONF_VERSION is increased each time build/conf/bblayers.conf
+# changes incompatibly
 POKY_BBLAYERS_CONF_VERSION = "2"
+
 BBPATH = "${TOPDIR}"
 BBFILES ?= ""
+
+QT_LAYER = "${@os.path.isdir("##OEROOT##/../meta-qt5")}"
+RZ_FEATURE_CODEC = "${@os.path.isdir("##OEROOT##/../meta-rz-features/meta-rz-codecs")}"
+
 BBLAYERS ?= " \
   ##OEROOT##/meta \
   ##OEROOT##/meta-poky \
@@ -11,4 +18,6 @@ BBLAYERS ?= " \
   ##OEROOT##/../meta-openembedded/meta-multimedia \
   ##OEROOT##/../meta-openembedded/meta-networking \
   ##OEROOT##/../meta-summit-radio/meta-summit-radio \
+  ${@'##OEROOT##/../meta-qt5' if '${QT_LAYER}' == 'True' else ''} \
+  ${@'##OEROOT##/../meta-rz-features/meta-rz-codecs' if '${RZ_FEATURE_CODEC}' == 'True' else ''} \
   "
