@@ -1,5 +1,7 @@
 IMAGE_INSTALL:append = " \
 	packagegroup-gstreamer1.0-plugins \
+	packagegroup-multimedia-libs \
+	packagegroup-multimedia-kernel-modules \
 	packagegroup-wayland-community \
 "
 # For GPU testing purposes
