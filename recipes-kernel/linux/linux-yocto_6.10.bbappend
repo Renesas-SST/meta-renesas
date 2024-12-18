@@ -37,6 +37,7 @@ SRC_URI:append:rzg2l-sbc = "\
                     file://dts-patches/0005-clk-renesas-add-WDT2-clocks-and-reset-support-for-r9.patch \
                     file://dts-patches/0006-drivers-gpu-panel-add-waveshare-panel-support-for-RZ.patch \
                     file://dts-patches/0007-drivers-rcar-du-rzg2l-add-clock-calculation-logic-fo.patch \
+                    file://dts-patches/0008-rzg2l-sbc-Add-vcp4-module-to-device-tree.patch \
                 "
 
 KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg peripherals.cfg da7219.cfg drm_panel.cfg ov5640.cfg panfrost.cfg"

@@ -1,0 +1,72 @@
+From 9e2feb11c70b468d42f4b9fda069a43fe27254d8 Mon Sep 17 00:00:00 2001
+From: Khanh Do Duy <khanh.do.yg@bp.renesas.com>
+Date: Fri, 6 Dec 2024 07:55:15 +0000
+Subject: [PATCH] rzg2l-sbc: Support Linux 6.10
+Upstream-Status: Pending
+Signed-off-by: Khanh Do Duy <khanh.do.yg@bp.renesas.com>
+---
+ .../files/mmngrbuf/drv/mmngr_buf_drv.c            | 15 +++++++++++----
+ .../files/mmngrbuf/include/mmngr_buf_private.h    |  4 ++--
+ 2 files changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+index 5ffee15..aba3d88 100644
+--- a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
++++ b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+@@ -70,6 +70,8 @@
+ 
+ #include "mmngr_buf_private.h"
+ 
++MODULE_IMPORT_NS(DMA_BUF);
++
+ static struct MM_BUF_DRVDATA	*mm_buf_drvdata;
+ 
+ static int open(struct inode *inode, struct file *file)
+@@ -294,7 +296,8 @@ static int dmabuf_mmap(struct dma_buf *buf, struct vm_area_struct *vma)
+ 	pgprot_t prot = vm_get_page_prot(vma->vm_flags);
+ 	struct MM_BUF_PRIVATE *priv = buf->priv;
+ 
+-	vma->vm_flags |= (VM_IO | VM_DONTEXPAND | VM_DONTDUMP);
++	vm_flags_set(vma, VM_IO | VM_DONTEXPAND | VM_DONTDUMP);
++
+ 	vma->vm_private_data = priv;
+ 	vma->vm_page_prot = pgprot_writecombine(prot);
+ 
+@@ -305,12 +308,16 @@ static int dmabuf_mmap(struct dma_buf *buf, struct vm_area_struct *vma)
+ 	return 0;
+ }
+ 
+-static void *dmabuf_vmap(struct dma_buf *buf)
++static int dmabuf_vmap(struct dma_buf *buf, struct iosys_map *map)
+ {
+-	return NULL;
++	struct MM_BUF_PRIVATE *priv = buf->priv;
++
++	phys_to_virt(priv->hard_addr);
++
++	return 0;
+ }
+ 
+-static void dmabuf_vunmap(struct dma_buf *buf, void *vaddr)
++static void dmabuf_vunmap(struct dma_buf *buf, struct iosys_map *map)
+ {
+ 
+ }
+diff --git a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h
+index a50a196..5677a30 100644
+--- a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h
++++ b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h
+@@ -119,8 +119,8 @@ static int dmabuf_begin_cpu_access(struct dma_buf *buf,
+ static int dmabuf_end_cpu_access(struct dma_buf *buf,
+ 				enum dma_data_direction direction);
+ static int dmabuf_mmap(struct dma_buf *buf, struct vm_area_struct *vma);
+-static void *dmabuf_vmap(struct dma_buf *buf);
+-static void dmabuf_vunmap(struct dma_buf *buf, void *vaddr);
++static int dmabuf_vmap(struct dma_buf *buf, struct iosys_map *map);
++static void dmabuf_vunmap(struct dma_buf *buf, struct iosys_map *map);
+ static int mm_probe(struct platform_device *pdev);
+ static int mm_remove(struct platform_device *pdev);
+ static int mm_init(void);
+-- 
+2.25.1
+
