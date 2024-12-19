@@ -54,7 +54,6 @@ MACHINE ??= "qemux86-64"
 # The default is a downloads directory under TOPDIR which is the build directory.
 #
 #DL_DIR ?= "${TOPDIR}/downloads"
-
 #
 # Where to place shared-state files
 #
@@ -298,6 +297,11 @@ KERNEL_DANGLING_FEATURES_WARN_ONLY = "1"
 # Add systemd configuration
 DISTRO_FEATURES:append = " systemd usrmerge pam"
 VIRTUAL-RUNTIME_init_manager = "systemd"
+
+PREFERRED_RPROVIDER_wpa-supplicant = "summit-supplicant-lwb"
+PREFERRED_RPROVIDER_wpa-supplicant-cli = "summit-supplicant-lwb"
+PREFERRED_RPROVIDER_wpa-supplicant-passphrase = "summit-supplicant-lwb"
+PREFERRED_RPROVIDER_wireless-regdb-static = "wireless-regdb"
 
 # Accepting commercial license flags for gstreamer build
 LICENSE_FLAGS_ACCEPTED:append = " commercial"

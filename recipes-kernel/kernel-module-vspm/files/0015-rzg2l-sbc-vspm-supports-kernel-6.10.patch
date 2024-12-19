@@ -1,0 +1,27 @@
+From a8523d6bdc71eea75884d008ec2e29a2782887b7 Mon Sep 17 00:00:00 2001
+From: Khanh Do Duy <khanh.do.yg@bp.renesas.com>
+Date: Wed, 18 Dec 2024 08:17:30 +0000
+Subject: [PATCH] rzg2l-sbc: vspm supports kernel 6.10
+Upstream-Status: Pending
+
+Signed-off-by: Khanh Do Duy <khanh.do.yg@bp.renesas.com>
+---
+ vspm-module/files/vspm/drv/frame.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/frame.c b/vspm-module/files/vspm/drv/frame.c
+index 7ea5b6d..dc1d1c4 100644
+--- a/vspm-module/files/vspm/drv/frame.c
++++ b/vspm-module/files/vspm/drv/frame.c
+@@ -400,8 +400,6 @@ int fw_execute(unsigned short tid, struct fw_func_tbl *func_tbl)
+ 			wait_for_completion(&task_info->suspend);
+ 	}
+ 
+-	/* Do exit kthread */
+-	do_exit(FW_OK);
+ 	return FW_OK;
+ }
+ 
+-- 
+2.25.1
+

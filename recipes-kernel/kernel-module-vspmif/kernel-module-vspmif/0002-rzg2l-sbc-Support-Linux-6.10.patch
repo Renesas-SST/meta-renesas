@@ -1,0 +1,34 @@
+From ffdedec8e8891a5f8a73d1af1ad900104ef89c0b Mon Sep 17 00:00:00 2001
+From: Khanh Do Duy <khanh.do.yg@bp.renesas.com>
+Date: Wed, 4 Dec 2024 07:24:56 +0000
+Subject: [PATCH 2/2] rzg2l-sbc: Support Linux 6.10
+Upstream-Status: Pending
+Signed-off-by: Khanh Do Duy <khanh.do.yg@bp.renesas.com>
+---
+ vspm_if-module/files/vspm_if/drv/vspm_if_main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+index 790dde4..6139190 100644
+--- a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
++++ b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+@@ -60,6 +60,7 @@
+ #include <linux/init.h>
+ #include <linux/miscdevice.h>
+ #include <linux/of_device.h>
++#include <linux/of.h>
+ #include <linux/platform_device.h>
+ #include <linux/slab.h>
+ #include <linux/dma-mapping.h>
+@@ -531,7 +532,7 @@ static long vspm_ioctl_wait_thread(struct vspm_if_private_t *priv)
+ 	}
+ 
+ 	/* wait for running state of callback thread  */
+-	while ((!priv->thread) || (priv->thread->state == TASK_RUNNING))
++	while ((!priv->thread) || (priv->thread->__state == TASK_RUNNING))
+ 		schedule();
+ 
+ 	return 0;
+-- 
+2.25.1
+

@@ -1,0 +1,50 @@
+From ce07f5a6cda198f3b64e3083b551a386f9006de3 Mon Sep 17 00:00:00 2001
+From: Khanh Do Duy <khanh.do.yg@bp.renesas.com>
+Date: Fri, 6 Dec 2024 06:40:12 +0000
+Subject: [PATCH 2/2] rzg2l-sbc: mmngr supports Linux 6.10
+Upstream-Status: Pending
+Signed-off-by: Khanh Do Duy <khanh.do.yg@bp.renesas.com>
+---
+ .../mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c     | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index fdef30b..fa96943 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -877,15 +877,19 @@ static void mm_cnv_addr(struct MM_PARAM *tmp)
+ 	struct mm_struct *mm = current->mm;
+ 	unsigned long start;
+ 	unsigned long pfn;
++	pte_t *ptep;
++	spinlock_t *ptl;
+ 	int lp = 0;
+ 	int ret = 0;
+ 
+ 	mmap_read_lock(mm);
+ 	vma = find_vma(mm, tmp->user_virt_addr);
+ 	start = tmp->user_virt_addr & PAGE_MASK;
+-	ret = follow_pfn(vma, start, &pfn);
++	ret = follow_pte(vma, start, &ptep, &ptl);
+ 	if(ret != 0)
+ 		 pr_warn("Could not convert virt[%p] addr", tmp->user_virt_addr);
++	pfn = pte_pfn(ptep_get(ptep));
++	pte_unmap_unlock(ptep, ptl);
+ 	tmp->hard_addr = pfn << PAGE_SHIFT;
+ 	mmap_read_unlock(mm);
+ 
+@@ -1160,9 +1164,9 @@ static int mmap(struct file *filp, struct vm_area_struct *vma)
+ 
+ 	if (p->flag != MM_KERNELHEAP_CACHED) {
+ 		vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
+-		vma->vm_flags |= (VM_IO | VM_DONTEXPAND | VM_DONTDUMP);
++		vm_flags_set(vma, VM_IO | VM_DONTEXPAND | VM_DONTDUMP);
+ 	} else {
+-		vma->vm_flags |= (VM_DONTEXPAND | VM_DONTDUMP);
++		vm_flags_set(vma, VM_DONTEXPAND | VM_DONTDUMP);
+ 	}
+ 
+ 	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+-- 
+2.25.1
+

@@ -1,11 +1,12 @@
 SUMMARY = "GStreamer 1.0 package groups"
 LICENSE = "MIT"
 
-#Note: We will enable VSPM options when integrating the VSPM module
-DEPENDS = "gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly"
-DEPENDS += "${@bb.utils.contains("USE_OMX_COMMON", "1", "gstreamer1.0-omx", "", d)}"
-# DEPENDS += "gstreamer1.0-plugin-vspmfilter"
-
+DEPENDS = "gstreamer1.0 \
+    gstreamer1.0-plugins-base \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-ugly \
+    ${@bb.utils.contains("USE_OMX_COMMON", "1", "gstreamer1.0-omx", "", d)}"
 
 LIC_FILES_CHKSUM = " \
     file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302 \
@@ -23,7 +24,6 @@ PACKAGES = " \
     packagegroup-gstreamer1.0-plugins-debug \
     packagegroup-gstreamer1.0-plugins-bad \
 "
-#    packagegroup-vspfilter-init 
 
 RDEPENDS:packagegroup-gstreamer1.0-plugins = " \
     packagegroup-gstreamer1.0-plugins-base \
@@ -36,7 +36,6 @@ RDEPENDS:packagegroup-gstreamer1.0-plugins = " \
     gstreamer1.0-plugins-bad \
 	${@bb.utils.contains("USE_OMX_COMMON", "1", "gstreamer1.0-omx", "", d)} \
 "
-#    gstreamer1.0-plugin-vspmfilter 
 
 RDEPENDS:packagegroup-gstreamer1.0-plugins-base = " \
     gstreamer1.0-meta-base \

@@ -1,0 +1,71 @@
+From cfc58772ce0c6263dc143bc991e19a2103cdbf2e Mon Sep 17 00:00:00 2001
+From: Khanh Do Duy <khanh.do.yg@bp.renesas.com>
+Date: Thu, 12 Dec 2024 09:23:17 +0000
+Subject: [PATCH] rzg2l-sbc: get interrupt number
+Upstream-Status: Pending
+
+---
+ vspm-module/files/vspm/drv/isu/isu_drv_local.h |  2 +-
+ vspm-module/files/vspm/drv/isu/isu_drv_phy.c   | 14 ++++++--------
+ 2 files changed, 7 insertions(+), 9 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_local.h b/vspm-module/files/vspm/drv/isu/isu_drv_local.h
+index c015071..8f56275 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_local.h
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_local.h
+@@ -177,7 +177,7 @@ struct isu_ch_info {
+ struct isu_prv_data {
+ 	struct platform_device *pdev;
+ 	void __iomem *isu_reg;
+-	struct resource *irq;
++	int irq_number;
+ 	struct isu_res_data {
+ 		unsigned int usable_rpf;
+ 		unsigned int usable_wpf;
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_phy.c b/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
+index 2e45b44..5e1c9f8 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
+@@ -584,23 +584,22 @@ long isu_ins_reg_ih(struct isu_prv_data *prv)
+ 	int ercd;
+ 
+ 	/* get irq information from platform */
+-	prv->irq = platform_get_resource(prv->pdev, IORESOURCE_IRQ, 0);
+-	if (!prv->irq) {
++	prv->irq_number = platform_get_irq(prv->pdev, 0);
++	if (prv->irq_number < 0) {
+ 		EPRINT("%s: failed to get IRQ resource!!\n", __func__);
+ 		return E_ISU_DEF_INH;
+ 	}
+ 
+ 	/* registory interrupt handler */
+ 	ercd = request_irq(
+-		prv->irq->start,
++		prv->irq_number,
+ 		isu_ins_ih,
+ 		IRQF_SHARED,
+ 		dev_name(&prv->pdev->dev),
+ 		prv);
+ 	if (ercd) {
+ 		EPRINT("%s: failed to request irq!! ercd=%d, irq=%d\n",
+-			__func__, ercd, (int)prv->irq->start);
+-		prv->irq = NULL;
++			__func__, ercd, prv->irq_number);
+ 		return E_VSP_DEF_INH;
+ 	}
+ 
+@@ -615,9 +614,8 @@ long isu_ins_reg_ih(struct isu_prv_data *prv)
+ long isu_ins_unreg_ih(struct isu_prv_data *prv)
+ {
+ 	/* release interrupt handler */
+-	if (prv->irq) {
+-		free_irq(prv->irq->start, prv);
+-		prv->irq = NULL;
++	if (prv->irq_number >= 0) {
++		free_irq(prv->irq_number, prv);
+ 	}
+ 
+ 	return 0;
+-- 
+2.25.1
+
