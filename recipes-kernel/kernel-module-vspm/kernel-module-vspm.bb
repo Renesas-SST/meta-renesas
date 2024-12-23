@@ -56,6 +56,9 @@ do_install () {
     # This file installed in SDK by kernel-devsrc pkg.
     install -m 644 ${B}/Module.symvers ${KERNELSRC}/include/vspm.symvers
 
+    # Replace absolute paths in vspm.symvers with a generic path
+    sed -i "s|${WORKDIR}|/usr/src/linux|g" ${KERNELSRC}/include/vspm.symvers
+
     # Install kernel module
     install -m 644 ${B}/vspm.ko ${D}/usr/lib/modules/${KERNEL_VERSION}/extra/
 

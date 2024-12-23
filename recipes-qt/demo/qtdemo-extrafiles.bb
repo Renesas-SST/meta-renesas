@@ -1,0 +1,46 @@
+DESCRIPTION = "Recipe for extra files for Qt demonstration"
+LICENSE = "CLOSED"
+
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+
+SRC_URI = " \
+	file://qtdemo-extrafiles.tar \
+	file://extra \
+	http://resource.renesas.com/resource/lib/img/products/media/auto-j/microcontrollers-microprocessors/rz/rzg/qt-videos/renesas-bigideasforeveryspace.mp4;name=video \
+ 	http://resource.renesas.com/resource/lib/img/products/media/auto-j/microcontrollers-microprocessors/rz/rzg/hmi-mmpoc-videos/h264-hd-30.mp4;name=video_hd30 \
+	http://resource.renesas.com/resource/lib/img/products/media/auto-j/microcontrollers-microprocessors/rz/rzg/hmi-mmpoc-videos/h264-bl10-fhd-30p-5m-aac-lc-stereo-124k-48000x264.mp4;name=video_fhd30 \
+	"
+
+SRC_URI[video.md5sum] = "44748e486a971d1e039fbfc3bc15b6f1"
+SRC_URI[video_hd30.md5sum] = "619825b0713dc39f7689c85750f136a7"
+SRC_URI[video_fhd30.md5sum] = "33696ae57ae684e2cc6f83b3aabee005"
+
+S = "${WORKDIR}/sources-unpack/extrafiles"
+
+do_configure[noexec] = "1"
+do_compile[noexec] = "1"
+
+do_install() {
+    install -d ${D}/home/root/demo/icons
+    install -d ${D}/home/root/demo/scripts/
+    install -d ${D}/home/root/videos
+    install -d ${D}/home/root/audios
+    install -d ${D}/home/root/info/img
+
+    install -Dm 755 ${S}/demo/icons/* ${D}/home/root/demo/icons/
+    install -Dm 755 ${S}/demo/scripts/* ${D}/home/root/demo/scripts/
+    install -Dm 644 ${UNPACKDIR}/*.mp4 ${D}/home/root/videos/
+
+    install -Dm 644 ${S}/audios/* ${D}/home/root/audios/
+    install -Dm 644 ${S}/info/img/* ${D}/home/root/info/img/
+    install -Dm 755 ${S}/info/renesas_rzg2l_info.html ${D}/home/root/info/
+    install -Dm 755 ${UNPACKDIR}/extra/*.sh ${D}/home/root/demo/scripts/
+    install -Dm 755 ${UNPACKDIR}/extra/*.png ${D}/home/root/demo/icons/
+}
+
+FILES:${PN} = " \
+	/home/root/demo/* \
+	/home/root/videos/* \
+	/home/root/audios/* \
+	/home/root/info/* \
+"
