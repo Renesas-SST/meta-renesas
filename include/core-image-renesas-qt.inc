@@ -29,6 +29,10 @@ SDK_POST_INSTALL_COMMAND:append = " ${sdk_post_process}"
 
 export SOURCE_DIR="${THISDIR}/environment-setup"
 append_setup () {
+    # Create a directory for qt.conf used in the eSDK population task
+    install -d ${SDK_OUTPUT}/${SDKPATH}/sysroots/${SDK_SYS}/usr/bin/qt5
+
+    # Create a directory for environment setup script
     install -d ${SDK_OUTPUT}/${SDKPATH}/sysroots/${SDK_SYS}/environment-setup.d/
     cp ${SOURCE_DIR}/environment-setup-append.sh ${SDK_OUTPUT}/${SDKPATH}/sysroots/${SDK_SYS}/environment-setup.d/
 }
