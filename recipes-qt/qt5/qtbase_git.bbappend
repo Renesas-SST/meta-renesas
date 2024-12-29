@@ -19,7 +19,7 @@ PACKAGECONFIG:append = " fontconfig sql-sqlite sql-sqlite openssl icu accessibil
 CONF_ADD_X11 = "${@bb.utils.contains('DISTRO_FEATURES', 'x11', ' -qpa xcb -xcb -xcb-xlib -system-xcb -eglfs', '', d)}"
 CONF_ADD_WAYLAND = "${@bb.utils.contains('DISTRO_FEATURES', 'wayland', ' -qpa wayland -no-xcb', '', d)}"
 
-PACKAGECONFIG_CONFARGS:append += "\
+PACKAGECONFIG_CONFARGS:append = "\
 	-no-kms \
 	-no-gbm \
 	-no-evdev \
