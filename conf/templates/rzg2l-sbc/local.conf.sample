@@ -298,10 +298,6 @@ KERNEL_DANGLING_FEATURES_WARN_ONLY = "1"
 DISTRO_FEATURES:append = " systemd usrmerge pam"
 VIRTUAL-RUNTIME_init_manager = "systemd"
 
-# Add the static lib to SDK toolchain
-SDKIMAGE_FEATURES:append = " staticdev-pkgs dev-pkgs dbg-pkgs"
-
-# Set provider for wpa supplicant
 PREFERRED_RPROVIDER_wpa-supplicant = "summit-supplicant-lwb"
 PREFERRED_RPROVIDER_wpa-supplicant-cli = "summit-supplicant-lwb"
 PREFERRED_RPROVIDER_wpa-supplicant-passphrase = "summit-supplicant-lwb"
@@ -310,10 +306,22 @@ PREFERRED_RPROVIDER_wireless-regdb-static = "wireless-regdb"
 # Accepting commercial license flags for gstreamer build
 LICENSE_FLAGS_ACCEPTED:append = " commercial"
 
+ERROR_QA:remove:layer-qt5-layer = "buildpaths"
+WARN_QA:append:layer-qt5-layer = " buildpaths"
+
+DISTRO_FEATURES:remove = " x11"
+
+SDKIMAGE_FEATURES:append = " staticdev-pkgs dev-pkgs dbg-pkgs"
+
 # Disable generating JSON SPDX for images
 INHERIT:remove = "create-spdx"
 
-# Reduce the level of build paths to avoid TMPDIR errors
-ERROR_QA:remove:layer-qt5-layer = "buildpaths"
-WARN_QA:append:layer-qt5-layer = " buildpaths"
-QT_DIR_NAME = "/qt5"
+# Override install lib in sysroot for Qt6
+QT6_INSTALL_BINDIR = "${bindir}/qt6"
+QT6_INSTALL_DATADIR = "${datadir}/qt6"
+QT6_INSTALL_INCLUDEDIR = "${includedir}/qt6"
+QT6_INSTALL_LIBEXECDIR = "${libexecdir}/qt6"
+QT6_INSTALL_DOCDIR = "${docdir}/qt6"
+QT6_INSTALL_TRANSLATIONSDIR = "${datadir}/translations/qt6"
+QT6_INSTALL_PLUGINSDIR = "${libdir}/plugins/qt6"
+QT6_INSTALL_QMLDIR = "${libdir}/qml/qt6"
