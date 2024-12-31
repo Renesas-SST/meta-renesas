@@ -1,3 +1,5 @@
+inherit populate_sdk_ext
+
 # Basic packages/tools
 IMAGE_INSTALL:append = " \
     kernel-image \
