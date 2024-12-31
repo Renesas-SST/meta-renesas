@@ -5,7 +5,8 @@ POKY_BBLAYERS_CONF_VERSION = "2"
 BBPATH = "${TOPDIR}"
 BBFILES ?= ""
 
-QT_LAYER = "${@os.path.isdir("##OEROOT##/../meta-qt5")}"
+QT5_LAYER = "${@os.path.isdir("##OEROOT##/../meta-qt5")}"
+QT6_LAYER = "${@os.path.isdir("##OEROOT##/../meta-qt6")}"
 RZ_FEATURE_CODEC = "${@os.path.isdir("##OEROOT##/../meta-rz-features/meta-rz-codecs")}"
 
 BBLAYERS ?= " \
@@ -19,5 +20,6 @@ BBLAYERS ?= " \
   ##OEROOT##/../meta-openembedded/meta-networking \
   ##OEROOT##/../meta-summit-radio/meta-summit-radio \
   ${@'##OEROOT##/../meta-qt5' if '${QT_LAYER}' == 'True' else ''} \
+  ${@'##OEROOT##/../meta-qt6' if '${QT_LAYER}' == 'True' else ''} \
   ${@'##OEROOT##/../meta-rz-features/meta-rz-codecs' if '${RZ_FEATURE_CODEC}' == 'True' else ''} \
   "

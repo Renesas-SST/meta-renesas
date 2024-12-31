@@ -11,13 +11,22 @@ TOOLCHAIN_HOST_TASK:append = " nativesdk-bison nativesdk-flex nativesdk-python3-
 TOOLCHAIN_HOST_TASK:append = " \
     nativesdk-qttools-tools \
     nativesdk-qtbase \
+    nativesdk-qtbase-tools \
     nativesdk-qtbase-dev \
     nativesdk-perl-modules \
     nativesdk-qtdeclarative-tools \
     nativesdk-qtwayland-tools \
 "
 
-FEATURE_PACKAGES_tools-sdk += " packagegroup-qt5-toolchain-target kernel-devsrc "
+FEATURE_PACKAGES_tools-sdk += " \
+    packagegroup-qt6-modules \
+    kernel-devsrc \
+    packagegroup-qt6-toolchain-target \
+    "
+
+IMAGE_INSTALL:append = " qttools qttools-dev qttools-tools "
+IMAGE_INSTALL:append = " qtbase-dev qtbase-tools "
+
 
 # Post process after installed sdk
 sdk_post_process () {
@@ -30,7 +39,9 @@ SDK_POST_INSTALL_COMMAND:append = " ${sdk_post_process}"
 export SOURCE_DIR="${THISDIR}/environment-setup"
 append_setup () {
     # Create a directory for qt.conf used in the eSDK population task
-    install -d ${SDK_OUTPUT}/${SDKPATH}/sysroots/${SDK_SYS}/usr/bin/qt5
+    install -d ${SDK_OUTPUT}/${SDKPATH}/sysroots/${SDK_SYS}/usr/bin/qt6
+    install -d ${SDK_OUTPUT}/${SDKPATH}/sysroots/${SDK_SYS}/usr/libexec/qt6
+    install -d ${SDK_OUTPUT}/${SDKPATH}/sysroots/${SDK_SYS}/usr/share/cmake
 
     # Create a directory for environment setup script
     install -d ${SDK_OUTPUT}/${SDKPATH}/sysroots/${SDK_SYS}/environment-setup.d/
