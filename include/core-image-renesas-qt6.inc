@@ -1,5 +1,6 @@
 ### For cross-compile Qt ###
-inherit populate_sdk_qt6
+QT_SUPPORT_CLASS = "${@'populate_sdk_qt6' if 'meta-qt6' in d.getVar('BBLAYERS') else 'populate_sdk_qt5'}"
+inherit ${QT_SUPPORT_CLASS}
 
 IMAGE_FEATURES:append = " \
     dev-pkgs tools-sdk \
