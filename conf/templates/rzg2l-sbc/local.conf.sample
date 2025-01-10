@@ -309,14 +309,14 @@ LICENSE_FLAGS_ACCEPTED:append = " commercial"
 ERROR_QA:remove:layer-qt5-layer = "buildpaths"
 WARN_QA:append:layer-qt5-layer = " buildpaths"
 
-DISTRO_FEATURES:remove = " x11"
-
 SDKIMAGE_FEATURES:append = " staticdev-pkgs dev-pkgs dbg-pkgs"
 
 # Disable generating JSON SPDX for images
 INHERIT:remove = "create-spdx"
 
-# Override install lib in sysroot for Qt6
+# Override install lib in sysroot for Qt5 and Qt6
+QT_DIR_NAME = "/qt5"
+
 QT6_INSTALL_BINDIR = "${bindir}/qt6"
 QT6_INSTALL_DATADIR = "${datadir}/qt6"
 QT6_INSTALL_INCLUDEDIR = "${includedir}/qt6"
