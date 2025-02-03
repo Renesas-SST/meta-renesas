@@ -13,4 +13,17 @@ IMAGE_INSTALL:append = " \
     obexftp \
 "
 
+# Packages for users application development
+IMAGE_INSTALL:append = " \
+    apt \
+    dpkg \
+    python3-tkinter \
+    python3-numpy \
+    python3-pandas \
+    python3-pyserial \
+    python3-matplotlib \
+    python3-pip \
+    apt-sources-config \
+"
+
 CORE_IMAGE_EXTRA_INSTALL += " packagegroup-tools-bluetooth "

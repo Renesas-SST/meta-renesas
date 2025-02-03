@@ -7,4 +7,4 @@ require include/core-image-renesas-qt6.inc
 
 SUMMARY = "Renesas core image with Qt6 platform support (no demo apps) based on core-image-weston"
 
-IMAGE_INSTALL:append = " packagegroup-qt6 "
+IMAGE_INSTALL:append = " packagegroup-qt6 packagegroup-qt6-modules"
