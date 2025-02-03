@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Restart Weston after user login
+# This is a workaround to restart Weston because, before login, 
+# Weston fails due to unmet systemd dependencies.
+systemctl restart weston
