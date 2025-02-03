@@ -325,3 +325,8 @@ QT6_INSTALL_DOCDIR = "${docdir}/qt6"
 QT6_INSTALL_TRANSLATIONSDIR = "${datadir}/translations/qt6"
 QT6_INSTALL_PLUGINSDIR = "${libdir}/plugins/qt6"
 QT6_INSTALL_QMLDIR = "${libdir}/qml/qt6"
+
+# Build essential and openssh packages
+IMAGE_INSTALL:append = " packagegroup-core-buildessential packagegroup-core-ssh-openssh openssh-sftp-server"
+EXTRA_IMAGE_FEATURES:append = " ssh-server-openssh"
+

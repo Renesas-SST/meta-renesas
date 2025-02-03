@@ -1,0 +1,4 @@
+deb [arch=arm64] http://ports.ubuntu.com/ oracular main multiverse universe
+deb [arch=arm64] http://ports.ubuntu.com/ oracular-security main multiverse universe
+deb [arch=arm64] http://ports.ubuntu.com/ oracular-backports main multiverse universe
+deb [arch=arm64] http://ports.ubuntu.com/ oracular-updates main multiverse universe
