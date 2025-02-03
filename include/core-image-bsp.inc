@@ -19,6 +19,7 @@ IMAGE_INSTALL:append = " \
     memtester \
     yavta \
     watchdog \
+    alsa-utils \
 "
 
 # Additional tools for support Tool develop
