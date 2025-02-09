@@ -50,4 +50,5 @@ do_deploy() {
     install -m 0644 ${S}/build/${PLATFORM}/release/bl31.bin ${DEPLOYDIR}/bl31-${MACHINE}.bin
 }
 
-addtask deploy before do_build after do_compile
+addtask deploy after do_install
+

@@ -65,4 +65,5 @@ do_deploy () {
 	install -m 0644 ${S}/fip.srec ${DEPLOYDIR}/target/images/fip-${MACHINE}.srec
 }
 
-addtask deploy before do_build after do_compile
+addtask deploy after do_compile
+
