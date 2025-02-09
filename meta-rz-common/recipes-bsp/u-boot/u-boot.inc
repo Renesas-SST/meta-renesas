@@ -309,4 +309,5 @@ do_deploy () {
     fi
 }
 
-addtask deploy before do_build after do_compile
+addtask deploy after do_install
+
