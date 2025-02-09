@@ -1,8 +1,12 @@
 # RZ/G2L-SBC SD Card creator flashing for Linux and Windows Platforms
 
-This release also includes automated host-side scripts that simplify the process of flashing the filesystem to SD cards. Select the appropriate script for your host platform, execute it, and power on the board.
+This release also includes automated host-side scripts that simplify the process of flashing the filesystem to SD cards. The flashing approach differs based on the host platform:
 
-The scripts support on both Linux and Windows OS.
+- Linux: The flashing process is performed directly on the host PC, where the SD card is inserted, and a script writes the filesystem to the SD card.
+
+- Windows: The flashing process uses User Datagram Protocol (UDP), where the SD card remains inserted in the RZ/G2L-SBC board, and the filesystem is flashed remotely from the host PC.
+
+Select the appropriate script for your platform and follow the instructions to complete the flashing process
 
 ## Outline of the folder
 ```
@@ -12,23 +16,22 @@ sd-creator
 │   └── Readme.md                                            <---- SD card flashing guideline on Linux
 ├── Readme.md
 └── windows                                                  <---- SD card flashing script package folder on Windows
-    └── fastboot-udp-sd-flasher
-        ├── config.ini
-        ├── flash_filesystem.bat                             <---- SD card flashing script on Windows
-        ├── Readme.md                                        <---- SD card flashing guideline on Windows
-        └── tools
-            ├── AdbWinApi.dll
-            ├── cygterm.cfg
-            ├── fastboot.bat
-            ├── fastboot.exe
-            ├── flash_system_image.ttl
-            ├── TERATERM.INI
-            ├── ttermpro.exe
-            ├── ttpcmn.dll
-            ├── ttpfile.dll
-            ├── ttpmacro.exe
-            ├── ttpset.dll
-            └── ttxssh.dll
+    ├── config.ini
+    ├── flash_filesystem.bat                                 <---- SD card flashing script on Windows
+    ├── Readme.md                                            <---- SD card flashing guideline on Windows
+    └── tools
+        ├── AdbWinApi.dll
+        ├── cygterm.cfg
+        ├── fastboot.bat
+        ├── fastboot.exe
+        ├── flash_system_image.ttl
+        ├── TERATERM.INI
+        ├── ttermpro.exe
+        ├── ttpcmn.dll
+        ├── ttpfile.dll
+        ├── ttpmacro.exe
+        ├── ttpset.dll
+        └── ttxssh.dll
 ```
 
 ## On Linux

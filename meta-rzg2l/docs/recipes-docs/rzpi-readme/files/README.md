@@ -350,6 +350,71 @@ root@rzpi:~# cd /home/root/demo/scripts/
 root@rzpi:~/demo/scripts# ./QtSmarthome-demo.sh
 ```
 
+### Quickboot images and network configurations
+
+Renesas provides custom Quickboot images optimized for faster boot times. These images include necessary systemd optimizations and a streamlined kernel to minimize boot delays.
+
+By default, systemd services for networking, D-Bus, and other non-essential components are disabled, leaving only the core boot services active.
+
+| File                 | Description                                                                                                                                                     |
+|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| renesas-quickboot-cli | A minimal Linux image with Quickboot enabled, offering only a CLI without a desktop environment. It supports HDMI/DSI output but lacks graphical components and a desktop which makes it ideal for fast-booting command-line based systems. |
+| renesas-quickboot-wayland | A Quickboot-enabled Linux image with Wayland and Qt support, featuring the Weston graphical desktop environment. It provides a basic graphical desktop, allowing users to develop and integrate custom GUI applications. No desktop applications are included by default. However, the QT framework is available allowing the user to install and run any QT application. |
+
+#### Enable networking stack
+For both Quickboot CLI and Quickboot Wayland images, networking (including Wi-Fi, Bluetooth, and SSH services) is disabled by default and must be enabled manually. The required scripts are located in `/home/root/network-management/`.
+
+To see available options before enabling any services, run the help command:
+
+```shell
+root@rzpi:~# cd network-management
+root@rzpi:~/network-management# ./enable_networking_stack.sh help
+```
+
+This command displays the usage information along with the following options:
+- wifi: Enable Wi-Fi services.
+- bluetooth: Enable Bluetooth services.
+- sshd: Enable SSH/SCP services.
+- all: Enable all network-related services (wifi, bluetooth, sshd).
+
+Run the following command with the appropriate option:
+```shell
+root@rzpi:~/network-management# ./enable_networking_stack.sh <service>
+```
+
+For example, to enable Wi-Fi, run:
+```shell
+root@rzpi:~/network-management# ./enable_networking_stack.sh wifi
+```
+
+To enable all networking services:
+```shell
+root@rzpi:~/network-management# ./enable_networking_stack.sh all
+```
+
+**Note**: Please reboot the board for the changes to take effect or manually restart each service and its dependencies.
+
+#### Disable networking stack
+To restore the default Quickboot behavior and disable unused network services, use the provided script. This removes systemd service symlinks and masks services related to networking, Wi-Fi, Bluetooth, and SSH.
+
+Run the following command with the appropriate option to disable unused services:
+
+```shell
+root@rzpi:~/network-management# ./disable_networking_stack.sh <service>
+```
+
+For example, to disable Bluetooth:
+
+```shell
+root@rzpi:~/network-management# ./disable_networking_stack.sh bluetooth
+```
+
+To fully restore Quickboot’s default behavior by disabling all networking services:
+```shell
+root@rzpi:~/network-management# ./disable_networking_stack.sh all
+```
+
+**Note**: Please reboot the board for the changes to take effect or manually restart each service and its dependencies.
 
 ### 40 IO expansion interface settings
 
@@ -539,6 +604,81 @@ root@rzpi:~# candump can1 & cansend can0 123#01020304050607
   can1  123   [7]  01 02 03 04 05 06 07
 root@rzpi:~#
 ```
+
+### Accessing PWM Timers 
+
+The RZG2L-SBC provides PWM (Pulse Width Modulation) timers, which can be used for various applications, including motor control, LED dimming, and signal generation for external devices. PWM allows for precise control over voltage levels by adjusting the duty cycle, making it useful in scenarios requiring variable power output.
+
+#### Overview
+
+The RZ/G2L-SBC board's device tree source (DTS) includes two GPT channels by default, providing PWM functionality for three pins.
+
+- GPT4: Supports two PWM channels (channel_A and channel_B).
+- GPT5: Supports a signal PWM channel A.
+
+However, these channels are disabled by default because the GPT4 pins are assigned to SPI and the GPT5 pins are used for DSI. If these resources are repurposed for PWM, then the default functions (SPI or DSI) will no longer be available.
+
+```shell
+&gpt4 {
+    pinctrl-0 = <&gpt4_pins>;
+    pinctrl-names = "default";
+    channel = "both_AB";
+    poeg = <&poega &poegb &poegc &poegd>;
+    status = "disabled";
+};
+
+&gpt5 {
+    pinctrl-0 = <&gpt5_pins>;
+    pinctrl-names = "default";
+    channel="channel_A";
+    poeg = <&poegd>;
+    status = "disabled";
+};
+```
+
+To enable the use of PWM, follow the steps in the next subsection:
+
+#### Enabling GPT Channels for PWM Use
+
+This section explains how to enable GPT channels for PWM on the RZ/G2L-SBC board. By default, the GPT channels are disabled in the device tree, so they need to be enabled manually.
+
+Step 1: Install device tree compiler tool
+
+```shell
+root@rzpi:~# apt-get update
+root@rzpi:~# apt-get install device-tree-compiler
+```
+
+**Note**: Please make sure you have internet access before running the command. 
+
+Step 2: Decompile the dtb file into a dts file
+```shell
+root@rzpi:~# dtc -I dtb -O dts -f /boot/rzpi.dtb -o rzpi.dts
+```
+
+Step 3: Modify the dts file
+
+Open the rzpi.dts file in a text editor.
+```shell
+root@rzpi:~# vi rzpi.dts
+```
+
+- For GPT4, locate `gpt@10048400`
+- For GPT5, locate `gpt@10048500`
+
+Change the status property of the node you want to enable from `disabled` to `okay`. Save the file after making the changes.
+
+Step 4: Recompile the dts file back into a dtb file
+
+```shell
+root@rzpi:~# dtc -I dts -O dtb -f rzpi.dts -o new_rzpi.dtb
+```
+
+Step 5: Deploy the new dtb file:
+
+Replace the original dtb file with the newly compiled one.
+
+**Note**: It is recommended to back up the original DTB file beforehand. After recompiling the DTS into a DTB and deploying it to /boot/rzpi.dtb, ensure that the file retains its original name. If the DTB file is missing or renamed, the boot process may fail.
 
 ### On-board Wi-Fi Modules configurations
 
