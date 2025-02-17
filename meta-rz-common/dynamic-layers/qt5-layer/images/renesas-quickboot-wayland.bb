@@ -13,9 +13,9 @@ IMAGE_INSTALL_append = " systemd-network-control-wayland"
 
 IMAGE_INSTALL_append = " packagegroup-qt5"
 
-ROOTFS_POSTPROCESS_COMMAND += ' sed_service_sytemd_quickboot;'
+ROOTFS_POSTPROCESS_COMMAND += ' sed_service_systemd_quickboot;'
 
-ROOTFS_POSTPROCESS_COMMAND += ' optimize_service_sytemd_wayland;'
+ROOTFS_POSTPROCESS_COMMAND += ' optimize_service_systemd_wayland;'
 
 ROOTFS_POSTPROCESS_COMMAND += ' mask_systemd_networking;'
 
