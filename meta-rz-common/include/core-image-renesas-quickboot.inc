@@ -17,7 +17,7 @@ IMAGE_INSTALL_append = " ${@oe.utils.conditional("OPTIMIZE_KERN", "1", " \
        ", "", d)}"
 
 # Modify service quick boot
-sed_service_sytemd_quickboot() {
+sed_service_systemd_quickboot() {
     target_file="${IMAGE_ROOTFS}/lib/systemd/system/basic.target"
     if [ -f "$target_file" ]; then
         sed -i '/^[^#]/ s/^/#/' $target_file
@@ -75,10 +75,10 @@ sed_service_sytemd_quickboot() {
 }
 
 # Optimize service quick boot wayland
-optimize_service_sytemd_wayland() {
-    target_foder="${IMAGE_ROOTFS}/etc/systemd/"
-    if [ -d "$target_foder" ]; then
-        find $target_foder -mindepth 1 \
+optimize_service_systemd_wayland() {
+    target_folder="${IMAGE_ROOTFS}/etc/systemd/"
+    if [ -d "$target_folder" ]; then
+        find $target_folder -mindepth 1 \
             -not -path "*system/*" \
             -not -path "*system" \
             -exec rm -rf {} +
@@ -115,14 +115,15 @@ optimize_service_sytemd_wayland() {
         rm -rf $target_folder/"urandom.service"
     fi
 
-    target_foder="${IMAGE_ROOTFS}/lib/systemd/"
-    if [ -d "$target_foder" ]; then
-        find $target_foder -mindepth 1 \
+    target_folder="${IMAGE_ROOTFS}/lib/systemd/"
+    if [ -d "$target_folder" ]; then
+        find $target_folder -mindepth 1 \
             -not -path "*systemd-sysv-install" \
             -not -name "libsystemd-shared-244.so" \
             -not -name "systemd" \
             -not -name "systemd-modules-load" \
             -not -name "systemd-udevd" \
+            -not -name "systemd-update-done" \
             -not -path "*system/*" \
             -not -path "*system" \
             -not -path "*network*" \
@@ -130,9 +131,9 @@ optimize_service_sytemd_wayland() {
             -exec rm -rf {} +
     fi
 
-    target_foder="${IMAGE_ROOTFS}/lib/systemd/system/"
-    if [ -d "$target_foder" ]; then
-        find $target_foder -mindepth 1 \
+    target_folder="${IMAGE_ROOTFS}/lib/systemd/system/"
+    if [ -d "$target_folder" ]; then
+        find $target_folder -mindepth 1 \
            -not -name "basic.target" \
            -not -name "default.target" \
            -not -name "getty-pre.target" \
@@ -148,6 +149,7 @@ optimize_service_sytemd_wayland() {
            -not -name "systemd-tmpfiles*" \
            -not -name "ldconfig.service" \
            -not -name "weston@.service" \
+           -not -name "systemd-update-done.service" \
            -not -path "*sysinit.target.wants/*" \
            -not -path "*sysinit.target.wants" \
            -not -path "*multi-user.target.wants/*" \
@@ -163,27 +165,28 @@ optimize_service_sytemd_wayland() {
            -exec rm -rf {} +
     fi
 
-    target_foder="${IMAGE_ROOTFS}/lib/systemd/system/sysinit.target.wants/"
-    if [ -d "$target_foder" ]; then
-       find $target_foder -mindepth 1 \
+    target_folder="${IMAGE_ROOTFS}/lib/systemd/system/sysinit.target.wants/"
+    if [ -d "$target_folder" ]; then
+       find $target_folder -mindepth 1 \
        -not -name "systemd-udev-trigger.service" \
        -not -name "systemd-journald.service" \
        -not -name "systemd-modules-load.service" \
        -not -name "systemd-tmpfiles*" \
+       -not -name "systemd-update-done.service" \
        -not -name "ldconfig.service" \
        -exec rm -rf {} +
     fi
 
-    target_foder="${IMAGE_ROOTFS}/lib/systemd/system/multi-user.target.wants/"
-    if [ -d "$target_foder" ]; then
-       find $target_foder -mindepth 1 \
+    target_folder="${IMAGE_ROOTFS}/lib/systemd/system/multi-user.target.wants/"
+    if [ -d "$target_folder" ]; then
+       find $target_folder -mindepth 1 \
        -not -name "getty.target" \
        -exec rm -rf {} +
     fi
 }
 
 # Optimize service quick boot cli
-optimize_service_sytemd_cli() {
+optimize_service_systemd_cli() {
     rm -rf ${IMAGE_ROOTFS}/lib/systemd/system/default.target
     rm -rf ${IMAGE_ROOTFS}/lib/systemd/system/weston@.service
 }
