@@ -54,8 +54,8 @@ SDK_POSTPROCESS_COMMAND:prepend = " append_setup;"
 setup_qt_env () {
         if [ ! -e ${IMAGE_ROOTFS}/${sysconfdir}/profile.d/setup_qt_env ]
         then
-                echo 'export PATH=$PATH:/usr/bin/qt5' > ${IMAGE_ROOTFS}${sysconfdir}/profile.d/setup_qt_env
-                echo 'export INCLUDEPATH=$INCLUDEPATH:/usr/include/qt5' >> ${IMAGE_ROOTFS}${sysconfdir}/profile.d/setup_qt_env
+                echo 'export PATH=$PATH:/usr/bin/qt6' > ${IMAGE_ROOTFS}${sysconfdir}/profile.d/setup_qt_env
+                echo 'export INCLUDEPATH=$INCLUDEPATH:/usr/include/qt6' >> ${IMAGE_ROOTFS}${sysconfdir}/profile.d/setup_qt_env
         fi
 }
 
