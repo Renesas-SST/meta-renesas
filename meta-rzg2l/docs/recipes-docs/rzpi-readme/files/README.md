@@ -1,14 +1,18 @@
 # RZG2L SBC board #
-This is the quick startup guide for RZG2L SBC board (hereinafter referred to as `RZG2L-SBC`).
+This is the quick startup guide for RZ/G2L SBC board (hereinafter referred to as `RZ/G2L-SBC`).
 The below will describe the current status of development, how to build, set up environment for RZG2L-SBC.
 
 ## Status
-This is a VLP v3.0.5 release of the RZG2L development product for RZG2L-SBC.
+This is a System Release package for RZ products based on VLP 3.0.5.
+
+## Currently Supported Platforms
+
+ - RZ/G2L-SBC
 
 This release provides the following features:
 
- - Yocto build compatible with RZG2L SoC (VLP v3.0.5)
- - RZG2L-SBC Linux BSP functionalities (based on RZG2L BSP v3.0.5-update1)
+ - Yocto build compatible with RZ/G2L SoC (VLP v3.0.5)
+ - RZ/G2L-SBC Linux BSP functionalities (based on RZG2L BSP v3.0.5-update1)
  - Graphic and Codec libraries supported with QT demo applications.
  - 40 IO expansion interface supported
  - On-board Wireless Modules enabled (only support for Wi-Fi)
@@ -180,9 +184,9 @@ rzpi/
 ├── license
 │   ├── Disclaimer051.pdf
 │   └── Disclaimer052.pdf
-├── r12uz0158eu0101-rz-g2l-sbc-single-board-computer.pdf
+├── r12uz0180eu0100-rz-srp-yocto3-um.pdf
 ├── README.md                                                            <---- This document
-├── RZG2L-SBC_Evaluation_license.pdf
+├── RZ_System_Release_Package_Evaluation_license.pdf
 └── target                                                               <---- Holds images for bootloader, kernel, rootfs, and device tree
     ├── env                                                              <---- Contains environment configuration files for booting and system setup
     │   ├── Readme.md
