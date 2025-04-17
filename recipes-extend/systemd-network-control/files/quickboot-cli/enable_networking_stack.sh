@@ -3,90 +3,89 @@
 
 set -e 
 
-# Config file for track states of network
-CONFIG_FILE="$HOME/.network_status_track"
-
-# Function to load the states from the config file
-load_states() {
-    if [ -f "$CONFIG_FILE" ]; then
-        # Read the values from the config file
-        source "$CONFIG_FILE"
-    else
-        # Initialize to false if config file does not exist
-        WIFI_ACTIVE=false
-        BLUETOOTH_ACTIVE=false
-        SSHD_ACTIVE=false
-    fi
-}
-
-# Function to save the states to the config file
-save_states() {
-    {
-        echo "WIFI_ACTIVE=$WIFI_ACTIVE"
-        echo "BLUETOOTH_ACTIVE=$BLUETOOTH_ACTIVE"
-        echo "SSHD_ACTIVE=$SSHD_ACTIVE"
-    } > "$CONFIG_FILE"
-}
-
-# Load the current states
-load_states
-
 # Function to remove symlinks for systemd udev services
 unmask_udev_services() {
     echo "Removing systemd udev service symlinks..."
-    rm -f /etc/systemd/system/systemd-udevd
-    rm -f /etc/systemd/system/systemd-udev-trigger.service
-    rm -f /etc/systemd/system/systemd-udevd.service
+    systemctl unmask systemd-udevd
+    systemctl unmask systemd-udev-trigger.service
+    systemctl unmask systemd-udevd.service
+
+    systemctl enable systemd-udevd
+    systemctl enable systemd-udev-trigger.service
+    systemctl enable systemd-udevd.service
+
+    systemctl restart systemd-udevd
+    systemctl restart systemd-udev-trigger.service
+    systemctl restart systemd-udevd.service
 }
 
 # Function to unmask connman service
 unmask_connman_service() {
     echo "Unmasking connman service..."
-    rm -f /etc/systemd/system/connman.service
+
+    systemctl unmask connman.service
+    systemctl enable connman.service
+    systemctl restart connman.service
 }
 
 # Function to unmask systemd network-related services
 unmask_network_services() {
     echo "Unmasking systemd network-related services..."
-    rm -f /etc/systemd/system/network.target
-    rm -f /etc/systemd/system/systemd-network-generator.service
-    rm -f /etc/systemd/system/systemd-networkd-wait-online.service
-    rm -f /etc/systemd/system/systemd-networkd.service
+
+    systemctl unmask network.target
+    systemctl unmask systemd-network-generator.service
+    systemctl unmask systemd-networkd-wait-online.service
+    systemctl unmask systemd-networkd.service
+
+    systemctl enable network.target
+    systemctl enable systemd-network-generator.service
+    systemctl enable systemd-networkd-wait-online.service
+
+    systemctl restart systemd-networkd.service
 }
 
 # Function to unmask wpa_supplicant services
 unmask_wpa_supplicant_services() {
     echo "Unmasking wpa_supplicant services..."
-    rm -f /etc/systemd/system/wpa_supplicant-nl80211@.service
-    rm -f /etc/systemd/system/wpa_supplicant-wired@.service
-    rm -f /etc/systemd/system/wpa_supplicant.service
-    rm -f /etc/systemd/system/wpa_supplicant@.service
+    systemctl unmask wpa_supplicant-nl80211@.service
+    systemctl unmask wpa_supplicant-wired@.service
+    systemctl unmask wpa_supplicant.service
+    systemctl unmask wpa_supplicant@.service
+
+    systemctl enable wpa_supplicant.service
+    systemctl restart wpa_supplicant.service
 }
 
 # Function to unmask Bluetooth services
 unmask_bluetooth_services() {
     echo "Unmasking Bluetooth services..."
-    rm -f /etc/systemd/system/bluetooth.service
-    rm -f /etc/systemd/system/bluetooth.target
+    systemctl unmask bluetooth.service
+    systemctl unmask bluetooth.target
+
+    systemctl enable bluetooth.service
+    systemctl enable bluetooth.target
+
+    systemctl restart bluetooth.service
+    systemctl restart bluetooth.target
 }
 
 # Function to unmask dbus-related services
 unmask_dbus_services() {
     echo "Unmasking dbus-related services..."
-    rm -f /etc/systemd/system/dbus-org.freedesktop.hostname1.service
-    rm -f /etc/systemd/system/dbus-org.freedesktop.locale1.service
-    rm -f /etc/systemd/system/dbus-org.freedesktop.login1.service
-    rm -f /etc/systemd/system/dbus-org.freedesktop.timedate1.service
-    rm -f /etc/systemd/system/dbus.service
-    rm -f /etc/systemd/system/dbus.socket
-    rm -f /etc/systemd/system/dbus.target.wants/dbus.socket
+
+    systemctl unmask dbus-org.freedesktop.hostname1.service
+    systemctl unmask dbus-org.freedesktop.locale1.service
+    systemctl unmask dbus-org.freedesktop.timedate1.service
 }
 
 unmask_sshd_service() {
     restore_systemd_generators
 
     echo "Unmask SSHD service..."
-    rm -f /etc/systemd/system/sshd.service
+
+    systemctl unmask sshd.service
+    systemctl enable sshd.service
+    systemctl restart sshd.service
 }
 
 restore_systemd_generators() {
@@ -105,19 +104,30 @@ off_load_systemd_generators() {
 clear_blacklist() {
     # Clear the contents of the blacklist.conf
     echo "" > ${IMAGE_ROOTFS}/etc/modprobe.d/blacklist.conf
+
+    # Load bluetooth and wifi kernel modules
+    modprobe brcmfmac
+    modprobe btusb
+    modprobe bluetooth
 }
 
-# Function to blacklist the Bluetooth module
-blacklist_bluetooth_module() {
-    echo "Blacklisting Bluetooth module..."
-    echo "blacklist btusb" >> ${IMAGE_ROOTFS}/etc/modprobe.d/blacklist.conf
-    echo "blacklist bluetooth" >> ${IMAGE_ROOTFS}/etc/modprobe.d/blacklist.conf
+# Function to un-blacklist the Bluetooth module
+unblacklist_bluetooth_module() {
+    echo "Removing Bluetooth module from backlist..."
+    sed -i '/^\s*blacklist\s\+btusb\s*$/d' /etc/modprobe.d/blacklist.conf
+    sed -i '/^\s*blacklist\s\+bluetooth\s*$/d' /etc/modprobe.d/blacklist.conf
+
+    modprobe btusb
+    modprobe bluetooth
 }
 
-# Function to blacklist the Wi-Fi module
-blacklist_wifi_module() {
-    echo "Blacklisting WI-FI module..."
-    echo "blacklist brcmfmac" >> ${IMAGE_ROOTFS}/etc/modprobe.d/blacklist.conf
+# Function to un-blacklist the Wi-Fi module
+unblacklist_wifi_module() {
+    echo "Removing WI-FI module from blacklist.conf..."
+    sed -i '/^\s*blacklist\s\+brcmfmac\s*$/d' /etc/modprobe.d/blacklist.conf
+
+    echo "Loading wifi kernel modules.."
+    modprobe brcmfmac
 }
 
 # Function to print usage
@@ -138,31 +148,29 @@ fi
 
 case $1 in
     wifi)
-        WIFI_ACTIVE=true
+        unmask_dbus_services
+        unmask_udev_services
         unmask_connman_service
         unmask_network_services
         unmask_wpa_supplicant_services
-        clear_blacklist
+        unblacklist_wifi_module
         ;;
     bluetooth)
-        BLUETOOTH_ACTIVE=true
+        unmask_dbus_services
+        unmask_udev_services
         unmask_bluetooth_services
-        clear_blacklist
+        unblacklist_bluetooth_module
         ;;
     sshd)
-        SSHD_ACTIVE=true
         unmask_sshd_service
         ;;
     all)
-        WIFI_ACTIVE=true
-        BLUETOOTH_ACTIVE=true
-        SSHD_ACTIVE=true
+        unmask_dbus_services
         unmask_udev_services
         unmask_connman_service
         unmask_network_services
         unmask_wpa_supplicant_services
         unmask_bluetooth_services
-        unmask_dbus_services
         unmask_sshd_service
         clear_blacklist
         ;;
@@ -176,29 +184,7 @@ case $1 in
         ;;
 esac
 
-# Save the updated states
-save_states
-
-# Check if SSH is no longer active, and if so, mask the systemd generator
-if [ "$SSHD_ACTIVE" == false ]; then
-    off_load_systemd_generators
-fi
-
-if [ "$BLUETOOTH_ACTIVE" == false ]; then
-    blacklist_bluetooth_module
-fi
-
-if [ "$WIFI_ACTIVE" == false ]; then
-    blacklist_wifi_module
-fi
-
-# Check if either Wi-Fi nor Bluetooth is active, if so, unmask udev and dbus
-if [ "$WIFI_ACTIVE" == true ] || [ "$BLUETOOTH_ACTIVE" == true ]; then
-    unmask_udev_services
-    unmask_dbus_services
-fi
-
 systemctl daemon-reload
 
 echo "All specified services have been successfully unmasked."
-echo "Please reset the board for the changes to take effect or manually restart each service and its dependencies"
+

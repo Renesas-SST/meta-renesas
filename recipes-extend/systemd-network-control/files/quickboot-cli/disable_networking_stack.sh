@@ -4,94 +4,98 @@
 
 set -e
 
-# Config file to track states of network
-CONFIG_FILE="$HOME/.network_status_track"
-
-# Function to load the states from the config file
-load_states() {
-    if [ -f "$CONFIG_FILE" ]; then
-        # Read the values from the config file
-        source "$CONFIG_FILE"
-    else
-        # Initialize to false if config file does not exist
-        WIFI_ACTIVE=false
-        BLUETOOTH_ACTIVE=false
-        SSHD_ACTIVE=false
-    fi
-}
-
-# Function to save the states to the config file
-save_states() {
-    {
-        echo "WIFI_ACTIVE=$WIFI_ACTIVE"
-        echo "BLUETOOTH_ACTIVE=$BLUETOOTH_ACTIVE"
-        echo "SSHD_ACTIVE=$SSHD_ACTIVE"
-    } > "$CONFIG_FILE"
-}
-
-# Load the current states
-load_states
-
-# Function to mask systemd udev services
+# Function to disable and mask systemd udev services
 mask_systemd_udev() {
-    echo "Masking systemd udev services..."
-    ln -sf /dev/null /etc/systemd/system/systemd-udevd
-    ln -sf /dev/null /etc/systemd/system/systemd-udev-trigger.service
-    ln -sf /dev/null /etc/systemd/system/systemd-udevd.service
+    echo "Disabling and masking systemd udev services..."
+
+    systemctl stop systemd-udevd
+    systemctl stop systemd-udev-trigger.service
+    systemctl stop systemd-udevd.service
+
+    systemctl disable systemd-udevd
+    systemctl disable systemd-udev-trigger.service
+    systemctl disable systemd-udevd.service
+
+    systemctl mask systemd-udevd
+    systemctl mask systemd-udev-trigger.service
+    systemctl mask systemd-udevd.service
 }
 
-# Function to mask systemd connman and wpa supplicant
+# Function to disable and mask systemd connman and wpa supplicant
 mask_systemd_wifi_related() {
-    echo "Masking systemd connman and wpa supplicant services..."
+    echo "Disabling and masking systemd connman and wpa supplicant services..."
 
-    # Mask connman service
-    ln -sf /dev/null /etc/systemd/system/connman.service
+    # Disable and mask connman service
+    systemctl stop connman.service
+    systemctl disable connman.service
+    systemctl mask connman.service
 
     # Mask wpa_supplicant services
-    ln -sf /dev/null /etc/systemd/system/wpa_supplicant-nl80211@.service
-    ln -sf /dev/null /etc/systemd/system/wpa_supplicant-wired@.service
-    ln -sf /dev/null /etc/systemd/system/wpa_supplicant.service
-    ln -sf /dev/null /etc/systemd/system/wpa_supplicant@.service
+    systemctl stop wpa_supplicant.service
+
+    systemctl disable wpa_supplicant-wired@.service
+    systemctl disable wpa_supplicant.service
+    systemctl disable wpa_supplicant@.service
+
+    systemctl mask wpa_supplicant-nl80211@.service
+    systemctl mask wpa_supplicant-wired@.service
+    systemctl mask wpa_supplicant.service
+    systemctl mask wpa_supplicant@.service
 }
 
-# Function to mask systemd network-related services
+# Function to disable and mask systemd network-related services
 mask_systemd_network_service() {
-    # Mask systemd network-related services
+    # Disable and Mask systemd network-related services
     echo "Masking network-related services..."
 
-    ln -sf /dev/null /etc/systemd/system/network.target
-    ln -sf /dev/null /etc/systemd/system/systemd-network-generator.service
-    ln -sf /dev/null /etc/systemd/system/systemd-networkd-wait-online.service
-    ln -sf /dev/null /etc/systemd/system/systemd-networkd.service
+    systemctl stop network.target
+    systemctl stop systemd-network-generator.service
+    systemctl stop systemd-networkd-wait-online.service
+    systemctl stop systemd-networkd.service
+
+    systemctl disable network.target
+    systemctl disable systemd-network-generator.service
+    systemctl disable systemd-networkd-wait-online.service
+    systemctl disable systemd-networkd.service
+
+    systemctl mask network.target
+    systemctl mask systemd-network-generator.service
+    systemctl mask systemd-networkd-wait-online.service
+    systemctl mask systemd-networkd.service
 }
 
-# Function to mask bluetooth services
+# Function to disable and mask bluetooth services
 mask_systemd_bluetooth() {
-    # Mask Bluetooth services
-    echo "Masking systemd bluetooth services..."
+    # Disable and mask Bluetooth services
+    echo "Disabling and masking systemd bluetooth services..."
 
-    ln -sf /dev/null /etc/systemd/system/bluetooth.service
-    ln -sf /dev/null /etc/systemd/system/bluetooth.target
+    systemctl stop bluetooth.service
+    systemctl stop bluetooth.target
+
+    systemctl disable bluetooth.service
+    systemctl disable bluetooth.target
+
+    systemctl mask bluetooth.service
+    systemctl mask bluetooth.target
 }
 
-# Function to mask dbus services
+# Function to disable and mask dbus services
 mask_systemd_dbus() {
-    echo "Masking systemd dbus services..."
+    echo "Disabling and masking systemd dbus services..."
 
-    mkdir -p /etc/systemd/system/dbus.target.wants/
-    ln -sf /dev/null /etc/systemd/system/dbus-org.freedesktop.hostname1.service
-    ln -sf /dev/null /etc/systemd/system/dbus-org.freedesktop.locale1.service
-    ln -sf /dev/null /etc/systemd/system/dbus-org.freedesktop.login1.service
-    ln -sf /dev/null /etc/systemd/system/dbus-org.freedesktop.timedate1.service
-    ln -sf /dev/null /etc/systemd/system/dbus.target.wants/dbus.socket
-    ln -sf /dev/null /etc/systemd/system/sshd.service
+    systemctl mask dbus-org.freedesktop.hostname1.service
+    systemctl mask dbus-org.freedesktop.locale1.service
+    systemctl mask dbus-org.freedesktop.timedate1.service
 }
 
 mask_sshd_service() {
     echo "Masking systemd sshd services..."
 
     off_load_systemd_generators
-    rm -f /etc/systemd/system/sshd.service
+
+    systemctl stop sshd.service
+    systemctl disable sshd.service
+    systemctl mask sshd.service
 }
 
 restore_systemd_generators() {
@@ -148,29 +152,24 @@ fi
 # udev and dbus are needed for wifi and bluetooth to be working correctly.
 case $1 in
     wifi)
-        WIFI_ACTIVE=false
         mask_systemd_wifi_related
         mask_systemd_network_service
+        blacklist_wifi_module
         ;;
     bluetooth)
-        BLUETOOTH_ACTIVE=false
         mask_systemd_bluetooth
+        blacklist_bluetooth_module
         ;;
     sshd)
-        SSHD_ACTIVE=false
         mask_sshd_service
         ;;
     all)
-        WIFI_ACTIVE=false
-        BLUETOOTH_ACTIVE=false
-        SSHD_ACTIVE=false
         mask_systemd_udev
         mask_systemd_wifi_related
         mask_systemd_network_service
         mask_systemd_dbus
         mask_systemd_bluetooth
         mask_sshd_service
-        off_load_systemd_generators
         blacklist_modules
         ;;
     help)
@@ -183,29 +182,13 @@ case $1 in
         ;;
 esac
 
-# Save the updated states
-save_states
-
-# Check if SSH is no longer active, and if so, mask the systemd generator
-if [ "$SSHD_ACTIVE" == false ]; then
-    off_load_systemd_generators
-fi
-
-if [ "$BLUETOOTH_ACTIVE" == false ]; then
-    blacklist_bluetooth_module
-fi
-
-if [ "$WIFI_ACTIVE" == false ]; then
-    blacklist_wifi_module
-fi
-
-# Check if neither Wi-Fi nor Bluetooth are active, and mask udev and dbus if so
-if [ "$WIFI_ACTIVE" == false ] && [ "$BLUETOOTH_ACTIVE" == false ]; then
-    mask_systemd_udev
+# Check if neither Wi-Fi nor Bluetooth is active, and mask udev and dbus if so
+if ! systemctl is-active --quiet connman.service && ! systemctl is-active --quiet bluetooth.service; then
     mask_systemd_dbus
+    mask_systemd_udev
 fi
 
 systemctl daemon-reload
 
 echo "All specified systemd services have been successfully masked."
-echo "Please reset the board for the changes to take effect."
+
