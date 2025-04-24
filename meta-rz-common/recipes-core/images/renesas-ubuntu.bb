@@ -23,8 +23,7 @@ CORE_IMAGE_BASE_INSTALL += "weston"
 
 # compatible machine comes with linux-yocto but not available in this build
 # so bring back these parameters
-COMPATIBLE_MACHINE:rzg2l-sbc = "(rzg2l-sbc)"
-COMPATIBLE_MACHINE = "^(aarch64|rzg2l-sbc)$"
+COMPATIBLE_MACHINE = "(rzpi)"
 
 IMAGE_FSTYPES = " tar.bz2"
 # bootloader for rzsbc
@@ -81,8 +80,7 @@ CONVERSION_CMD_bz2_append() {
 
 	# Remove existing tar file and move the output to target directory
 	rm -f "${target_dir}"/*.tar.bz2
-	#mv "${out}${IMAGE_NAME_SUFFIX}.tar.bz2" "${target_dir}/${IMAGE_LINK_NAME}.tar.bz2"
-	mv "${out}${IMAGE_NAME_SUFFIX}.tar.bz2" "${target_dir}/core-image-qt-rzpi.tar.bz2"
+	mv "${out}${IMAGE_NAME_SUFFIX}.tar.bz2" "${target_dir}/${IMAGE_LINK_NAME}.tar.bz2"
 }
 ###################################
 
