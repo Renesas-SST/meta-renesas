@@ -14,3 +14,7 @@ rootfs
 
 ### Files
 - **core-image-qt-rzpi.tar.bz2**: Compressed tarball of the root filesystem image for the RZ/G2L-SBC.
+
+### Note
+
+- The above structure is an example when building with the target image `IMAGE=core-image-qt`. The compressed root filesystems is `core-image-qt-rzpi.tar.bz2` (tar.bz2 format). Other target images will follow the same structure but with names corresponding to their respective target images.

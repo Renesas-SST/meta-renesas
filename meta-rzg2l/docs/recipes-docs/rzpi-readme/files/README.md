@@ -28,7 +28,40 @@ Known issues:
 
 ## Building
 
-### Core-image
+### Ubuntu Distro for Embedded Linux
+The [`ubuntu-tiny`](https://github.com/Renesas-SST/meta-renesas/blob/dunfell/rz-sbc/meta-rz-common/conf/distro/ubuntu-tiny.conf) distro is a custom minimal embedded Linux distribution for the RZ/G2L-SBC, built using the Yocto Project. Unlike `core-image-minimal` or `core-image-weston`, which uses Poky's default configuration and packages, `ubuntu-tiny` is tailored to resemble a stripped-down Ubuntu-based environment. It is designed for small footprint builds with only essential features enabled, making it ideal for applications on constrained systems or for faster development and prototyping.
+
+
+> **IMPORTANT**
+> Despite the name, `ubuntu-tiny` is **not derived from the official Ubuntu distribution**. It is a Yocto-based custom distro that mimics Ubuntu’s package structure and naming conventions. The root filesystem is entirely built using Yocto.
+
+#### Purpose
+`ubuntu-tiny` provides the following features, with a focus on:
+
+- Based on Poky, stripped of unnecessary packages.
+- A minimal root filesystem for building core Ubuntu features.
+- Supports essential features: Wayland, X11, OpenGL, Qt5, Weston, Bluetooth.
+
+#### Renesas-Ubuntu image
+The `renesas-ubuntu` image recipe is a Yocto-based image built on top of `ubuntu-tiny`, providing the following features:
+
+- Hardware enablement for RZ/G2L-SBC platform
+- Kernel, bootloader, firmware, and multimedia support
+- Preinstalled user-space tools and demos tailored for the RZ/G2L-SBC
+
+This image offers a native Ubuntu-like environment while benefiting from Yocto's reproducibility and control. It is ideal for embedded development targeting RZ/G2L SBC platforms.
+
+However, the primary purpose of the renesas-ubuntu image is to build Ubuntu-based images, such as Ubuntu Core and Ubuntu LXDE that depend on Yocto-built artifacts. It is not recommended to use this image as a Yocto rootfs itself.
+
+### Building full Ubuntu-based root filesystems
+
+For building more comprehensive Ubuntu-based images such as **Ubuntu Core** or **Ubuntu LXDE** (using the official `ubuntu-base` as a base), refer to the [rz-build-scripts](https://github.com/Renesas-SST/rz-build-scripts/blob/dunfell/rz-sbc) project.
+
+> **IMPORTANT**
+> These full Ubuntu builds are beyond the scope of this document.
+> For detailed instructions, visit the [rz-build-scripts documentation](https://github.com/Renesas-SST/rz-build-scripts/blob/dunfell/rz-sbc/README.md).
+
+### Building core-image Yocto
 Step 1: Prepare environment for building package
 
 Linux Ubuntu 20.04 is recommended for Yocto build.
@@ -76,14 +109,15 @@ $ IMAGE=<target_image> ./rzsbc_yocto.sh build
 
 | Target Image               | Description                                                                                 |
 |----------------------------|---------------------------------------------------------------------------------------------|
-| core-image-minimal         | Minimal set of components                                                                   |
-| core-image-bsp             | Minimal set of components plus audio support and some useful tool                           |
-| core-image-weston          | Standard image with graphics support                                                        |
-| core-image-qt              | Enable Qt LGPL version                                                                      |
-| renesas-core-image-cli     | Renesas core image for deploying CLI apps based on core-image-bsp                           |
-| renesas-core-image-weston  | Renesas core image with Qt5 platform support (no demo apps) based on core-image-weston      |
-| renesas-quickboot-cli      | Renesas core image for Linux quickboot CLI                                                  |
-| renesas-quickboot-wayland  | Renesas core image for Linux quickboot with Wayland, QT support (no demo apps)              |
+| core-image-minimal         |  A basic image that contains the minimal set of components required to boot the device. It focuses on essential system functions without extra tools or features. |
+| core-image-bsp             | Extends core-image-minimal with additional utilities and tools, providing a lightweight environment for system validation, hardware diagnostics, and basic development|
+| core-image-weston          | A standard graphical image with Wayland and Weston support for embedded GUI applications.|
+| core-image-qt              | Extends core-image-weston with the Qt LGPL version (Qt5 framework) enabled, allowing for Qt-based application development and execution in a Wayland-based environment. Additionally, this image provides some example applications (demo apps) to quickly deploy Qt applications on the development platform.|
+| renesas-core-image-cli     | Based on core-image-bsp, this image offers a CLI environment for Renesas hardware development without graphical interfaces.Besides the useful tools inherited from the core-image-bsp, this image also containsnew packages for SBC (Single Board Computer) development. For example,package managers (apt, dpgk), network utilities for Bluetooth, Wi-Fi. |
+| renesas-core-image-weston  | Renesas customized core image based on the core-image-weston, with Qt5 framework support (no QT demo apps included). This image offers a full graphical environment for Renesas hardware development and all the useful tools from the renesas-core-image-cli.      |
+| renesas-quickboot-cli      | This image has the same system functionality as the renesas-core-image-cli but with Quickboot enabled, allowing for faster boot times and efficient system validation on a CLI environment.|
+| renesas-quickboot-wayland  | This image has the same system functionality as the renesas-core-image-weston but with Quickboot enabled, allowing for faster boot times and efficient system validation on a graphical environment              |
+| renesas-ubuntu  | renesas-ubuntu | Ubuntu-based image built on top of the ubuntu-tiny Yocto distro, ideal for embedded development. It includes core support for Wayland, X11, OpenGL, and Qt5, but does not include full development tools or environments. This image is not meant to be used as a Yocto rootfs, but rather as a foundation for pure Ubuntu-based systems that depend on Yocto-generated artifacts.|
 
 **Note:**
 
