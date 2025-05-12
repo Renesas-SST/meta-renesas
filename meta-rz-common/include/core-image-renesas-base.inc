@@ -194,8 +194,8 @@ deploy_package() {
     rm -f ${DEPLOY_DIR_IMAGE}/*pmic*
     rm -f ${DEPLOY_DIR_IMAGE}/*PMIC*
     rm -f ${DEPLOY_DIR_IMAGE}/*.elf
-    rm -f ${DEPLOY_DIR_IMAGE}/Image-rzpi*
-    rm -f ${DEPLOY_DIR_IMAGE}/rzpi-rzpi*
+    rm -f ${DEPLOY_DIR_IMAGE}/Image*
+    rm -f ${DEPLOY_DIR_IMAGE}/rzpi*
     rm -f ${DEPLOY_DIR_IMAGE}/modules*
     rm -f ${DEPLOY_DIR_IMAGE}/u-boot*
 
@@ -344,3 +344,6 @@ EXTRA_IMAGEDEPENDS += " target-readme "
 # Readme documentation
 EXTRA_IMAGEDEPENDS += " readme "
 EXTRA_IMAGEDEPENDS += " rzpi-docs "
+
+# Force image rebuild before SDK creation (changes when building multiple images lead to re-deploy but not clean because images are not re-built)
+SDK_POSTPROCESS_COMMAND_prepend = " deploy_package;"
