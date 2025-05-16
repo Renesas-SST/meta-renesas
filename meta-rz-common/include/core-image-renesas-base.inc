@@ -345,5 +345,8 @@ EXTRA_IMAGEDEPENDS += " target-readme "
 EXTRA_IMAGEDEPENDS += " readme "
 EXTRA_IMAGEDEPENDS += " rzpi-docs "
 
+# Add dev-pkgs to image features
+EXTRA_IMAGE_FEATURES_append = " dev-pkgs"
+
 # Force image rebuild before SDK creation (changes when building multiple images lead to re-deploy but not clean because images are not re-built)
 SDK_POSTPROCESS_COMMAND_prepend = " deploy_package;"
