@@ -330,6 +330,11 @@ PACKAGECONFIG_append_pn-python3 = " tk"
 # Set to : 1 - Enable
 OPTIMIZE_KERN = "0"
 
+# Enable Docker Support for Kernel Build
+# Set to "1" to enable building the kernel with Docker-based configurations
+# Set to "0" to disable Docker integration (default)
+DOCKER_SUPPORT = "0"
+
 # Summit wireless framework provider
 PREFERRED_RPROVIDER_wpa-supplicant = "summit-supplicant-lwb"
 PREFERRED_RPROVIDER_wpa-supplicant-cli = "summit-supplicant-lwb"
