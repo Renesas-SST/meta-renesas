@@ -1081,6 +1081,8 @@ Remember that sources doesn’t have to be a single origin. It's very common to 
 
 The source management is beyond the scope of this document.
 
+**Note**: This layer currently uses the Debian Bullseye APT repositories. Modifying the APT sources (e.g., switching to Ubuntu or using third-party repositories) may break the boot or cause installation issues for some applications due to changes in package versions, availability, or dependencies. Proceed with caution if you plan to alter the default APT configuration.
+ 
 #### Using `apt-get` to install packages
 
 To install a package using `apt-get`, use the following command:
@@ -1110,6 +1112,76 @@ After installing a package using dpkg, if you need to resolve dependency issues,
 
 ```
 root@rzpi:~# apt-get install -f
+```
+
+### Docker Installation Setup
+
+Step 1: Enable Docker support in Kernel build
+
+To enable Docker integration at the kernel level, set the following configuration option in the build configuration file:
+
+```
+# Enable Docker Support for Kernel Build
+# Set to "1" to enable building the kernel with Docker-based configurations
+# Set to "0" to disable Docker integration (default)
+DOCKER_SUPPORT = "1"
+```
+
+Rebuilding the kernel is required after changing this setting to apply the update.
+
+Step 2: Install Docker via APT
+
+Make sure your device has internet access, then run:
+
+```shell
+root@rzpi:~# apt-get update
+root@rzpi:~# apt-get install docker.io
+```
+
+Step 3: Docker supports only iptables-legacy and iptables-nft. Firewall rules created directly with nftables are not compatible with Docker. To ensure proper operation, switch to legacy iptables:
+
+```shell
+root@rzpi:~# update-alternatives --set iptables /usr/sbin/iptables-legacy
+root@rzpi:~# update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
+```
+
+Restart the Docker service to apply changes:
+
+```shell
+root@rzpi:~# systemctl restart docker
+```
+
+Step 4: Verify Docker Installation
+
+Run the following command to test Docker.
+
+```
+root@rzpi:~# docker run hello-world
+```
+
+You should see a message similar to:
+
+```
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+
+To generate this message, Docker took the following steps:
+ 1. The Docker client contacted the Docker daemon.
+ 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
+    (arm64v8)
+ 3. The Docker daemon created a new container from that image which runs the
+    executable that produces the output you are currently reading.
+ 4. The Docker daemon streamed that output to the Docker client, which sent it
+    to your terminal.
+
+To try something more ambitious, you can run an Ubuntu container with:
+ $ docker run -it ubuntu bash
+
+Share images, automate workflows, and more with a free Docker ID:
+ https://hub.docker.com/
+
+For more examples and ideas, visit:
+ https://docs.docker.com/get-started/
 ```
 
 ### Network Boot and TFTP
