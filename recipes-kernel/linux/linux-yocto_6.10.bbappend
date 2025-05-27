@@ -48,19 +48,19 @@ KCONFIG_MODE:rzg2l-sbc = "alldefconfig"
 KBUILD_DEFCONFIG:rzg2l-sbc ?= "defconfig"
 
 # Use the following to specify an in-tree defconfig.
-# KBUILD_DEFCONFIG:rzg2l-sbc = "rzpi"
+# KBUILD_DEFCONFIG:rzg2l-sbc = "rzg2l-sbc"
 
 # Supported device tree and device tree overlays
 KERNEL_DEVICETREE:rzg2l-sbc = " \
-        renesas/rzpi.dtb \
+        renesas/rzg2l-sbc.dtb \
 "
 
 KERNEL_DEVICETREE:append:rzg2l-sbc = " \
-        renesas/overlays/rzpi-can.dtbo \
-        renesas/overlays/rzpi-ext-i2c.dtbo \
-        renesas/overlays/rzpi-ext-spi.dtbo \
-        renesas/overlays/rzpi-dsi.dtbo \
-        renesas/overlays/rzpi-ov5640.dtbo \
+        renesas/overlays/rzg2l-sbc-can.dtbo \
+        renesas/overlays/rzg2l-sbc-ext-i2c.dtbo \
+        renesas/overlays/rzg2l-sbc-ext-spi.dtbo \
+        renesas/overlays/rzg2l-sbc-dsi.dtbo \
+        renesas/overlays/rzg2l-sbc-ov5640.dtbo \
 "
 
 # Override the dtc flags to support dtbo build in kernel-devicetree.bbclass
@@ -74,8 +74,8 @@ do_deploy:append:rzg2l-sbc(){
     install -m 0644 ${B}/arch/arm64/boot/Image ${DEPLOYDIR}/target/images/${KERNEL_IMAGETYPE}-${KERNEL_ARTIFACT_NAME}.bin
     ln -sf ${KERNEL_IMAGETYPE}-${KERNEL_ARTIFACT_NAME}.bin ${DEPLOYDIR}/target/images/Image
 
-    install -m 0644 ${B}/arch/arm64/boot/dts/renesas/rzpi.dtb ${DEPLOYDIR}/target/images/dtbs/rzpi-${KERNEL_DTB_NAME}.$dtb_ext
-    ln -sf rzpi-${KERNEL_DTB_NAME}.$dtb_ext ${DEPLOYDIR}/target/images/dtbs/rzpi.dtb
+    install -m 0644 ${B}/arch/arm64/boot/dts/renesas/rzg2l-sbc.dtb ${DEPLOYDIR}/target/images/dtbs/rzg2l-sbc-${KERNEL_DTB_NAME}.$dtb_ext
+    ln -sf rzg2l-sbc-${KERNEL_DTB_NAME}.$dtb_ext ${DEPLOYDIR}/target/images/dtbs/rzg2l-sbc.dtb
 }
 
 SRCREV_machine:rzg2l-sbc ?= "${AUTOREV}"

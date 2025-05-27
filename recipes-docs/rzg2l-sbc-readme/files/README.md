@@ -199,8 +199,8 @@ rzg2l-sbc/
     │   │   │   ├── rzg2l-sbc-ext-spi.dtbo
     │   │   │   └── rzg2l-sbc-ov5640.dtbo
     │   │   ├── Readme.md
-    │   │   ├── rzpi--6.10.14+git0+af06ad75b8_bbe3d1be4e-r0-rzg2l-sbc-20241213061340.dtbo
-    │   │   └── rzpi.dtb -> rzpi--6.10.14+git0+af06ad75b8_bbe3d1be4e-r0-rzg2l-sbc-20241213061340.dtbo
+    │   │   ├── rzg2l-sbc--6.10.14+git0+af06ad75b8_bbe3d1be4e-r0-rzg2l-sbc-20241213061340.dtbo
+    │   │   └── rzg2l-sbc.dtb -> rzg2l-sbc--6.10.14+git0+af06ad75b8_bbe3d1be4e-r0-rzg2l-sbc-20241213061340.dtbo
     │   ├── fip-rzg2l-sbc.bin
     │   ├── fip-rzg2l-sbc.srec
     │   ├── Flash_Writer_SCIF_rzg2l-sbc.mot
@@ -364,23 +364,23 @@ The specific description is as follows:
 /------------------------------|--------------|------------------------------
 |       Config                 | Value if set |     To be loading
 |------------------------------|--------------|------------------------------
-| enable_overlay_i2c           | '1' or 'yes' |  rzpi-ext-i2c.dtbo
+| enable_overlay_i2c           | '1' or 'yes' |  rzg2l-sbc-ext-i2c.dtbo
 |------------------------------|--------------|------------------------------
-| enable_overlay_spi           | '1' or 'yes' |  rzpi-ext-spi.dtbo
+| enable_overlay_spi           | '1' or 'yes' |  rzg2l-sbc-ext-spi.dtbo
 |------------------------------|--------------|------------------------------
-| enable_overlay_can           | '1' or 'yes' |  rzpi-can.dtbo
+| enable_overlay_can           | '1' or 'yes' |  rzg2l-sbc-can.dtbo
 |------------------------------|--------------|------------------------------
-| enable_overlay_dsi           | '1' or 'yes' |  rzpi-dsi.dtbo
+| enable_overlay_dsi           | '1' or 'yes' |  rzg2l-sbc-dsi.dtbo
 |------------------------------|--------------|------------------------------
-| enable_overlay_csi_ov5640    | '1' or 'yes' |  rzpi-ov5640.dtbo
+| enable_overlay_csi_ov5640    | '1' or 'yes' |  rzg2l-sbc-ov5640.dtbo
 |----------------------------------------------------------------------------
-| fdtfile   : is a base dtb file, should be set rzpi.dtb
+| fdtfile   : is a base dtb file, should be set rzg2l-sbc.dtb
 |----------------------------------------------------------------------------
 | uboot env : you could set U-Boot's environment variables here, such as 'console=' 'bootargs='
 \---------------------------------------------------------------------------
 
 default settings:
-    fdtfile=rzpi.dtb
+    fdtfile=rzg2l-sbc.dtb
     #enable_overlay_i2c=1
     #enable_overlay_spi=1
     #enable_overlay_can=1
@@ -1044,7 +1044,7 @@ In this subsection, the U-Boot environment will be configured for network settin
   U-Boot 2021.10 (May 24 2024 - 07:26:08 +0000)
 
   CPU:   Renesas Electronics CPU rev 1.0
-  Model: RZpi
+  Model: RZ/G2L-SBC
   DRAM:  896 MiB
   MMC:   sd@11c00000: 0
   Loading Environment from SPIFlash... SF: Detected is25wp256 with page size 256 Bytes, erase size 4 KiB, total 32 MiB
@@ -1113,7 +1113,7 @@ renesas@builder-pc:/tftpboot/rzsbc/$ tree -L 2
 │   ├── tmp
 │   ├── usr
 │   └── var
-└── rzpi.dtb
+└── rzg2l-sbc.dtb
 ```
 - Step 2: Define the boot arguments to specify the network and root file system settings:
 
@@ -1132,9 +1132,9 @@ renesas@builder-pc:/tftpboot/rzsbc/$ tree -L 2
   => setenv bootcmd 'tftp <load_address_kernel> <path/to/kernel_image>; tftp <load_address_dtb> <path/to/device_tree_blob>; tftp <load_address_dtbo> <path/to/dtbo file>; booti <load_address_kernel> - <load_address_dtb> - <load_address_dtbo>'
   ```
 
-  For example load `Image`, `rzpi.dtb` and `rzpi-ext-spi.dtbo` files.
+  For example load `Image`, `rzg2l-sbc.dtb` and `rzg2l-sbc-ext-spi.dtbo` files.
   ```shell
-  => setenv bootcmd 'tftp 0x48080000 rzsbc/Image; tftp 0x48000000 rzsbc/rzpi.dtb; tftp 0x48010000 rzsbc/overlays/rzpi-ext-spi.dtbo; booti 0x48080000 - 0x48000000 - 0x48010000'
+  => setenv bootcmd 'tftp 0x48080000 rzsbc/Image; tftp 0x48000000 rzsbc/rzg2l-sbc.dtb; tftp 0x48010000 rzsbc/overlays/rzg2l-sbc-ext-spi.dtbo; booti 0x48080000 - 0x48000000 - 0x48010000'
   ```
 
 - Step 4: Save the changes to the environment variables so they persist across reboots:
@@ -1165,7 +1165,7 @@ renesas@builder-pc:/tftpboot/rzsbc/$ tree -L 2
   Bytes transferred = 18035200 (1133200 hex)
   Using ethernet@11c30000 device
   TFTP from server 192.168.5.86; our IP address is 192.168.5.30
-  Filename 'rzsbc/rzpi.dtb'.
+  Filename 'rzsbc/rzg2l-sbc.dtb'.
   Load address: 0x48000000
   Loading: ####
           8.6 MiB/s
@@ -1173,7 +1173,7 @@ renesas@builder-pc:/tftpboot/rzsbc/$ tree -L 2
   Bytes transferred = 44855 (af37 hex)
   Using ethernet@11c30000 device
   TFTP from server 192.168.5.86; our IP address is 192.168.5.30
-  Filename 'rzsbc/overlays/rzpi-ext-spi.dtbo'.
+  Filename 'rzsbc/overlays/rzg2l-sbc-ext-spi.dtbo'.
   Load address: 0x48010000
   Loading: #
           455.1 KiB/s

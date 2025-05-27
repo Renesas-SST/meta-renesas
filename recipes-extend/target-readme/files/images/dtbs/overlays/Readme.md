@@ -8,17 +8,17 @@ This directory includes Device Tree Overlay (DTO) files that extend or modify th
 
 ```
 overlays                                       
-├── rzpi-can.dtbo                         <---- Overlay for CAN interface
-├── rzpi-dsi.dtbo                         <---- Overlay for DSI display interface
-├── rzpi-ext-i2c.dtbo                     <---- Overlay for external I2C devices
-├── rzpi-ext-spi.dtbo                     <---- Overlay for external SPI devices
-├── rzpi-ov5640.dtbo                      <---- Overlay for OV5640 camera
+├── rzg2l-sbc-can.dtbo                         <---- Overlay for CAN interface
+├── rzg2l-sbc-dsi.dtbo                         <---- Overlay for DSI display interface
+├── rzg2l-sbc-ext-i2c.dtbo                     <---- Overlay for external I2C devices
+├── rzg2l-sbc-ext-spi.dtbo                     <---- Overlay for external SPI devices
+├── rzg2l-sbc-ov5640.dtbo                      <---- Overlay for OV5640 camera
 └── Readme.md                             <---- This document
 ```
 
 ### Files
-- **rzpi-can.dtbo**: Overlay for configuring the CAN interface.
-- **rzpi-dsi.dtbo**: Overlay for configuring the DSI display interface.
-- **rzpi-ext-i2c.dtbo**: Overlay for enabling external I2C devices.
-- **rzpi-ext-spi.dtbo**: Overlay for enabling external SPI devices.
-- **rzpi-ov5640.dtbo**: Overlay for integrating the OV5640 camera.
+- **rzg2l-sbc-can.dtbo**: Overlay for configuring the CAN interface.
+- **rzg2l-sbc-dsi.dtbo**: Overlay for configuring the DSI display interface.
+- **rzg2l-sbc-ext-i2c.dtbo**: Overlay for enabling external I2C devices.
+- **rzg2l-sbc-ext-spi.dtbo**: Overlay for enabling external SPI devices.
+- **rzg2l-sbc-ov5640.dtbo**: Overlay for integrating the OV5640 camera.

@@ -119,7 +119,7 @@ then
 		echo "Listing rootfs partition:"
 		ls -l
 		tar -xvjf ${rootfs_image_path} -C /tmp/rz_sdm2/
-		#cp rzpi.dtb /tmp/rz_sdm2/boot/
+		#cp rzg2l-sbc.dtb /tmp/rz_sdm2/boot/
 		#ls -l /tmp/rz_sdm2/
 		cd /tmp/rz_sdm2/boot
 		#gzip -k Image-*
