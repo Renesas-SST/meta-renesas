@@ -31,7 +31,7 @@ IMAGE_ROOTFS_ALIGNMENT = "16"
 
 # Move images to boot partition
 IMAGE_BOOT_FILES:rzg2l-sbc = " \
-    target/images/dtbs/rzpi.dtb;dtb/renesas/rzpi.dtb \
+    target/images/dtbs/rzg2l-sbc.dtb;dtb/renesas/rzg2l-sbc.dtb \
     target/images/dtbs/overlays/*;dtb/renesas/overlays/ \
     target/images/Image;Image \
     target/env/uEnv.txt;uEnv.txt \
@@ -55,7 +55,7 @@ do_release_clean() {
     rm -f ${DEPLOY_DIR_IMAGE}/u-boot*
     rm -f ${DEPLOY_DIR_IMAGE}/*initramfs*
     rm -f ${DEPLOY_DIR_IMAGE}/Image*
-    rm -f ${DEPLOY_DIR_IMAGE}/rzpi*
+    rm -f ${DEPLOY_DIR_IMAGE}/rzg2l-sbc*
     rm -f ${DEPLOY_DIR_IMAGE}/modules*
     rm -f ${DEPLOY_DIR_IMAGE}/${IMAGE_BASENAME}*
     rm -f ${DEPLOY_DIR_IMAGE}/Readme.md
@@ -156,8 +156,8 @@ IMAGE_CMD:wic:prepend() {
         cp "${DEPLOY_DIR_IMAGE}/target/images/Image" "${DEPLOY_DIR_IMAGE}/"
     fi
 
-    if [ ! -f "${DEPLOY_DIR_IMAGE}/rzpi.dtb" ]; then
-        cp "${DEPLOY_DIR_IMAGE}/target/images/dtbs/rzpi.dtb" "${DEPLOY_DIR_IMAGE}/"
+    if [ ! -f "${DEPLOY_DIR_IMAGE}/rzg2l-sbc.dtb" ]; then
+        cp "${DEPLOY_DIR_IMAGE}/target/images/dtbs/rzg2l-sbc.dtb" "${DEPLOY_DIR_IMAGE}/"
     fi
 }
 

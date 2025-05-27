@@ -12,23 +12,23 @@ Refer to the following description for different loading options.
 /------------------------------|--------------|------------------------------
 |       Config                 | Value if set |     To be loading
 |------------------------------|--------------|------------------------------
-| enable_overlay_i2c           | '1' or 'yes' |  rzpi-ext-i2c.dtbo
+| enable_overlay_i2c           | '1' or 'yes' |  rzg2l-sbc-ext-i2c.dtbo
 |------------------------------|--------------|------------------------------
-| enable_overlay_spi           | '1' or 'yes' |  rzpi-ext-spi.dtbo
+| enable_overlay_spi           | '1' or 'yes' |  rzg2l-sbc-ext-spi.dtbo
 |------------------------------|--------------|------------------------------
-| enable_overlay_can           | '1' or 'yes' |  rzpi-can.dtbo
+| enable_overlay_can           | '1' or 'yes' |  rzg2l-sbc-can.dtbo
 |------------------------------|--------------|------------------------------
-| enable_overlay_dsi           | '1' or 'yes' |  rzpi-dsi.dtbo
+| enable_overlay_dsi           | '1' or 'yes' |  rzg2l-sbc-dsi.dtbo
 |------------------------------|--------------|------------------------------
-| enable_overlay_csi_ov5640    | '1' or 'yes' |  rzpi-ov5640.dtbo
+| enable_overlay_csi_ov5640    | '1' or 'yes' |  rzg2l-sbc-ov5640.dtbo
 |----------------------------------------------------------------------------
-| fdtfile   : is a base dtb file, should be set rzpi.dtb
+| fdtfile   : is a base dtb file, should be set rzg2l-sbc.dtb
 |----------------------------------------------------------------------------
 | uboot env : you could set U-Boot's environment variables here, such as 'console=' 'bootargs='
 \---------------------------------------------------------------------------
 
 default settings:
-    fdtfile=rzpi.dtb
+    fdtfile=rzg2l-sbc.dtb
     #enable_overlay_i2c=1
     #enable_overlay_spi=1
     #enable_overlay_can=1

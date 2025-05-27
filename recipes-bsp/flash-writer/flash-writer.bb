@@ -39,9 +39,6 @@ do_compile() {
 		PMIC_BOARD="RZV2L_SMARC_PMIC";
 	elif [ "${MACHINE}" = "rzv2l-dev" ]; then
 		BOARD="RZV2L_15MMSQ_DEV";
-	elif [ "${MACHINE}" = "rzpi" ]; then
-		BOARD="RZG2L_SBC";
-		PMIC_BOARD="RZG2L_SMARC_PMIC";
 	elif [ "${MACHINE}" = "rzg2l-sbc" ]; then
 		BOARD="RZG2L_SBC";
 		PMIC_BOARD="RZG2L_SMARC_PMIC";
