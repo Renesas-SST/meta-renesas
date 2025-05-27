@@ -14,14 +14,14 @@ images
 ├── renesas-core-image-weston-rzg2l-sbc.wic
 ├── dtbs                                    <---- Directory containing Device Tree Blob files
 │   ├── overlays                                <---- Directory containing Device Tree Overlay files
-│   │   ├── rzpi-can.dtbo
-│   │   ├── rzpi-dsi.dtbo
-│   │   ├── rzpi-ext-i2c.dtbo
-│   │   ├── rzpi-ext-spi.dtbo
-│   │   ├── rzpi-ov5640.dtbo 
+│   │   ├── rzg2l-sbc-can.dtbo
+│   │   ├── rzg2l-sbc-dsi.dtbo
+│   │   ├── rzg2l-sbc-ext-i2c.dtbo
+│   │   ├── rzg2l-sbc-ext-spi.dtbo
+│   │   ├── rzg2l-sbc-ov5640.dtbo 
 │   ├   └── Readme.md
-│   ├── rzpi--6.10.14+git0+af06ad75b8_bbe3d1be4e-r0-rzg2l-sbc-20241213061340.dtbo
-│   ├── rzpi.dtb -> rzpi--6.10.14+git0+af06ad75b8_bbe3d1be4e-r0-rzg2l-sbc-20241213061340.dtbo
+│   ├── rzg2l-sbc--6.10.14+git0+af06ad75b8_bbe3d1be4e-r0-rzg2l-sbc-20241213061340.dtbo
+│   ├── rzg2l-sbc.dtb -> rzg2l-sbc--6.10.14+git0+af06ad75b8_bbe3d1be4e-r0-rzg2l-sbc-20241213061340.dtbo
 │   └── Readme.md
 ├── fip-rzg2l-sbc.bin
 ├── fip-rzg2l-sbc.srec
