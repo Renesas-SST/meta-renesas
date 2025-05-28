@@ -1,5 +1,6 @@
 # Basic packages/tools
 IMAGE_INSTALL:append = " \
+    ustreamer \
     kernel-image \
     kernel-devicetree \
     bash \
