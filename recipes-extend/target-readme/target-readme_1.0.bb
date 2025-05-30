@@ -51,5 +51,5 @@ do_deploy () {
     install -m 0644 ${D}/target/images/rootfs/Readme.md ${DEPLOYDIR}/target/images/rootfs/Readme.md
 }
 
-COMPATIBLE_MACHINE = "(rzg2l-sbc)"
+COMPATIBLE_MACHINE = "(rz-cmn)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"

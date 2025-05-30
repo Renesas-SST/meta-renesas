@@ -19,9 +19,9 @@ IMAGE_INSTALL:append = " \
     libgpiod-dev \
 "
 
-IMAGE_INSTALL:append:rzg2l-sbc = " uenv"
+IMAGE_INSTALL:append:rz-cmn = " uenv"
 
-WKS_FILE = "rzg2l-sbc-image-bootpart-mmc0.wks"
+WKS_FILE = "rz-cmn-image-bootpart-mmc0.wks"
 
 # Rootfs partition space created in Kbytes
 IMAGE_ROOTFS_EXTRA_SPACE = "1048576"
@@ -30,22 +30,21 @@ IMAGE_ROOTFS_EXTRA_SPACE = "1048576"
 IMAGE_ROOTFS_ALIGNMENT = "16"
 
 # Move images to boot partition
-IMAGE_BOOT_FILES:rzg2l-sbc = " \
-    target/images/dtbs/rzg2l-sbc.dtb;dtb/renesas/rzg2l-sbc.dtb \
+IMAGE_BOOT_FILES:rz-cmn = " \
+    target/images/dtbs/*.dtb;dtb/renesas/ \
     target/images/dtbs/overlays/*;dtb/renesas/overlays/ \
     target/images/Image;Image \
     target/env/uEnv.txt;uEnv.txt \
     Readme.md;Readme.md \
-    target/images/fip-${MACHINE}.bin;uload-bootloader/fip-${MACHINE}.bin \
-    target/images/bl2_bp-${MACHINE}.bin;uload-bootloader/bl2_bp-${MACHINE}.bin  \
+    target/images/*.bin;uload-bootloader/ \
 "
 
 DEPENDS += " linux-yocto uenv firmware-pack"
 
 add_bootloader_rootfs() {
     install -d ${IMAGE_ROOTFS}/boot/uload-bootloader
-    cp -rf ${DEPLOY_DIR_IMAGE}/target/images/bl2_bp-rzg2l-sbc.bin ${IMAGE_ROOTFS}/boot/uload-bootloader
-    cp -rf ${DEPLOY_DIR_IMAGE}/target/images/fip-rzg2l-sbc.bin ${IMAGE_ROOTFS}/boot/uload-bootloader
+    cp -rf ${DEPLOY_DIR_IMAGE}/target/images/bl2_bp_*.bin ${IMAGE_ROOTFS}/boot/uload-bootloader
+    cp -rf ${DEPLOY_DIR_IMAGE}/target/images/fip_*.bin ${IMAGE_ROOTFS}/boot/uload-bootloader
 }
 
 # Clean the output directory after the build
@@ -55,13 +54,14 @@ do_release_clean() {
     rm -f ${DEPLOY_DIR_IMAGE}/u-boot*
     rm -f ${DEPLOY_DIR_IMAGE}/*initramfs*
     rm -f ${DEPLOY_DIR_IMAGE}/Image*
-    rm -f ${DEPLOY_DIR_IMAGE}/rzg2l-sbc*
+    rm -f ${DEPLOY_DIR_IMAGE}/*.dtb
+    rm -f ${DEPLOY_DIR_IMAGE}/*.dtbo
     rm -f ${DEPLOY_DIR_IMAGE}/modules*
     rm -f ${DEPLOY_DIR_IMAGE}/${IMAGE_BASENAME}*
     rm -f ${DEPLOY_DIR_IMAGE}/Readme.md
 }
 
-addtask release_clean after do_image_complete before do_populate_lic_deploy
+addtask do_release_clean after do_image_complete before do_populate_lic_deploy
 addtask write_image_spdx after create_image_sbom_spdx before do_release_clean
 ROOTFS_POSTPROCESS_COMMAND += " add_bootloader_rootfs;"
 
@@ -75,12 +75,12 @@ python do_rootfs_wicenv:append () {
 # Install file rootfs.manifest to host/build
 python write_image_manifest:append () {
     # Create target dir host/build
-    link_name = d.getVar('IMAGE_BASENAME') + "-" + d.getVar('MACHINE')
+    link_name = d.getVar('IMAGE_BASENAME')
     target_dir = os.path.join(deploy_dir, 'host/build')
     os.makedirs(target_dir, exist_ok=True)
 
     # Copy the .manifest file to the deploy_dir/host/build folder
-    var_get_name = d.getVar('IMAGE_BASENAME') + "-" + d.getVar('MACHINE') + d.getVar('IMAGE_VERSION_SUFFIX')
+    var_get_name = d.getVar('IMAGE_BASENAME') + d.getVar('IMAGE_VERSION_SUFFIX')
     manifest_name_target = os.path.join(deploy_dir, "%s.rootfs.manifest" % var_get_name)
     target_manifest = os.path.join(target_dir, os.path.basename(manifest_name_target))
     os.system(f"cp {manifest_name} {target_manifest}")
@@ -97,12 +97,12 @@ python write_image_manifest:append () {
 # Install file testdata.json to host/build
 python write_image_test_data:append () {
     # Create the directory deploy_dir/host/build
-    link_name = d.getVar('IMAGE_BASENAME') + "-" + d.getVar('MACHINE')
+    link_name = d.getVar('IMAGE_BASENAME')
     target_dir = os.path.join(deploy_dir, 'host/build')
     os.makedirs(target_dir, exist_ok=True)
 
     # Copy the .testdata.json file to deploy_dir/host/build
-    var_get_name = d.getVar('IMAGE_BASENAME') + "-" + d.getVar('MACHINE') + d.getVar('IMAGE_VERSION_SUFFIX')
+    var_get_name = d.getVar('IMAGE_BASENAME') + d.getVar('IMAGE_VERSION_SUFFIX')
     testdata_name_target = os.path.join(deploy_dir, "%s.testdata.json" % var_get_name)
     target_testdata = os.path.join(target_dir, os.path.basename(testdata_name_target))
     os.system(f"cp {testdata_name} {target_testdata}")
@@ -164,8 +164,8 @@ IMAGE_CMD:wic:prepend() {
 IMAGE_CMD:wic:append() {
     # Remove existing wic file and move the output to target directory
     rm -f "${target_dir}"/*.wic
-    mv "${out}.wic" "${target_dir}/${IMAGE_BASENAME}-${MACHINE}.wic"
-    cp "${target_dir}/${IMAGE_BASENAME}-${MACHINE}.wic" "${IMGDEPLOYDIR}/${IMAGE_NAME}.wic"
+    mv "${out}.wic" "${target_dir}/${IMAGE_BASENAME}.wic"
+    cp "${target_dir}/${IMAGE_BASENAME}.wic" "${IMGDEPLOYDIR}/${IMAGE_NAME}.wic"
 }
 
 # Move tar file from deploy complete folder to target/images/rootfs directory
@@ -178,7 +178,7 @@ CONVERSION_CMD:bz2:append() {
     mkdir -p "${target_dir}"
     # Remove existing tar file and move the output to target directory
     rm -f "${target_dir}"/*.tar.bz2
-    mv "${out}.tar.bz2" "${target_dir}/${IMAGE_BASENAME}-${MACHINE}.tar.bz2"
+    mv "${out}.tar.bz2" "${target_dir}/${IMAGE_BASENAME}.tar.bz2"
 }
 
 # Linux bootloader flashing utility
@@ -215,7 +215,5 @@ EXTRA_IMAGEDEPENDS += " host-readme "
 EXTRA_IMAGEDEPENDS += " target-readme "
 
 # Readme documentation
-EXTRA_IMAGEDEPENDS += " rzg2l-sbc-readme "
-EXTRA_IMAGEDEPENDS += " rzg2l-sbc-docs "
-
-IMAGE_INSTALL:append = " kernel-modules"
+EXTRA_IMAGEDEPENDS += " rz-cmn-readme "
+EXTRA_IMAGEDEPENDS += " rz-cmn-docs "

@@ -10,7 +10,7 @@ ENABLE_SPD_OPTEE	?= '0'
 ENABLE_RZ_SCE		?= '0'
 
 FLASH_WRITER_URL = "git://github.com/Renesas-SST/flash-writer.git"
-BRANCH = "dunfell/rz-sbc"
+BRANCH = "styhead/rz-cmn"
 SRC_URI = "${FLASH_WRITER_URL};name=rzg2l-sbc;subdir=rzg2l-sbc;protocol=https;branch=${BRANCH} \
 			${FLASH_WRITER_URL};name=rzg2l-evk;subdir=rzg2l-evk;protocol=https;branch=${BRANCH} \
 			${FLASH_WRITER_URL};name=rzv2l-evk;subdir=rzv2l-evk;protocol=https;branch=${BRANCH} \

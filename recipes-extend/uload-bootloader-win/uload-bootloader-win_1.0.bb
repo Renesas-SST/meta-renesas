@@ -31,5 +31,5 @@ do_deploy () {
     install -m 0755 ${D}/util/uload-bootloader-windows-script/tools/* ${DEPLOYDIR}/host/tools/uload-bootloader/windows/tools
 }
 
-COMPATIBLE_MACHINE = "(rzg2l-sbc)"
+COMPATIBLE_MACHINE = "(rz-cmn)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
