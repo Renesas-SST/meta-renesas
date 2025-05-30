@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = " \
 "
 
 inherit module
-require include/rzg2l-sbc-modules-common.inc
+require include/rz-cmn-modules-common.inc
 
 DEPENDS = "linux-yocto kernel-module-vspm"
 PN = "kernel-module-vspmif"
@@ -20,7 +20,7 @@ SRCREV = "2fdb2838a5625e4231f1cff5d10079acc4954952"
 
 SRC_URI = "${VSPMIF_DRV_URL};branch=${BRANCH};protocol=https"
 
-SRC_URI:append:rzg2l-sbc = " \
+SRC_URI:append:rz-cmn = " \
     file://0001-Add-ISU-to-vspmif.patch \
     file://0002-Remove-width-height-in-isu_dst_t.patch \
     file://0002-rzg2l-sbc-Support-Linux-6.10.patch \

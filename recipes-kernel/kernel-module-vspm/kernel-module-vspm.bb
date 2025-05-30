@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = " \
 "
 
 inherit module
-require include/rzg2l-sbc-modules-common.inc
+require include/rz-cmn-modules-common.inc
 
 DEPENDS = "linux-yocto"
 PN = "kernel-module-vspm"
@@ -19,7 +19,7 @@ SRCREV = "07787fc1168e7fe37c305aca151a6f756f35874f"
 
 SRC_URI = "${VSPM_DRV_URL};branch=${BRANCH};protocol=https"
 
-SRC_URI:append:rzg2l-sbc = " \
+SRC_URI:append:rz-cmn = " \
         file://0001-Add-ISU-driver.patch \
         file://0002-Add-option-ISU_CSC_RAW.patch \
         file://0003-Add-ISU-to-VSPM.patch \
@@ -75,7 +75,7 @@ do_install () {
     install -m 644 ${B}/../include/fdp_drv.h ${D}/${includedir}/
 }
 
-do_install:append:rzg2l-sbc () {
+do_install:append:rz-cmn () {
     install -m 644 ${B}/../include/isu_drv.h ${KERNELSRC}/include/
     install -m 644 ${B}/../include/isu_drv.h ${D}/${includedir}/
 }
