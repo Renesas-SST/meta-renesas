@@ -38,5 +38,5 @@ do_deploy () {
     install -m 0644 ${D}/util/env/Readme.md ${DEPLOYDIR}/host/env
 }
 
-COMPATIBLE_MACHINE = "(rzg2l-sbc)"
+COMPATIBLE_MACHINE = "(rz-cmn)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"

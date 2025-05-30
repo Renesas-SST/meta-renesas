@@ -7,9 +7,9 @@ DEPENDS += "bc-native dtc-native"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-UBOOT_URL = "git://github.com/vudangRVC/u-boot-sst.git"
+UBOOT_URL = "git://github.com/Renesas-SST/u-boot.git"
 SRC_URI = "${UBOOT_URL};name=machine;protocol=https;branch=${BRANCH}"
-BRANCH = "rz-support-multi-boards"
+BRANCH = "styhead/rz-cmn"
 SRCREV_machine = "${AUTOREV}"
 
 FILES:${PN} = "/boot ${sysconfdir}"

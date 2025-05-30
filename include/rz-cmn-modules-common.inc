@@ -6,4 +6,4 @@ export CROSS_COMPILE = "${TARGET_PREFIX}"
 export KERNELDIR = "${STAGING_KERNEL_DIR}"
 export LDFLAGS = ""
 export CP = "cp"
-require include/rzg2l-sbc-path-common.inc
+require include/rz-cmn-path-common.inc

@@ -11,7 +11,7 @@ UNPACKDIR = "${S}"
 SRC_URI = " \
 	file://README.md \
 "
-COMPATIBLE_MACHINE = "(rzg2l-sbc)"
+COMPATIBLE_MACHINE = "(rz-cmn)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 FILES:${PN} += "/docs"
