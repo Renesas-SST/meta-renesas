@@ -1,6 +1,6 @@
 DESCRIPTION = "Memory Manager Buffer User module for Renesas RZG2"
 require mmngr_lib.inc
-require include/rzg2l-sbc-path-common.inc
+require include/rz-cmn-path-common.inc
 
 DEPENDS = "kernel-module-mmngrbuf"
 PN = "mmngrbuf-user-module"

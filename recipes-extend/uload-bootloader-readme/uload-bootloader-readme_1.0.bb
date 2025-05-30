@@ -27,5 +27,5 @@ do_deploy () {
     install -m 0644 ${D}/util/Readme.md ${DEPLOYDIR}/host/tools/uload-bootloader
 }
 
-COMPATIBLE_MACHINE = "(rzg2l-sbc)"
+COMPATIBLE_MACHINE = "(rz-cmn)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"

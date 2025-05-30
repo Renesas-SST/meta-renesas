@@ -16,7 +16,7 @@ includedir = "${RENESAS_DATADIR}/include"
 WS:aarch64 = ""
 WS:virtclass-multilib-lib32 = "32"
 
-SRC_URI:append:rzg2l-sbc = " \
+SRC_URI:append:rz-cmn = " \
 	file://0001-Modify-vspm_public.h-for-ISUM.patch \
 	file://0002-Modify-Makefile-for-building-vspm_api_isu.patch \
 	file://0003-Add-vspm_api_isu.c-for-ISUM.patch \

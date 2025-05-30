@@ -24,5 +24,5 @@ FILES:${PN} += " \
 
 RDEPENDS_${PN} += "bash"
 
-COMPATIBLE_MACHINE:rzg2l-sbc = "(rzg2l-sbc)"
+COMPATIBLE_MACHINE:rz-cmn = "(rz-cmn)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
