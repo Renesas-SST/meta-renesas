@@ -1,6 +1,6 @@
 DESCRIPTION = "Trusted Firmware-A for Renesas RZ"
 
-require include/rzg2l-optee-config.inc
+require include/rz-optee-config.inc
 inherit deploy
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
@@ -10,20 +10,25 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 "
 # Set S variable to folder that includes Makefile
 S = "${WORKDIR}/git"
+UNPACKDIR = "${S}"
 
-SRC_URI:rzg2l-sbc = " \
-    git://github.com/Renesas-SST/rz-atf.git;name=machine;branch=${BRANCH};protocol=https \
+SRC_URI:rz-cmn = " \
+    git://github.com/vudangRVC/rz-atf-sst.git;name=rzg2l-sbc;subdir=rzg2l-sbc;branch=atf-pass-params;protocol=https \
+    git://github.com/vudangRVC/rz-atf-sst.git;name=rzg2l-evk;subdir=rzg2l-evk;branch=atf-pass-params-g2l;protocol=https \
+    git://github.com/vudangRVC/rz-atf-sst.git;name=rzv2l-evk;subdir=rzv2l-evk;branch=atf-pass-params-v2l;protocol=https \
+    git://github.com/vudangRVC/rz-atf-sst.git;name=rzv2h-evk;subdir=rzv2h-evk;branch=atf-pass-params-v2h;protocol=https \
 "
 
-BRANCH:rzg2l-sbc = "styhead/rz-sbc"
-SRCREV_machine:rzg2l-sbc = "${AUTOREV}"
+SRCREV_rzg2l-sbc = "${AUTOREV}"
+SRCREV_rzg2l-evk = "${AUTOREV}"
+SRCREV_rzv2l-evk = "${AUTOREV}"
+SRCREV_rzv2h-evk = "${AUTOREV}"
+SRCREV_FORMAT = "rzg2l-sbc_rzg2l-evk_rzv2l-evk_rzv2h-evk"
 PV = "v2.9+git"
 
-# Configuration for rzg2l-sbc board
-PLATFORM:rzg2l-sbc = "g2l"
-EXTRA_FLAGS:rzg2l-sbc = "BOARD=sbc_1"
-FLASH_ADDRESS_BL2_BP:rzg2l-sbc = "00000"
-FLASH_ADDRESS_FIP:rzg2l-sbc = "1D200"
+# Configuration for multi boards
+FLASH_ADDRESS_BL2_BP:rz-cmn = "00000"
+FLASH_ADDRESS_FIP:rz-cmn = "1D200"
 
 FILES:${PN} = "/boot "
 # Add the /boot directory to the target's sysroot
@@ -51,30 +56,65 @@ LDFLAGS[unexport] = "1"
 AS[unexport] = "1"
 LD[unexport] = "1"
 
-# Make args with option ${EXTRA_OEMAKE}
-EXTRA_OEMAKE="PLAT=${PLATFORM} ${EXTRA_FLAGS} bl2 bl31"
+TARGETS = "rzg2l-sbc rzg2l-evk rzv2l-evk rzv2h-evk"
+
+do_compile() {
+    cd ${S}/rzg2l-sbc
+    BUILD_FLAGS="PLAT=g2l BOARD=sbc_1"
+    make ${BUILD_FLAGS} bl2 bl31
+
+    cd ${S}/rzg2l-evk
+    BUILD_FLAGS="PLAT=g2l BOARD=smarc_pmic_2"
+    make ${BUILD_FLAGS} bl2 bl31
+
+    cd ${S}/rzv2l-evk
+    BUILD_FLAGS="PLAT=v2l BOARD=smarc_pmic_2"
+    make ${BUILD_FLAGS} bl2 bl31
+
+    cd ${S}/rzv2h-evk
+    BUILD_FLAGS="PLAT=v2h BOARD=evk_1 ENABLE_STACK_PROTECTOR=default"
+    make ${BUILD_FLAGS} bl2 bl31
+}
 
 # Install bl2.bin and bl31.bin to boot folder and rename
 do_install() {
     install -d ${D}/boot
-    install -m 644 ${S}/build/${PLATFORM}/release/bl2.bin ${D}/boot/bl2-${MACHINE}.bin
-    install -m 644 ${S}/build/${PLATFORM}/release/bl31.bin ${D}/boot/bl31-${MACHINE}.bin
+    for target in ${TARGETS}; do
+        if [ ${target} = "rzg2l-sbc" ] || [ ${target} = "rzg2l-evk" ]; then
+            PLATFORM="g2l"
+        elif [ ${target} = "rzv2l-evk" ]; then
+            PLATFORM="v2l"
+        elif [ ${target} = "rzv2h-evk" ]; then
+            PLATFORM="v2h"
+        fi
+        install -m 644 ${S}/${target}/build/${PLATFORM}/release/bl2.bin ${D}/boot/bl2-${target}.bin
+        install -m 644 ${S}/${target}/build/${PLATFORM}/release/bl31.bin ${D}/boot/bl31-${target}.bin
+    done
 }
 
 do_deploy() {
     # Create deploy folder
     install -d ${DEPLOYDIR}
-
-    # Copy IPL to deploy folder
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl2/bl2.elf ${DEPLOYDIR}/bl2-${MACHINE}.elf
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl2.bin ${DEPLOYDIR}/bl2-${MACHINE}.bin
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl31/bl31.elf ${DEPLOYDIR}/bl31-${MACHINE}.elf
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl31.bin ${DEPLOYDIR}/bl31-${MACHINE}.bin
-
     install -d ${DEPLOYDIR}/target/images
-    install -m 0644 ${D}/boot/bl2-${MACHINE}.bin ${DEPLOYDIR}/target/images/bl2-${MACHINE}.bin
+
+    for target in ${TARGETS}; do
+        if [ ${target} = "rzg2l-sbc" ] || [ ${target} = "rzg2l-evk" ]; then
+            PLATFORM="g2l"
+        elif [ ${target} = "rzv2l-evk" ]; then
+            PLATFORM="v2l"
+        elif [ ${target} = "rzv2h-evk" ]; then
+            PLATFORM="v2h"
+        fi
+        # Copy IPL to deploy folder
+        install -m 0644 ${S}/${target}/build/${PLATFORM}/release/bl2/bl2.elf ${DEPLOYDIR}/bl2-${target}.elf
+        install -m 0644 ${S}/${target}/build/${PLATFORM}/release/bl2.bin ${DEPLOYDIR}/bl2-${target}.bin
+        install -m 0644 ${S}/${target}/build/${PLATFORM}/release/bl31/bl31.elf ${DEPLOYDIR}/bl31-${target}.elf
+        install -m 0644 ${S}/${target}/build/${PLATFORM}/release/bl31.bin ${DEPLOYDIR}/bl31-${target}.bin
+
+        install -m 0644 ${D}/boot/bl2-${target}.bin ${DEPLOYDIR}/target/images/bl2-${target}.bin
+    done
 }
 
 addtask deploy after do_install
 
-COMPATIBLE_MACHINE = "rzg2l-sbc"
+COMPATIBLE_MACHINE = "rz-cmn"
