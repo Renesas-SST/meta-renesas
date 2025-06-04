@@ -28,12 +28,12 @@ inherit deploy
 S = "${WORKDIR}/git"
 UNPACKDIR = "${S}"
 
-TARGETS = "rzg2l-sbc rzg2l-evk rzv2l-evk"
-
 do_compile() {
-	for target in ${TARGETS}; do
+	for target in ${SUPPORT_TARGETS}; do
 		PMIC_BUILD_DIR="${S}/${target}/build_pmic"
-		if [ ${target} = "rzg2l-sbc" ]; then
+		if [ ${target} = "rzv2h-evk" ]; then
+			continue;
+		elif [ ${target} = "rzg2l-sbc" ]; then
 			BOARD="RZG2L_SBC"
 			PMIC_BOARD="RZG2L_SMARC_PMIC"
 		elif [ ${target} = "rzg2l-evk" ]; then
@@ -58,7 +58,10 @@ do_install[noexec] = "1"
 
 do_deploy() {
 	install -d ${DEPLOYDIR}/target/images
-	for target in ${TARGETS}; do
+	for target in ${SUPPORT_TARGETS}; do
+		if [ ${target} = "rzv2h-evk" ]; then
+			continue;
+		fi
 		PMIC_BUILD_DIR="${S}/${target}/build_pmic"
 		install -m 644 ${S}/${target}/AArch64_output/*.mot ${DEPLOYDIR}/target/images
 		if [ "${PMIC_SUPPORT}" = "1" ]; then
