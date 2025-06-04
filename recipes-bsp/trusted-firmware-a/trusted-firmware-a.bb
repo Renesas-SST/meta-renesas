@@ -57,8 +57,6 @@ LDFLAGS[unexport] = "1"
 AS[unexport] = "1"
 LD[unexport] = "1"
 
-TARGETS = "rzg2l-sbc rzg2l-evk rzv2l-evk rzv2h-evk"
-
 do_compile() {
     cd ${S}/rzg2l-sbc
     BUILD_FLAGS="PLAT=g2l BOARD=sbc_1"
@@ -80,7 +78,7 @@ do_compile() {
 # Install bl2.bin and bl31.bin to boot folder and rename
 do_install() {
     install -d ${D}/boot
-    for target in ${TARGETS}; do
+    for target in ${SUPPORT_TARGETS}; do
         if [ ${target} = "rzg2l-sbc" ] || [ ${target} = "rzg2l-evk" ]; then
             PLATFORM="g2l"
         elif [ ${target} = "rzv2l-evk" ]; then
@@ -98,7 +96,7 @@ do_deploy() {
     install -d ${DEPLOYDIR}
     install -d ${DEPLOYDIR}/target/images
 
-    for target in ${TARGETS}; do
+    for target in ${SUPPORT_TARGETS}; do
         if [ ${target} = "rzg2l-sbc" ] || [ ${target} = "rzg2l-evk" ]; then
             PLATFORM="g2l"
         elif [ ${target} = "rzv2l-evk" ]; then
