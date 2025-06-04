@@ -11,11 +11,9 @@ DEPENDS = " trusted-firmware-a u-boot bootparameter-native fiptool-native bptool
 
 S = "${WORKDIR}/sources"
 
-TARGETS = "rzg2l-sbc rzg2l-evk rzv2l-evk rzv2h-evk"
-
 # Create bin file and convert to srec file
 do_compile () {
-    for target in ${TARGETS}; do
+    for target in ${SUPPORT_TARGETS}; do
         if [ ${target} = "rzv2h-evk" ]; then
             # Create bl2_bp.bin esd
             bptool ${RECIPE_SYSROOT}/boot/bl2-${target}.bin bp.bin 0x08103000 esd
