@@ -3,7 +3,6 @@ DESCRIPTION = "Trusted Firmware-A for Renesas RZ"
 require include/rz-optee-config.inc
 inherit deploy
 
-DEPENDS:append = " dtc-native"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 LICENSE = "MIT"
@@ -14,9 +13,9 @@ S = "${WORKDIR}/git"
 UNPACKDIR = "${S}"
 
 SRC_URI:rz-cmn = " \
-    git://github.com/Renesas-SST/rz-atf.git;name=rzg2l-sbc;subdir=rzg2l-sbc;branch=styhead/rz-cmn;protocol=https \
-    git://github.com/Renesas-SST/rz-atf.git;name=rzg2l-evk;subdir=rzg2l-evk;branch=styhead/rz-cmn;protocol=https \
-    git://github.com/Renesas-SST/rz-atf.git;name=rzv2l-evk;subdir=rzv2l-evk;branch=styhead/rz-cmn;protocol=https \
+    git://github.com/vudangRVC/rz-atf-sst.git;name=rzg2l-sbc;subdir=rzg2l-sbc;branch=atf-pass-params;protocol=https \
+    git://github.com/vudangRVC/rz-atf-sst.git;name=rzg2l-evk;subdir=rzg2l-evk;branch=atf-pass-params-g2l;protocol=https \
+    git://github.com/vudangRVC/rz-atf-sst.git;name=rzv2l-evk;subdir=rzv2l-evk;branch=atf-pass-params-v2l;protocol=https \
     git://github.com/vudangRVC/rz-atf-sst.git;name=rzv2h-evk;subdir=rzv2h-evk;branch=atf-pass-params-v2h;protocol=https \
 "
 
@@ -57,18 +56,20 @@ LDFLAGS[unexport] = "1"
 AS[unexport] = "1"
 LD[unexport] = "1"
 
+TARGETS = "rzg2l-sbc rzg2l-evk rzv2l-evk rzv2h-evk"
+
 do_compile() {
     cd ${S}/rzg2l-sbc
     BUILD_FLAGS="PLAT=g2l BOARD=sbc_1"
-    make ${BUILD_FLAGS} bl2_with_dtb  bl31
+    make ${BUILD_FLAGS} bl2 bl31
 
     cd ${S}/rzg2l-evk
     BUILD_FLAGS="PLAT=g2l BOARD=smarc_pmic_2"
-    make ${BUILD_FLAGS} bl2_with_dtb  bl31
+    make ${BUILD_FLAGS} bl2 bl31
 
     cd ${S}/rzv2l-evk
-    BUILD_FLAGS="PLAT=v2l BOARD=smarc_rzv2l"
-    make ${BUILD_FLAGS} bl2_with_dtb  bl31
+    BUILD_FLAGS="PLAT=v2l BOARD=smarc_pmic_2"
+    make ${BUILD_FLAGS} bl2 bl31
 
     cd ${S}/rzv2h-evk
     BUILD_FLAGS="PLAT=v2h BOARD=evk_1 ENABLE_STACK_PROTECTOR=default"
@@ -78,7 +79,7 @@ do_compile() {
 # Install bl2.bin and bl31.bin to boot folder and rename
 do_install() {
     install -d ${D}/boot
-    for target in ${SUPPORT_TARGETS}; do
+    for target in ${TARGETS}; do
         if [ ${target} = "rzg2l-sbc" ] || [ ${target} = "rzg2l-evk" ]; then
             PLATFORM="g2l"
         elif [ ${target} = "rzv2l-evk" ]; then
@@ -96,7 +97,7 @@ do_deploy() {
     install -d ${DEPLOYDIR}
     install -d ${DEPLOYDIR}/target/images
 
-    for target in ${SUPPORT_TARGETS}; do
+    for target in ${TARGETS}; do
         if [ ${target} = "rzg2l-sbc" ] || [ ${target} = "rzg2l-evk" ]; then
             PLATFORM="g2l"
         elif [ ${target} = "rzv2l-evk" ]; then
