@@ -117,7 +117,7 @@ $ IMAGE=<target_image> ./rzsbc_yocto.sh build
 | renesas-core-image-weston  | Renesas customized core image based on the core-image-weston, with Qt5 framework support (no QT demo apps included). This image offers a full graphical environment for Renesas hardware development and all the useful tools from the renesas-core-image-cli.      |
 | renesas-quickboot-cli      | This image has the same system functionality as the renesas-core-image-cli but with Quickboot enabled, allowing for faster boot times and efficient system validation on a CLI environment.|
 | renesas-quickboot-wayland  | This image has the same system functionality as the renesas-core-image-weston but with Quickboot enabled, allowing for faster boot times and efficient system validation on a graphical environment              |
-| renesas-ubuntu  | renesas-ubuntu | Ubuntu-based image built on top of the ubuntu-tiny Yocto distro, ideal for embedded development. It includes core support for Wayland, X11, OpenGL, and Qt5, but does not include full development tools or environments. This image is not meant to be used as a Yocto rootfs, but rather as a foundation for pure Ubuntu-based systems that depend on Yocto-generated artifacts.|
+| renesas-ubuntu | Ubuntu-based image built on top of the ubuntu-tiny Yocto distro, ideal for embedded development. It includes core support for Wayland, X11, OpenGL, and Qt5, but does not include full development tools or environments. This image is not meant to be used as a Yocto rootfs, but rather as a foundation for pure Ubuntu-based systems that depend on Yocto-generated artifacts.|
 
 **Note:**
 
@@ -134,128 +134,270 @@ The output folder outline:
 rzpi/
 ├── host
 │   ├── build
-│   │   ├── core-image-qt-rzpi-20240918051558.rootfs.manifest
-│   │   ├── core-image-qt-rzpi-20240918051558.testdata.json
-│   │   ├── core-image-qt-rzpi.manifest -> core-image-qt-rzpi-20240918051558.rootfs.manifest
-│   │   └── core-image-qt-rzpi.testdata.json -> core-image-qt-rzpi-20240918051558.testdata.json
+│   │   ├── core-image-bsp-rzpi-<timestamp>.rootfs.manifest
+│   │   ├── core-image-bsp-rzpi-<timestamp>.testdata.json
+│   │   ├── core-image-bsp-rzpi.manifest
+│   │   ├── core-image-bsp-rzpi.testdata.json
+│   │   ├── core-image-minimal-rzpi-<timestamp>.rootfs.manifest
+│   │   ├── core-image-minimal-rzpi-<timestamp>.testdata.json
+│   │   ├── core-image-minimal-rzpi.manifest
+│   │   ├── core-image-minimal-rzpi.testdata.json
+│   │   ├── core-image-qt-rzpi-<timestamp>.rootfs.manifest
+│   │   ├── core-image-qt-rzpi-<timestamp>.testdata.json
+│   │   ├── core-image-qt-rzpi.manifest
+│   │   ├── core-image-qt-rzpi.testdata.json
+│   │   ├── core-image-weston-rzpi-<timestamp>.rootfs.manifest
+│   │   ├── core-image-weston-rzpi-<timestamp>.testdata.json
+│   │   ├── core-image-weston-rzpi.manifest
+│   │   ├── core-image-weston-rzpi.testdata.json
+│   │   ├── renesas-core-image-cli-rzpi-<timestamp>.rootfs.manifest
+│   │   ├── renesas-core-image-cli-rzpi-<timestamp>.testdata.json
+│   │   ├── renesas-core-image-cli-rzpi.manifest
+│   │   ├── renesas-core-image-cli-rzpi.testdata.json
+│   │   ├── renesas-core-image-weston-rzpi-<timestamp>.rootfs.manifest
+│   │   ├── renesas-core-image-weston-rzpi-<timestamp>.testdata.json
+│   │   ├── renesas-core-image-weston-rzpi.manifest
+│   │   ├── renesas-core-image-weston-rzpi.testdata.json
+│   │   ├── renesas-quickboot-cli-rzpi-<timestamp>.rootfs.manifest
+│   │   ├── renesas-quickboot-cli-rzpi-<timestamp>.testdata.json
+│   │   ├── renesas-quickboot-cli-rzpi.manifest
+│   │   ├── renesas-quickboot-cli-rzpi.testdata.json
+│   │   ├── renesas-quickboot-wayland-rzpi-<timestamp>.rootfs.manifest
+│   │   ├── renesas-quickboot-wayland-rzpi-<timestamp>.testdata.json
+│   │   ├── renesas-quickboot-wayland-rzpi.manifest
+│   │   ├── renesas-quickboot-wayland-rzpi.testdata.json
+│   │   ├── renesas-ubuntu-rzpi-<timestamp>.rootfs.manifest
+│   │   ├── renesas-ubuntu-rzpi-<timestamp>.testdata.json
+│   │   ├── renesas-ubuntu-rzpi.manifest
+│   │   └── renesas-ubuntu-rzpi.testdata.json
 │   ├── env
-│   │   ├── Readme.md
-│   │   └── core-image-qt.env
-│   ├── Readme.md
-│   ├── src                                                             <---- Build script packages
-│   │   ├── git_patch.json
-│   │   ├── jq-linux-amd64
-│   │   ├── patches
-│   │   │   ├── meta-summit-radio
-│   │   │   │   └── 0001-rzsbc-summit-radio-pre-3.4-support-eSDK-build.patch
-│   │   │   └── poky
-│   │   │       └── 0001-meta-classes-esdk-explicitly-address-the-location-of.patch
-│   │   ├── README.md
-│   │   ├── rzsbc_yocto.sh
-│   │   └── site.conf
-│   └── tools
-│       ├── bootloader-flasher
-│       │   ├── linux                                                    <---- Bootloader flashing script package folder on Linux
-│       │   │   ├── bootloader_flash.py                                  <---- Bootloader flashing script on Linux
-│       │   │   └── Readme.md                                            <---- Bootloader flashing script on Linux guideline
-│       │   ├── Readme.md
-│       │   └── windows                                                  <---- Bootloader flashing script package folder on Windows
-│       │       ├── config.ini
-│       │       ├── flash_bootloader.bat                                 <---- Bootloader flashing script on Windows
-│       │       ├── Readme.md                                            <---- Bootloader flashing script on Windows guideline
-│       │       └── tools
-│       │           ├── cygterm.cfg
-│       │           ├── flash_bootloader.ttl
-│       │           ├── TERATERM.INI
-│       │           ├── ttermpro.exe
-│       │           ├── ttpcmn.dll
-│       │           ├── ttpfile.dll
-│       │           ├── ttpmacro.exe
-│       │           ├── ttpset.dll
-│       │           └── ttxssh.dll
-│       ├── Readme.md
-│       ├── sd-creator
-│       │   ├── linux                                                    <---- SD card flashing script package folder on Linux
-│       │   │   ├── sd_flash.sh                                          <---- SD card flashing script on Linux
-│       │   │   └── Readme.md                                            <---- SD card flashing guideline on Linux
-│       │   ├── Readme.md
-│       │   └── windows                                                  <---- SD card flashing script package folder on Windows
-│       │       ├── config.ini
-│       │       ├── flash_filesystem.bat                             <---- SD card flashing script on Windows
-│       │       ├── Readme.md                                        <---- SD card flashing guideline on Windows
-│       │       └── tools
-│       │           ├── AdbWinApi.dll
-│       │           ├── cygterm.cfg
-│       │           ├── fastboot.bat
-│       │           ├── fastboot.exe
-│       │           ├── flash_system_image.ttl
-│       │           ├── TERATERM.INI
-│       │           ├── ttermpro.exe
-│       │           ├── ttpcmn.dll
-│       │           ├── ttpfile.dll
-│       │           ├── ttpmacro.exe
-│       │           ├── ttpset.dll
-│       │           └── ttxssh.dll
-│       └── uload-bootloader
-│           ├── linux                                                    <---- Bootloader flashing from U-Boot console script package on Linux
-│           │   ├── uload_bootloader_flash.py                            <---- Bootloader flashing from U-Boot console script on Linux
-│           │   └── Readme.md                                            <---- Bootloader flashing from U-Boot console guideline on Linux
-│           ├── Readme.md
-│           └── windows                                                  <---- Bootloader flashing from U-Boot console script package on Windows
-│               ├── config.ini
-│               ├── Readme.md                                            <---- Bootloader flashing from U-Boot console guideline on Windows
-│               ├── tools
-│               │   ├── cygterm.cfg
-│               │   ├── TERATERM.INI
-│               │   ├── ttermpro.exe
-│               │   ├── ttpcmn.dll
-│               │   ├── ttpfile.dll
-│               │   ├── ttpmacro.exe
-│               │   ├── ttpset.dll
-│               │   ├── ttxssh.dll
-│               │   └── uload-flash_bootloader.ttl
-│               └── uload-flash_bootloader.bat                           <---- Bootloader flashing from U-Boot console script on Windows
+│   │   ├── core-image-bsp.env
+│   │   ├── core-image-minimal.env
+│   │   ├── core-image-qt.env
+│   │   ├── core-image-weston.env
+│   │   ├── Readme.md
+│   │   ├── renesas-core-image-cli.env
+│   │   ├── renesas-core-image-weston.env
+│   │   ├── renesas-quickboot-cli.env
+│   │   ├── renesas-quickboot-wayland.env
+│   │   └── renesas-ubuntu.env
+│   ├── Readme.md
+│   ├── src
+│   │   └── rz-cmn-srp
+│   │       ├── git_patch.json
+│   │       ├── images.json
+│   │       ├── jq-linux-amd64
+│   │       ├── patches
+│   │       │   ├── meta-summit-radio
+│   │       │   │   ├── 0001-rzsbc-summit-radio-pre-3.4-support-eSDK-build.patch
+│   │       │   │   └── 0002-rzsbc-summit-radio-pre-3.4-enable-usb-bt-support.patch
+│   │       │   └── poky
+│   │       │       └── 0001-meta-classes-esdk-explicitly-address-the-location-of.patch
+│   │       ├── README.md
+│   │       ├── rzsbc_builder.sh
+│   │       ├── site.conf
+│   │       └── ubuntu
+│   │           ├── config
+│   │           │   ├── ubuntu_core
+│   │           │   │   ├── network_interfaces.conf
+│   │           │   │   └── resolved.conf
+│   │           │   └── ubuntu_lxde
+│   │           │       ├── interfaces
+│   │           │       ├── lightdm.conf
+│   │           │       ├── NetworkManager.conf
+│   │           │       ├── rsyslog
+│   │           │       ├── ttyS0.conf
+│   │           │       └── v4l2-init.sh
+│   │           ├── config.ini
+│   │           ├── docs
+│   │           │   ├── ubuntu_core
+│   │           │   │   └── README.md
+│   │           │   └── ubuntu_lxde
+│   │           │       ├── Pictures
+│   │           │       │   ├── audacity.png
+│   │           │       │   ├── bluetooth_0.png
+│   │           │       │   ├── bluetooth_1.png
+│   │           │       │   ├── bluetooth_2.png
+│   │           │       │   ├── bluetooth_3.png
+│   │           │       │   ├── bluetooth_4.png
+│   │           │       │   ├── csi_0.png
+│   │           │       │   ├── csi_1.png
+│   │           │       │   ├── csi_2.png
+│   │           │       │   ├── eth_1.png
+│   │           │       │   ├── eth_2.png
+│   │           │       │   ├── eth_3.png
+│   │           │       │   ├── eth_4.png
+│   │           │       │   ├── eth_5.png
+│   │           │       │   ├── eth.png
+│   │           │       │   ├── save_audio_0.png
+│   │           │       │   ├── save_audio_1.png
+│   │           │       │   ├── save_audio_2.png
+│   │           │       │   ├── vlc_open_0.png
+│   │           │       │   ├── vlc_open_1.png
+│   │           │       │   ├── vlc_open_2.png
+│   │           │       │   ├── vlc.png
+│   │           │       │   ├── vlc_video_1.png
+│   │           │       │   ├── vlc_video.png
+│   │           │       │   ├── web_1.png
+│   │           │       │   ├── web_2.png
+│   │           │       │   ├── web_lxterm_htop.png
+│   │           │       │   ├── web.png
+│   │           │       │   └── wifi_0.png
+│   │           │       └── README.md
+│   │           ├── include
+│   │           │   ├── common
+│   │           │   │   ├── allow_empty_password.sh
+│   │           │   │   ├── create_wic.sh
+│   │           │   │   ├── install_gstreamer.sh
+│   │           │   │   ├── install_weston.sh
+│   │           │   │   ├── prepare_env_rootfs.sh
+│   │           │   │   ├── prepare_ubuntu_base.sh
+│   │           │   │   └── yocto_working.sh
+│   │           │   ├── ubuntu_core
+│   │           │   │   ├── mount.sh
+│   │           │   │   ├── prepare_conf.sh
+│   │           │   │   ├── prepare_env.sh
+│   │           │   │   ├── prepare_rootfs_qt.sh
+│   │           │   │   └── setup_dns.sh
+│   │           │   └── ubuntu_lxde
+│   │           │       ├── create_swap.sh
+│   │           │       ├── mount.sh
+│   │           │       ├── prepare_conf.sh
+│   │           │       └── prepare_rootfs_qt.sh
+│   │           ├── script
+│   │           │   ├── ubuntu_core
+│   │           │   │   ├── apt_install_base.sh
+│   │           │   │   ├── link_to_leagcy_iptables.sh
+│   │           │   │   └── set_root_password.sh
+│   │           │   └── ubuntu_lxde
+│   │           │       ├── apt_audio_video.sh
+│   │           │       ├── apt_blueman.sh
+│   │           │       ├── apt_install_base.sh
+│   │           │       ├── apt_lxde_desktop.sh
+│   │           │       ├── apt_wifi_ble.sh
+│   │           │       ├── create_rzpi_user.sh
+│   │           │       ├── set_root_password.sh
+│   │           │       ├── set_swap_enable.sh
+│   │           │       └── setup-set-permissions.sh
+│   │           └── setup_ubuntu_environment.sh
+│   └── tools
+│       ├── bootloader-flasher
+│       │   ├── linux
+│       │   │   ├── bootloader_flash.py
+│       │   │   └── Readme.md
+│       │   ├── Readme.md
+│       │   └── windows
+│       │       ├── config.ini
+│       │       ├── flash_bootloader.bat
+│       │       ├── Readme.md
+│       │       └── tools
+│       │           ├── cygterm.cfg
+│       │           ├── flash_bootloader.ttl
+│       │           ├── TERATERM.INI
+│       │           ├── ttermpro.exe
+│       │           ├── ttpcmn.dll
+│       │           ├── ttpfile.dll
+│       │           ├── ttpmacro.exe
+│       │           ├── ttpset.dll
+│       │           └── ttxssh.dll
+│       ├── Readme.md
+│       ├── sd-creator
+│       │   ├── linux
+│       │   │   ├── Readme.md
+│       │   │   └── sd_flash.sh
+│       │   ├── Readme.md
+│       │   └── windows
+│       │       ├── config.ini
+│       │       ├── flash_filesystem.bat
+│       │       ├── Readme.md
+│       │       └── tools
+│       │           ├── AdbWinApi.dll
+│       │           ├── cygterm.cfg
+│       │           ├── fastboot.bat
+│       │           ├── fastboot.exe
+│       │           ├── flash_system_image.ttl
+│       │           ├── TERATERM.INI
+│       │           ├── ttermpro.exe
+│       │           ├── ttpcmn.dll
+│       │           ├── ttpfile.dll
+│       │           ├── ttpmacro.exe
+│       │           ├── ttpset.dll
+│       │           └── ttxssh.dll
+│       └── uload-bootloader
+│           ├── linux
+│           │   ├── Readme.md
+│           │   └── uload_bootloader_flash.py
+│           ├── Readme.md
+│           └── windows
+│               ├── config.ini
+│               ├── Readme.md
+│               ├── tools
+│               │   ├── cygterm.cfg
+│               │   ├── TERATERM.INI
+│               │   ├── ttermpro.exe
+│               │   ├── ttpcmn.dll
+│               │   ├── ttpfile.dll
+│               │   ├── ttpmacro.exe
+│               │   ├── ttpset.dll
+│               │   ├── ttxssh.dll
+│               │   └── uload-flash_bootloader.ttl
+│               └── uload-flash_bootloader.bat
 ├── license
-│   ├── Disclaimer051.pdf
-│   └── Disclaimer052.pdf
-├── r12uz0180eu0100-rz-srp-yocto3-um.pdf
-├── README.md                                                            <---- This document
+│   ├── Disclaimer051.pdf
+│   └── Disclaimer052.pdf
+├── r11qs0062eu0110-rz-srp-yocto3-um-quick-start-guide.pdf
+├── r12uz0177eu0110-rz-srp-yocto3-um.pdf
+├── README.md
 ├── RZ_System_Release_Package_Evaluation_license.pdf
-└── target                                                               <---- Holds images for bootloader, kernel, rootfs, and device tree
-    ├── env                                                              <---- Contains environment configuration files for booting and system setup
-    │   ├── Readme.md
-    │   └── uEnv.txt
-    ├── images                                                           <---- Contains bootloader, kernel, and root filesystem images
-    │   ├── bl2_bp-rzpi.bin
-    │   ├── bl2_bp-rzpi.srec
-    │   ├── bl2-rzpi.bin
-    │   ├── core-image-qt-rzpi.wic
-    │   ├── dtbs                                                         <---- Contains Device tree blobs (DTBs) for hardware configuration
-    │   │   ├── overlays                                                 <---- Overlays for extending device tree functionality
-    │   │   │   ├── Readme.md
-    │   │   │   ├── rzpi-can.dtbo
-    │   │   │   ├── rzpi-dsi.dtbo
-    │   │   │   ├── rzpi-ext-i2c.dtbo
-    │   │   │   ├── rzpi-ext-spi.dtbo
-    │   │   │   └── rzpi-ov5640.dtbo
-    │   │   ├── Readme.md
-    │   │   ├── rzpi--5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240910054534.dtb
-    │   │   └── rzpi.dtb -> rzpi--5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240910054534.dtb
-    │   ├── fip-rzpi.bin
-    │   ├── fip-rzpi.srec
-    │   ├── Flash_Writer_SCIF_rzpi.mot
-    │   ├── Image -> Image--5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240910054534.bin
-    │   ├── Image--5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240910054534.bin
-    │   ├── Readme.md
-    │   └── rootfs                                                       <---- Contains compressed root filesystem images
-    │       ├── core-image-qt-rzpi.tar.bz2
-    │       └── Readme.md
+└── target
+    ├── env
+    │   ├── Readme.md
+    │   └── uEnv.txt
+    ├── images
+    │   ├── bl2_bp-rzpi.bin
+    │   ├── bl2_bp-rzpi.srec
+    │   ├── bl2-rzpi.bin
+    │   ├── core-image-bsp-rzpi.wic
+    │   ├── core-image-minimal-rzpi.wic
+    │   ├── core-image-qt-rzpi.wic
+    │   ├── core-image-weston-rzpi.wic
+    │   ├── dtbs
+    │   │   ├── overlays
+    │   │   │   ├── Readme.md
+    │   │   │   ├── rzpi-can.dtbo
+    │   │   │   ├── rzpi-dsi.dtbo
+    │   │   │   ├── rzpi-ext-i2c.dtbo
+    │   │   │   ├── rzpi-ext-spi.dtbo
+    │   │   │   └── rzpi-ov5640.dtbo
+    │   │   ├── Readme.md
+    │   │   ├── rzpi--5.10.184-cip36+gitAUTOINC+<commit-hash>-r1-rzpi-<timestamp>.dtb
+    │   │   └── rzpi.dtb
+    │   ├── fip-rzpi.bin
+    │   ├── fip-rzpi.srec
+    │   ├── Flash_Writer_SCIF_rzpi.mot
+    │   ├── Image
+    │   ├── Image--5.10.184-cip36+gitAUTOINC+<commit-hash>-r1-rzpi-<timestamp>.bin
+    │   ├── Readme.md
+    │   ├── renesas-core-image-cli-rzpi.wic
+    │   ├── renesas-core-image-weston-rzpi.wic
+    │   ├── renesas-quickboot-cli-rzpi.wic
+    │   ├── renesas-quickboot-wayland-rzpi.wic
+    │   ├── renesas-ubuntu-rzpi.wic
+    │   └── rootfs
+    │       ├── core-image-bsp-rzpi.tar.bz2
+    │       ├── core-image-minimal-rzpi.tar.bz2
+    │       ├── core-image-qt-rzpi.tar.bz2
+    │       ├── core-image-weston-rzpi.tar.bz2
+    │       ├── Readme.md
+    │       ├── renesas-core-image-cli-rzpi.tar.bz2
+    │       ├── renesas-core-image-weston-rzpi.tar.bz2
+    │       ├── renesas-quickboot-cli-rzpi.tar.bz2
+    │       ├── renesas-quickboot-wayland-rzpi.tar.bz2
+    │       └── renesas-ubuntu-rzpi.tar.bz2
     └── Readme.md
 
-28 directories, 92 files
+43 directories, 220 files
 ```
-
-**The above structure is an example when building using the target image `IMAGE=core-image-qt`. The compressed root filesystems and the environment artifacts will have names with the prefix `core-image-qt`. Other target images will have the same structure.**
 
 ### eSDK
 
@@ -266,7 +408,13 @@ The eSDK build generates an installer, which you will use to install the eSDK on
 Running the build script with the following option to build eSDK:
 
 ```shell
-$ IMAGE=<target_image> ./rzsbc_yocto.sh build-sdk
+$ IMAGE=<target_image> ./rzsbc_builder.sh build-sdk
+```
+
+For example:
+
+```shell
+$ IMAGE=core-image-qt ./rzsbc_builder.sh build-sdk
 ```
 
 The resulting eSDK installer will be located in `~/Yocto/yocto_rzsbc_board/build/tmp/deploy/sdk`.
@@ -303,9 +451,15 @@ $ source ~/esdk/3.1.26/environment-setup-aarch64-poky-linux
 
 ### Flash Bootloader on Linux
 
-We prepare a suppport script `bootloader_flash.py` for flashing bootloader on Linux. The script can be achieved from Yocto build.
+To flash the bootloader on a Linux system, use the script `bootloader_flash.py` located in the Yocto build output directory:
 
-Please run the follow command to know how to use the script:
+```
+host/tools/bootloader-flasher/linux/
+```
+
+This script is generated as part of the Yocto build process.
+
+To see usage instructions and available options, run:
 
 ```
 $ ./bootloader_flash.py -h
@@ -317,19 +471,23 @@ $ ./bootloader_flash.py -h
 
 Same as Flash Bootloader on Linux, we prepare some suppport scripts for flashing bootloader on Windows.
 
-Please get folder `bootloader-windows-script` from Yocto build output folder. Then refer to `Readme.txt` file to know how to use the scripts.
+Please get folder `host/tools/bootloader-flasher/windows/` from Yocto build output folder. Then refer to `Readme.md` file to know how to use the scripts.
 
 ### Flash Bootloader on U-Boot console
 
 In case users want to update Bootloader without touching the hardware setup. We support a method to flash Bootloader on U-Boot console.
 
-Please get folder `uload-bootloader` from Yocto build output folder. Then refer to `uload-readme.txt` file to know the flashing procedure.
+Please get folder `host/tools/uload-bootloader/` from Yocto build output folder. Then refer to `Readme.md` file to know the flashing procedure.
 
 ### Prepare image and rootfs in microSD card on Linux
 
-Please prepare the rootfs image in microSD card before booting RZG2L-SBC system.
-We prepare a suppport script `sd_flash.sh` for this purpose. The script can be achieved from Yocto build.
+Before booting the RZG2L-SBC system, you need to flash the root filesystem image onto a microSD card.
 
+A support script named `sd_flash.sh` is provided for this purpose. You can find the script in the Yocto build output directory:
+
+```
+host/tools/sd-creator/linux/
+```
 Please run the follow command to know how to use the script:
 
 ```
@@ -364,7 +522,7 @@ After executing SD card flashing script successfully. In U-boot console, running
 
 Same as Linux, we prepare some suppport scripts on Windows for preparing image and rootfs in microSD card.
 
-Please get folder `filesystem-windows-script` from Yocto build output folder. Then refer to `README.md` file to know how to use the scripts.
+Please get folder `host/tools/sd-creator/windows/` from Yocto build output folder. Then refer to `README.md` file to know how to use the scripts.
 
 ### U-boot environment
 

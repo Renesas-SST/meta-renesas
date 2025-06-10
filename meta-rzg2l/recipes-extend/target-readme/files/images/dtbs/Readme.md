@@ -15,8 +15,8 @@ dtbs
 │   ├── rzpi-ext-spi.dtbo                     <---- Overlay for external SPI devices
 │   ├── rzpi-ov5640.dtbo                      <---- Overlay for OV5640 camera
 │   └── Readme.md
-├── rzpi--5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240717204209.dtb  <---- Main device tree blob file for RZ/G2L-SBC
-└── rzpi.dtb > rzpi-5.10.184-cip36+gitAUTOINC+5f065ec41b-r1-rzpi-20240717204209.dtb  <---- Symlink to the main dtb file
+├── rzpi--5.10.184-cip36+gitAUTOINC+<commit-hash>-r1-rzpi-<timestamp>.dtb  <---- Main device tree blob file for RZ/G2L-SBC
+└── rzpi.dtb > rzpi-5.10.184-cip36+gitAUTOINC+<commit-hash>-r1-rzpi-<timestamp>.dtb  <---- Symlink to the main dtb file
 └── Readme.md                                  <---- This document
 
 ```
