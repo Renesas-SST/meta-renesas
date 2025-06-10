@@ -1,10 +1,10 @@
 # RZ Common target folder
 
-## Description
+## Overview
 
 This directory contains the environment setup and image files required for the target system, specifically for the RZ Common platform.
 
-## A top-level directory of target
+## Directory Structure
 
 ```
 target
@@ -73,8 +73,13 @@ target
 └── Readme.md                                               <---- This document
 ```
 
-## Note
+- `env/` - Includes U-Boot environment configuration files.  
+- `images/` - Includes boot and flashable image files, kernel binaries, device tree blobs, and overlays.  
 
 Each of these subfolders have Readme's at the appropriate level in the file hierarchy to help you further.
 The above structure is an example when building using the target image `IMAGE=core-image-weston`. The compressed root filesystems and the environment artifacts will have names with the prefix `core-image-weston`. Other target images will have the same structure.
 
+Each subdirectory includes its own `Readme.md` with detailed descriptions and instructions:
+
+- See `env/Readme.md` for environment setup details.  
+- See `images/Readme.md` for the structure and usage of boot images and device trees.  

@@ -7,7 +7,8 @@ This directory contains files and tools used for managing and deploying images t
 ## A top-level directory of host
 
 ```
-host
+$ tree -L 1
+host/
 ├── build
 │   ├── core-image-bsp-20250523093711.rootfs.manifest         -> Manifest file for the root filesystem
 │   ├── core-image-bsp-20250523093711.testdata.json           -> Test data for the image
@@ -35,4 +36,16 @@ host
 ## Note
 The above structure is an example when building using the target image `IMAGE=core-image-weston`. The compressed root filesystems and the environment artifacts will have names with the prefix `core-image-weston`. Other target images will have the same structure.
 
-Each of these subfolders have Readme's at the appropriate level in the file hierarchy to help you further.
+- `env/`: Environment variable files for Yocto builds, containing exported variables that set up the build environment for different images.
+
+- `src/`: Contains the main build scripts, including a single script that automates building the entire Yocto project from scratch.
+
+- `tools/`: Utility scripts and tools for flashing bootloaders, creating SD card images, with support for both Linux and Windows platforms.
+
+## Usage
+
+Each subdirectory includes its own `Readme.md` with detailed descriptions and instructions:
+
+- See `env/Readme.md` for environment configurations and setting up the Yocto build environment.
+- See `src/rz-cmn-srp/README.md` for details on the main build script and how to use it.
+- See `tools/Readme.md`  for instructions on platform-specific utilities and deployment tools.
