@@ -27,13 +27,14 @@ Known issues:
 ### Core-image
 Step 1: Prepare environment for building package
 
-Linux Ubuntu 20.04 is recommended for Yocto build.
+Linux Ubuntu 24.04 is recommended for Yocto build.
 Before starting the build, run the command below on the Linux Host PC to install packages to be used.
 ```
 $ sudo apt-get update
-$ sudo apt-get install gawk wget git-core diffstat unzip texinfo gcc-multilib \
-build-essential chrpath socat cpio python python3 python3-pip python3-pexpect \
-xz-utils debianutils iputils-ping libsdl1.2-dev xterm p7zip-full
+$ sudo apt-get install build-essential chrpath cpio debianutils diffstat file \
+gawk gcc git iputils-ping libacl1 liblz4-tool locales python3 python3-git \
+python3-jinja2 python3-pexpect python3-pip python3-subunit socat texinfo unzip \
+wget xz-utils zstd
 ```
 
 Run the below commands to set the user name and email address before starting the build procedure.
@@ -45,41 +46,42 @@ $ git config --global user.name "Your Name"
 Step 2: Prepare the local build environment
 
 After preparing the host machine for building, download necessary packages (get them from Renesas website):
-- Graphic: https://www.renesas.com/us/en/document/swo/rz-mpu-graphics-library-evaluation-version-rzg2l-and-rzg2lc-rtk0ef0045z13001zj-v112enzip
 - Codec: https://www.renesas.com/us/en/document/swo/rz-mpu-video-codec-library-evaluation-version-rzg2l-rtk0ef0045z15001zj-v110xxzip?r=1535641
 
-Then create a workspace folder (example: `~/Yocto`) for the build and put the files `rzsbc_yocto.sh`, `site.conf`, `README.md`, `jq-linux-amd64` and a patch folder for eSDK build support from the release package into it.
+Then create a workspace folder (example: `~/renesas/rz-cmn-srp`) for the build and put the files `rzsbc_builder.sh`, `site.conf`, `README.md`, `jq-linux-amd64`, `images.json` and a patch folder for eSDK build support from the release package into it.
 ```
-$ mkdir ~/Yocto
-$ cp *.zip ~/Yocto
-$ cp rzsbc_yocto.sh ~/Yocto
-$ cp site.conf ~/Yocto
-$ cp README.md ~/Yocto
-$ cp jq-linux-amd64 ~/Yocto
-$ cp git_patch.json ~/Yocto
-$ cp -r patches ~/Yocto
+$ mkdir ~/renesas/rz-cmn-srp
+$ cp *.zip ~/renesas/rz-cmn-srp
+$ cp README.md ~/renesas/rz-cmn-srp
+$ cp rzsbc_builder.sh ~/renesas/rz-cmn-srp
+$ cp site.conf ~/renesas/rz-cmn-srp
+$ cp jq-linux-amd64 ~/renesas/rz-cmn-srp
+$ cp git_patch.json ~/renesas/rz-cmn-srp
+$ cp images.json ~/renesas/rz-cmn-srp
+$ cp -r patches/ ~/renesas/rz-cmn-srp
+$ cp -r files_to_add/ ~/renesas/rz-cmn-srp
 ```
 
 Step 3: Build package
 
 Build the package by executing the following commands:
 ```
-$ cd ~/Yocto
-$ IMAGE=<target_image> ./rzsbc_yocto.sh build
+$ cd ~/renesas/rz-cmn-srp
+$ IMAGE=<target_image> ./rzsbc_builder.sh build
 ```
 
 <target_image>: the target Yocto build image. It can be one from the following table of supported images
 
 | Target Image               | Description                                                                                 |
 |----------------------------|---------------------------------------------------------------------------------------------|
-| core-image-minimal         | Minimal set of components                                                                   |
-| core-image-bsp             | Minimal set of components plus audio support and some useful tool                           |
-| core-image-weston          | Standard image with graphics support                                                        |
-| core-image-qt              | Enable Qt LGPL version                                                                      |
-| renesas-core-image-cli     | Renesas core image for deploying CLI apps based on core-image-bsp                           |
-| renesas-core-image-weston  | Renesas core image with Qt5 platform support (no demo apps) based on core-image-weston      |
-| renesas-quickboot-cli      | Renesas core image for Linux quickboot CLI                                                  |
-| renesas-quickboot-wayland  | Renesas core image for Linux quickboot with Wayland, QT support (no demo apps)              |
+| core-image-minimal         |  A basic image that contains the minimal set of components required to boot the device. It focuses on essential system functions without extra tools or features. |
+| core-image-bsp             | Extends core-image-minimal with additional utilities and tools, providing a lightweight environment for system validation, hardware diagnostics, and basic development|
+| core-image-weston          | A standard graphical image with Wayland and Weston support for embedded GUI applications.|
+| renesas-core-image-cli     | Based on core-image-bsp, this image offers a CLI environment for Renesas hardware development without graphical interfaces.Besides the useful tools inherited from the core-image-bsp, this image also containsnew packages for SBC (Single Board Computer) development. For example,package managers (apt, dpgk), network utilities for Bluetooth, Wi-Fi. |
+| renesas-core-image-weston  | Renesas customized core image based on the core-image-weston, with Qt5 framework support (no QT demo apps included). This image offers a full graphical environment for Renesas hardware development and all the useful tools from the renesas-core-image-cli.      |
+| renesas-quickboot-cli      | This image has the same system functionality as the renesas-core-image-cli but with Quickboot enabled, allowing for faster boot times and efficient system validation on a CLI environment.|
+| renesas-quickboot-wayland  | This image has the same system functionality as the renesas-core-image-weston but with Quickboot enabled, allowing for faster boot times and efficient system validation on a graphical environment              |
+| renesas-ubuntu | Ubuntu-based image built on top of the ubuntu-tiny Yocto distro, ideal for embedded development. It includes core support for Wayland, X11, OpenGL, and Qt5, but does not include full development tools or environments. This image is not meant to be used as a Yocto rootfs, but rather as a foundation for pure Ubuntu-based systems that depend on Yocto-generated artifacts.|
 
 **Note:**
 
@@ -89,133 +91,266 @@ $ IMAGE=<target_image> ./rzsbc_yocto.sh build
 
 Step 4: Collect the output
 
-After building Yocto, the output folder should be `~/Yocto/yocto_rzsbc_board/build/tmp/deploy/images/rzg2l-sbc`
+After building Yocto, the output folder should be `~/renesas/rz-cmn-srp/yocto_rzsbc_board/build/tmp/deploy/images/rzg2l-sbc`
 
 The output folder outline:
 ```
 rzg2l-sbc/
 ├── host
 │   ├── build
-│   │   ├── renesas-core-image-weston-rzg2l-sbc-20240918051558.rootfs.manifest
-│   │   ├── renesas-core-image-weston-rzg2l-sbc-20240918051558.testdata.json
-│   │   ├── renesas-core-image-weston-rzg2l-sbc.manifest -> renesas-core-image-weston-rzg2l-sbc-20240918051558.rootfs manifest
-│   │   └── renesas-core-image-weston-rzg2l-sbc.testdata.json -> renesas-core-image-weston-rzg2l-sbc-20240918051558.testdata.json
+│   │   ├── core-image-bsp-rzg2l-sbc-<timestamp>.rootfs.manifest
+│   │   ├── core-image-bsp-rzg2l-sbc-<timestamp>.testdata.json
+│   │   ├── core-image-bsp-rzg2l-sbc.manifest -> core-image-bsp-rzg2l-sbc-<timestamp>.rootfs.manifest
+│   │   ├── core-image-bsp-rzg2l-sbc.testdata.json -> core-image-bsp-rzg2l-sbc-<timestamp>.testdata.json
+│   │   ├── core-image-minimal-rzg2l-sbc-<timestamp>.rootfs.manifest
+│   │   ├── core-image-minimal-rzg2l-sbc-<timestamp>.testdata.json
+│   │   ├── core-image-minimal-rzg2l-sbc.manifest -> core-image-minimal-rzg2l-sbc-<timestamp>.rootfs.manifest
+│   │   ├── core-image-minimal-rzg2l-sbc.testdata.json -> core-image-minimal-rzg2l-sbc-<timestamp>.testdata.json
+│   │   ├── core-image-weston-rzg2l-sbc-<timestamp>.rootfs.manifest
+│   │   ├── core-image-weston-rzg2l-sbc-<timestamp>.testdata.json
+│   │   ├── core-image-weston-rzg2l-sbc.manifest -> core-image-weston-rzg2l-sbc-<timestamp>.rootfs.manifest
+│   │   ├── core-image-weston-rzg2l-sbc.testdata.json -> core-image-weston-rzg2l-sbc-<timestamp>.testdata.json
+│   │   ├── renesas-core-image-cli-rzg2l-sbc-<timestamp>.rootfs.manifest
+│   │   ├── renesas-core-image-cli-rzg2l-sbc-<timestamp>.testdata.json
+│   │   ├── renesas-core-image-cli-rzg2l-sbc.manifest -> renesas-core-image-cli-rzg2l-sbc-<timestamp>.rootfs.manifest
+│   │   ├── renesas-core-image-cli-rzg2l-sbc.testdata.json -> renesas-core-image-cli-rzg2l-sbc-<timestamp>.testdata.json
+│   │   ├── renesas-core-image-weston-rzg2l-sbc-<timestamp>.rootfs.manifest
+│   │   ├── renesas-core-image-weston-rzg2l-sbc-<timestamp>.testdata.json
+│   │   ├── renesas-core-image-weston-rzg2l-sbc.manifest -> renesas-core-image-weston-rzg2l-sbc-<timestamp>.rootfs.manifest
+│   │   ├── renesas-core-image-weston-rzg2l-sbc.testdata.json -> renesas-core-image-weston-rzg2l-sbc-<timestamp>.testdata.json
+│   │   ├── renesas-quickboot-cli-rzg2l-sbc-<timestamp>.rootfs.manifest
+│   │   ├── renesas-quickboot-cli-rzg2l-sbc-<timestamp>.testdata.json
+│   │   ├── renesas-quickboot-cli-rzg2l-sbc.manifest -> renesas-quickboot-cli-rzg2l-sbc-<timestamp>.rootfs.manifest
+│   │   ├── renesas-quickboot-cli-rzg2l-sbc.testdata.json -> renesas-quickboot-cli-rzg2l-sbc-<timestamp>.testdata.json
+│   │   ├── renesas-quickboot-wayland-rzg2l-sbc-<timestamp>.rootfs.manifest
+│   │   ├── renesas-quickboot-wayland-rzg2l-sbc-<timestamp>.testdata.json
+│   │   ├── renesas-quickboot-wayland-rzg2l-sbc.manifest -> renesas-quickboot-wayland-rzg2l-sbc-<timestamp>.rootfs.manifest
+│   │   └── renesas-quickboot-wayland-rzg2l-sbc.testdata.json -> renesas-quickboot-wayland-rzg2l-sbc-<timestamp>.testdata.json
 │   ├── env
-│   │   ├── Readme.md
-│   │   └── renesas-core-image-weston.env
-│   ├── Readme.md
-│   ├── src                                                             <---- Build script packages
-│   │   ├── git_patch.json
-│   │   ├── jq-linux-amd64
-│   │   ├── patches
-│   │   │   └── meta-summit-radio
-│   │   │       └── 0001-rz-sbc-Support-build-in-yocto-styhead-release.patch
-│   │   ├── README.md
-│   │   ├── rzsbc_yocto.sh
-│   │   └── site.conf
-│   └── tools
-│       ├── bootloader-flasher
-│       │   ├── linux                                                    <---- Bootloader flashing script package folder on Linux
-│       │   │   ├── bootloader_flash.py                                  <---- Bootloader flashing script on Linux
-│       │   │   └── Readme.md                                            <---- Bootloader flashing script on Linux guideline
-│       │   ├── Readme.md
-│       │   └── windows                                                  <---- Bootloader flashing script package folder on Windows
-│       │       ├── config.ini
-│       │       ├── flash_bootloader.bat                                 <---- Bootloader flashing script on Windows
-│       │       ├── Readme.md                                            <---- Bootloader flashing script on Windows guideline
-│       │       └── tools
-│       │           ├── cygterm.cfg
-│       │           ├── flash_bootloader.ttl
-│       │           ├── TERATERM.INI
-│       │           ├── ttermpro.exe
-│       │           ├── ttpcmn.dll
-│       │           ├── ttpfile.dll
-│       │           ├── ttpmacro.exe
-│       │           ├── ttpset.dll
-│       │           └── ttxssh.dll
-│       ├── Readme.md
-│       ├── sd-creator
-│       │   ├── linux                                                    <---- SD card flashing script package folder on Linux
-│       │   │   ├── sd_flash.sh                                          <---- SD card flashing script on Linux
-│       │   │   └── Readme.md                                            <---- SD card flashing guideline on Linux
-│       │   ├── Readme.md
-│       │   └── windows                                                  <---- SD card flashing script package folder on Windows
-│       │       ├── config.ini
-│       │       ├── flash_filesystem.bat                             <---- SD card flashing script on Windows
-│       │       ├── Readme.md                                        <---- SD card flashing guideline on Windows
-│       │       └── tools
-│       │           ├── AdbWinApi.dll
-│       │           ├── cygterm.cfg
-│       │           ├── fastboot.bat
-│       │           ├── fastboot.exe
-│       │           ├── flash_system_image.ttl
-│       │           ├── TERATERM.INI
-│       │           ├── ttermpro.exe
-│       │           ├── ttpcmn.dll
-│       │           ├── ttpfile.dll
-│       │           ├── ttpmacro.exe
-│       │           ├── ttpset.dll
-│       │           └── ttxssh.dll
-│       └── uload-bootloader
-│           ├── linux                                                    <---- Bootloader flashing from U-Boot console script package on Linux
-│           │   ├── uload_bootloader_flash.py                            <---- Bootloader flashing from U-Boot console script on Linux
-│           │   └── Readme.md                                            <---- Bootloader flashing from U-Boot console guideline on Linux
-│           ├── Readme.md
-│           └── windows                                                  <---- Bootloader flashing from U-Boot console script package on Windows
-│               ├── config.ini
-│               ├── Readme.md                                            <---- Bootloader flashing from U-Boot console guideline on Windows
-│               ├── tools
-│               │   ├── cygterm.cfg
-│               │   ├── TERATERM.INI
-│               │   ├── ttermpro.exe
-│               │   ├── ttpcmn.dll
-│               │   ├── ttpfile.dll
-│               │   ├── ttpmacro.exe
-│               │   ├── ttpset.dll
-│               │   ├── ttxssh.dll
-│               │   └── uload-flash_bootloader.ttl
-│               └── uload-flash_bootloader.bat                           <---- Bootloader flashing from U-Boot console script on Windows
+│   │   ├── core-image-bsp.env
+│   │   ├── core-image-minimal.env
+│   │   ├── core-image-weston.env
+│   │   ├── Readme.md
+│   │   ├── renesas-core-image-cli.env
+│   │   ├── renesas-core-image-weston.env
+│   │   ├── renesas-quickboot-cli.env
+│   │   └── renesas-quickboot-wayland.env
+│   ├── Readme.md
+│   ├── src
+│   │   └── rz-cmn-srp
+│   │       ├── git_patch.json
+│   │       ├── images.json
+│   │       ├── jq-linux-amd64
+│   │       ├── patches
+│   │       │   ├── meta-rz-features
+│   │       │   │   └── 0001-support-codec-for-linux-6.10-and-yocto-styhead.patch
+│   │       │   └── meta-summit-radio
+│   │       │       ├── 0001-rz-sbc-meta-summit-radio-Support-build-in-yocto-styh.patch
+│   │       │       └── 0002-rz-sbc-summit-radio-support-eSDK-build.patch
+│   │       ├── README.md
+│   │       ├── rzsbc_builder.sh
+│   │       └── ubuntu
+│   │           ├── config
+│   │           │   ├── ubuntu_core
+│   │           │   │   ├── network_interfaces.conf
+│   │           │   │   └── resolved.conf
+│   │           │   └── ubuntu_lxde
+│   │           │       ├── connman-gtk.desktop
+│   │           │       ├── interfaces
+│   │           │       ├── lightdm.conf
+│   │           │       ├── NetworkManager.conf
+│   │           │       ├── rsyslog
+│   │           │       ├── ttyS0.conf
+│   │           │       └── v4l2-init.sh
+│   │           ├── config.ini
+│   │           ├── docs
+│   │           │   ├── ubuntu_core
+│   │           │   │   └── README.md
+│   │           │   └── ubuntu_lxde
+│   │           │       ├── Pictures
+│   │           │       │   ├── audacity.png
+│   │           │       │   ├── bluetooth_0.png
+│   │           │       │   ├── bluetooth_1.png
+│   │           │       │   ├── bluetooth_2.png
+│   │           │       │   ├── bluetooth_3.png
+│   │           │       │   ├── bluetooth_4.png
+│   │           │       │   ├── csi_0.png
+│   │           │       │   ├── csi_1.png
+│   │           │       │   ├── csi_2.png
+│   │           │       │   ├── eth_1.png
+│   │           │       │   ├── eth_2.png
+│   │           │       │   ├── eth_3.png
+│   │           │       │   ├── eth_4.png
+│   │           │       │   ├── eth_5.png
+│   │           │       │   ├── eth.png
+│   │           │       │   ├── save_audio_0.png
+│   │           │       │   ├── save_audio_1.png
+│   │           │       │   ├── save_audio_2.png
+│   │           │       │   ├── vlc_open_0.png
+│   │           │       │   ├── vlc_open_1.png
+│   │           │       │   ├── vlc_open_2.png
+│   │           │       │   ├── vlc.png
+│   │           │       │   ├── vlc_video_1.png
+│   │           │       │   ├── vlc_video.png
+│   │           │       │   ├── web_1.png
+│   │           │       │   ├── web_2.png
+│   │           │       │   ├── web_lxterm_htop.png
+│   │           │       │   ├── web.png
+│   │           │       │   └── wifi_0.png
+│   │           │       └── README.md
+│   │           ├── include
+│   │           │   ├── common
+│   │           │   │   ├── allow_empty_password.sh
+│   │           │   │   ├── create_wic.sh
+│   │           │   │   ├── install_gstreamer.sh
+│   │           │   │   ├── install_weston.sh
+│   │           │   │   ├── prepare_env_rootfs.sh
+│   │           │   │   ├── prepare_env.sh
+│   │           │   │   ├── prepare_ubuntu_base.sh
+│   │           │   │   └── yocto_working.sh
+│   │           │   ├── ubuntu_core
+│   │           │   │   ├── mount.sh
+│   │           │   │   ├── prepare_conf.sh
+│   │           │   │   ├── prepare_env.sh
+│   │           │   │   ├── prepare_rootfs_qt.sh
+│   │           │   │   └── setup_dns.sh
+│   │           │   └── ubuntu_lxde
+│   │           │       ├── create_swap.sh
+│   │           │       ├── mount.sh
+│   │           │       ├── prepare_conf.sh
+│   │           │       └── prepare_rootfs_qt.sh
+│   │           ├── script
+│   │           │   ├── ubuntu_core
+│   │           │   │   ├── apt_install_base.sh
+│   │           │   │   ├── link_to_leagcy_iptables.sh
+│   │           │   │   └── set_root_password.sh
+│   │           │   └── ubuntu_lxde
+│   │           │       ├── apt_audio_video.sh
+│   │           │       ├── apt_blueman.sh
+│   │           │       ├── apt_install_base.sh
+│   │           │       ├── apt_lxde_desktop.sh
+│   │           │       ├── apt_wifi_ble.sh
+│   │           │       ├── create_rzpi_user.sh
+│   │           │       ├── create_user.sh
+│   │           │       ├── set_root_password.sh
+│   │           │       ├── set_swap_enable.sh
+│   │           │       └── setup-set-permissions.sh
+│   │           └── setup_ubuntu_environment.sh
+│   └── tools
+│       ├── bootloader-flasher
+│       │   ├── linux
+│       │   │   ├── bootloader_flash.py
+│       │   │   └── Readme.md
+│       │   ├── Readme.md
+│       │   └── windows
+│       │       ├── config.ini
+│       │       ├── flash_bootloader.bat
+│       │       ├── Readme.md
+│       │       └── tools
+│       │           ├── cygterm.cfg
+│       │           ├── flash_bootloader.ttl
+│       │           ├── TERATERM.INI
+│       │           ├── ttermpro.exe
+│       │           ├── ttpcmn.dll
+│       │           ├── ttpfile.dll
+│       │           ├── ttpmacro.exe
+│       │           ├── ttpset.dll
+│       │           └── ttxssh.dll
+│       ├── Readme.md
+│       ├── sd-creator
+│       │   ├── linux
+│       │   │   ├── Readme.md
+│       │   │   └── sd_flash.sh
+│       │   ├── Readme.md
+│       │   └── windows
+│       │       ├── config.ini
+│       │       ├── flash_filesystem.bat
+│       │       ├── Readme.md
+│       │       └── tools
+│       │           ├── AdbWinApi.dll
+│       │           ├── cygterm.cfg
+│       │           ├── fastboot.bat
+│       │           ├── fastboot.exe
+│       │           ├── flash_system_image.ttl
+│       │           ├── TERATERM.INI
+│       │           ├── ttermpro.exe
+│       │           ├── ttpcmn.dll
+│       │           ├── ttpfile.dll
+│       │           ├── ttpmacro.exe
+│       │           ├── ttpset.dll
+│       │           └── ttxssh.dll
+│       └── uload-bootloader
+│           ├── linux
+│           │   ├── Readme.md
+│           │   └── uload_bootloader_flash.py
+│           ├── Readme.md
+│           └── windows
+│               ├── config.ini
+│               ├── Readme.md
+│               ├── tools
+│               │   ├── cygterm.cfg
+│               │   ├── TERATERM.INI
+│               │   ├── ttermpro.exe
+│               │   ├── ttpcmn.dll
+│               │   ├── ttpfile.dll
+│               │   ├── ttpmacro.exe
+│               │   ├── ttpset.dll
+│               │   ├── ttxssh.dll
+│               │   └── uload-flash_bootloader.ttl
+│               └── uload-flash_bootloader.bat
 ├── license
-│   ├── Disclaimer051.pdf
-│   └── Disclaimer052.pdf
-├── r12uz0158eu0101-rz-g2l-sbc-single-board-computer.pdf
-├── README.md                                                            <---- This document
+│   ├── Disclaimer051.pdf
+│   └── Disclaimer052.pdf
+├── r12uz0158eu0102-rz-g2l-sbc-single-board-computer.pdf
+├── README.md
 ├── RZG2L-SBC_Evaluation_license.pdf
-└── target                                                               <---- Holds images for bootloader, kernel, rootfs, and device tree
-    ├── env                                                              <---- Contains environment configuration files for booting and system setup
-    │   ├── Readme.md
-    │   └── uEnv.txt
-    ├── images                                                           <---- Contains bootloader, kernel, and root filesystem images
-    │   ├── bl2_bp-rzg2l-sbc.bin
-    │   ├── bl2_bp-rzg2l-sbc.srec
-    │   ├── bl2-rzg2l-sbc.bin
-    │   ├── renesas-core-image-weston-rzg2l-sbc.wic
-    │   ├── dtbs                                                         <---- Contains Device tree blobs (DTBs) for hardware configuration
-    │   │   ├── overlays                                                 <---- Overlays for extending device tree functionality
-    │   │   │   ├── Readme.md
-    │   │   │   ├── rzg2l-sbc-can.dtbo
-    │   │   │   ├── rzg2l-sbc-dsi.dtbo
-    │   │   │   ├── rzg2l-sbc-ext-i2c.dtbo
-    │   │   │   ├── rzg2l-sbc-ext-spi.dtbo
-    │   │   │   └── rzg2l-sbc-ov5640.dtbo
-    │   │   ├── Readme.md
-    │   │   ├── rzg2l-sbc--6.10.14+git0+af06ad75b8_bbe3d1be4e-r0-rzg2l-sbc-20241213061340.dtbo
-    │   │   └── rzg2l-sbc.dtb -> rzg2l-sbc--6.10.14+git0+af06ad75b8_bbe3d1be4e-r0-rzg2l-sbc-20241213061340.dtbo
-    │   ├── fip-rzg2l-sbc.bin
-    │   ├── fip-rzg2l-sbc.srec
-    │   ├── Flash_Writer_SCIF_rzg2l-sbc.mot
-    │   ├── Image -> Image--6.10.14+git0+af06ad75b8_bbe3d1be4e-r0-rzg2l-sbc-20241213061340.bin
-    │   ├── Image--6.10.14+git0+af06ad75b8_bbe3d1be4e-r0-rzg2l-sbc-20241213061340.bin
-    │   ├── Readme.md
-    │   └── rootfs                                                       <---- Contains compressed root filesystem images
-    │       ├── renesas-core-image-weston-rzg2l-sbc.tar.bz2
-    │       └── Readme.md
+└── target
+    ├── env
+    │   ├── Readme.md
+    │   └── uEnv.txt
+    ├── images
+    │   ├── bl2_bp-rzg2l-sbc.bin
+    │   ├── bl2_bp-rzg2l-sbc.srec
+    │   ├── bl2-rzg2l-sbc.bin
+    │   ├── core-image-bsp-rzg2l-sbc.wic
+    │   ├── core-image-minimal-rzg2l-sbc.wic
+    │   ├── core-image-weston-rzg2l-sbc.wic
+    │   ├── dtbs
+    │   │   ├── overlays
+    │   │   │   ├── Readme.md
+    │   │   │   ├── rzg2l-sbc-can.dtbo
+    │   │   │   ├── rzg2l-sbc-dsi.dtbo
+    │   │   │   ├── rzg2l-sbc-ext-i2c.dtbo
+    │   │   │   ├── rzg2l-sbc-ext-spi.dtbo
+    │   │   │   └── rzg2l-sbc-ov5640.dtbo
+    │   │   ├── Readme.md
+    │   │   ├── rzg2l-sbc--6.10.14+git0+<commit-hash>-r0-rzg2l-sbc-<timestamp>.dtbo
+    │   │   └── rzg2l-sbc.dtb -> rzg2l-sbc--6.10.14+git0+<commit-hash>-r0-rzg2l-sbc-<timestamp>.dtbo
+    │   ├── fip-rzg2l-sbc.bin
+    │   ├── fip-rzg2l-sbc.srec
+    │   ├── Flash_Writer_SCIF_rzg2l-sbc.mot
+    │   ├── Flash_Writer_SCIF_rzg2l-sbc_PMIC.mot
+    │   ├── Image -> Image--6.10.14+git0+<commit-hash>-r0-rzg2l-sbc-<timestamp>.bin
+    │   ├── Image--6.10.14+git0+<commit-hash>-r0-rzg2l-sbc-<timestamp>.bin
+    │   ├── Readme.md
+    │   ├── renesas-core-image-cli-rzg2l-sbc.wic
+    │   ├── renesas-core-image-weston-rzg2l-sbc.wic
+    │   ├── renesas-quickboot-cli-rzg2l-sbc.wic
+    │   ├── renesas-quickboot-wayland-rzg2l-sbc.wic
+    │   └── rootfs
+    │       ├── core-image-bsp-rzg2l-sbc.tar.bz2
+    │       ├── core-image-minimal-rzg2l-sbc.tar.bz2
+    │       ├── core-image-weston-rzg2l-sbc.tar.bz2
+    │       ├── Readme.md
+    │       ├── renesas-core-image-cli-rzg2l-sbc.tar.bz2
+    │       ├── renesas-core-image-weston-rzg2l-sbc.tar.bz2
+    │       ├── renesas-quickboot-cli-rzg2l-sbc.tar.bz2
+    │       ├── renesas-quickboot-wayland-rzg2l-sbc.tar.bz2
+    │       └── renesas-ubuntu-rzg2l-sbc.tar.bz2
     └── Readme.md
 
-28 directories, 92 files
+44 directories, 209 files
 ```
-
-**The above structure is an example when building using the target image `IMAGE=renesas-core-image-weston`. The compressed root filesystems and the environment artifacts will have names with the prefix `renesas-core-image-weston`. Other target images will have the same structure.**
 
 ### eSDK
 
@@ -226,46 +361,58 @@ The eSDK build generates an installer, which you will use to install the eSDK on
 Running the build script with the following option to build eSDK:
 
 ```shell
-$ IMAGE=<target_image> ./rzsbc_yocto.sh build-sdk
+$ IMAGE=<target_image> ./rzsbc_builder.sh build-sdk
 ```
 
-The resulting eSDK installer will be located in `~/Yocto/yocto_rzsbc_board/build/tmp/deploy/sdk`.
+For example:
+
+```shell
+$ IMAGE=renesas-core-image-weston ./rzsbc_builder.sh build-sdk
+```
+
+The resulting eSDK installer will be located in `~/renesas/rz-cmn-srp/yocto_rzsbc_board/build/tmp/deploy/sdk`.
 The eSDK installer will have the extension “.sh”.
 
 ```shell
 $ ls
-poky-glibc-x86_64-renesas-core-image-weston-aarch64-rzg2l-sbc-toolchain-ext-3.1.26.sh
-poky-glibc-x86_64-renesas-core-image-weston-aarch64-rzg2l-sbc-toolchain-ext-3.1.26.host.manifest
-poky-glibc-x86_64-renesas-core-image-weston-aarch64-rzg2l-sbc-toolchain-ext-3.1.26.testdata.json
-poky-glibc-x86_64-renesas-core-image-weston-aarch64-rzg2l-sbc-toolchain-ext-3.1.26.target.manifest
+poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rzg2l-sbc-toolchain-ext-5.1.4.sh
+poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rzg2l-sbc-toolchain-ext-5.1.4.host.manifest
+poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rzg2l-sbc-toolchain-ext-5.1.4.testdata.json
+poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rzg2l-sbc-toolchain-ext-5.1.4.target.manifest
 ```
 
 **Note:**
 **(1) The SDK build may fail depending on the build environment. At that time, please run the build again after a period of time.**
 
-**(2) The SDK result of the `ls` command is built using the target image `IMAGE=renesas-core-image-weston`. Other SDKs will be located in the same location `~/Yocto/yocto_rzsbc_board/build/tmp/deploy/sdk` but will have different names according to the target image.**
+**(2) The SDK result of the `ls` command is built using the target image `IMAGE=renesas-core-image-weston`. Other SDKs will be located in the same location `~/renesas/rz-cmn-srp/yocto_rzsbc_board/build/tmp/deploy/sdk` but will have different names according to the target image.**
 
 #### Install eSDK on your host machine
 
 The eSDK allows you to develop and test custom applications for RZG2L-SBC on different systems. This section covers setting up your development environment and with the setup, you can develop your applications that run on RZG2L-SBC.
 
 ```shell
-$ sh ./build/tmp/deploy/sdk/poky-glibc-x86_64-renesas-core-image-weston-aarch64-rzg2l-sbc-toolchain-ext-3.1.26.sh
+$ sh ./build/tmp/deploy/sdk/poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rzg2l-sbc-toolchain-ext-5.1.4.sh
 ```
 
-Everytime you want to build your applications, run the environment setup script first (`~/esdk/3.1.26` is the location that the eSDK is installed):
+Everytime you want to build your applications, run the environment setup script first (`~/esdk/5.1.4` is the location that the eSDK is installed):
 
 ```shell
-$ source ~/esdk/3.1.26/environment-setup-aarch64-poky-linux
+$ source ~/esdk/5.1.4/environment-setup-armv8-2a-poky-linux
 ```
 
 ## Programming/Flashing images for RZG2L-SBC
 
 ### Flash Bootloader on Linux
 
-We prepare a suppport script `bootloader_flash.py` for flashing bootloader on Linux. The script can be achieved from Yocto build.
+To flash the bootloader on a Linux system, use the script `bootloader_flash.py` located in the Yocto build output directory:
 
-Please run the follow command to know how to use the script:
+```
+host/tools/bootloader-flasher/linux/
+```
+
+This script is generated as part of the Yocto build process.
+
+To see usage instructions and available options, run:
 
 ```
 $ ./bootloader_flash.py -h
@@ -277,19 +424,23 @@ $ ./bootloader_flash.py -h
 
 Same as Flash Bootloader on Linux, we prepare some suppport scripts for flashing bootloader on Windows.
 
-Please get folder `bootloader-windows-script` from Yocto build output folder. Then refer to `Readme.txt` file to know how to use the scripts.
+Please get folder `host/tools/bootloader-flasher/windows/` from Yocto build output folder. Then refer to `Readme.md` file to know how to use the scripts.
 
 ### Flash Bootloader on U-Boot console
 
 In case users want to update Bootloader without touching the hardware setup. We support a method to flash Bootloader on U-Boot console.
 
-Please get folder `uload-bootloader` from Yocto build output folder. Then refer to `uload-readme.txt` file to know the flashing procedure.
+Please get folder `host/tools/uload-bootloader/` from Yocto build output folder. Then refer to `Readme.md` file to know the flashing procedure.
 
 ### Prepare image and rootfs in microSD card on Linux
 
-Please prepare the rootfs image in microSD card before booting RZG2L-SBC system.
-We prepare a suppport script `sd_flash.sh` for this purpose. The script can be achieved from Yocto build.
+Before booting the RZG2L-SBC system, you need to flash the root filesystem image onto a microSD card.
 
+A support script named `sd_flash.sh` is provided for this purpose. You can find the script in the Yocto build output directory:
+
+```
+host/tools/sd-creator/linux/
+```
 Please run the follow command to know how to use the script:
 
 ```
@@ -324,7 +475,7 @@ After executing SD card flashing script successfully. In U-boot console, running
 
 Same as Linux, we prepare some suppport scripts on Windows for preparing image and rootfs in microSD card.
 
-Please get folder `filesystem-windows-script` from Yocto build output folder. Then refer to `README.md` file to know how to use the scripts.
+Please get folder `host/tools/sd-creator/windows/` from Yocto build output folder. Then refer to `README.md` file to know how to use the scripts.
 
 ### U-boot environment
 
@@ -333,31 +484,27 @@ In U-Boot console, execute one more command to bring RZG2L-SBC system up:
 ```
 => boot
 ```
-
 ## Confirm supported features on RZG2L-SBC
-
-### QT demo applications
-
-Some QT demo applications are suppported in this VLP release for RZG2L-SBC. 
-Run the following commands to enter to QT demo applications folder and run a demo app as your needs.
-
-For example, QT smart home demo application is executed.
-
-```
-root@rzg2l-sbc:~# cd /home/root/demo/scripts/
-root@rzg2l-sbc:~/demo/scripts# ./QtSmarthome-demo.sh
-```
-
 
 ### 40 IO expansion interface settings
 
-The 40 IO Expansion Interface on RZG2L-SBC supports for I2C channel 0 and channel 3, SPI channel 0, SCIF channel 0, CAN channel 0 and channel 1 and GPIO pin-function (default).
+The RZ/G2L-SBC features a versatile 40-pin IO Expansion Interface that supports various communication protocols and functions. This interface can be configured for:
 
-By default, I2C channel 0 and SCIF channel 0 are enabled. Users can configure to use other channels.
+- I2C: Channels 0 and 3
+- SPI: Channel 0
+- SCIF: Channel 0
+- CAN: Channels 0 and 1
+- GPIO: Pin-function (default setting)
 
-We support an FDT overlays appoach to easily reconfigure for this Expansion Interface.
+By default, I2C Channel 0 and SCIF Channel 0 are enabled. However, you can easily reconfigure the interface to use other channels and functions using FDT overlays.
 
-The specific description is as follows:
+#### Understanding FDT Overlays and uEnv.txt
+
+The RZ/G2L-SBC uses FDT (Flattened Device Tree) overlays to manage the configuration of its IO expansion interface. These overlays are enabled by setting specific environment variables in the `uEnv.txt` file.
+
+The `uEnv.txt` file is located in partition 1 of the SD card.
+
+The following table details the available configuration options that can be set in uEnv.txt:
 
 ```
 ## For RZ SBC U-Boot Env
@@ -386,20 +533,71 @@ default settings:
     #enable_overlay_can=1
     #enable_overlay_dsi=1
     #enable_overlay_csi_ov5640=1
+
+(Note: Lines starting with # are commented out and not active.)
 ```
 
-You can refer to the `readme.txt` file in `/boot` folder for the FDT overlays information.
+#### How to Edit uEnv.txt
+
+The `uEnv.txt` file can be edited using two primary methods:
+
+- On Windows
+
+Mount the SD card on a Windows computer. The `uEnv.txt` file should be accessible for direct editing as it resides in the first partition, typically formatted as FAT32.
+
+- On Linux
+
+When working within a Linux environment (e.g., via SSH or serial console on the RZG2L-SBC), the SD card's first partition can be mounted and the file edited:
+
+
+You can refer to the `Readme.md` file in partition 1 for the FDT overlays information.
+You can mount the sdcard on Windows to edit the uEnv.txt or do it on linux as below
+
+Step 1: Mount the partition
+```shell
+root@rzg2l-sbc:~# mount /dev/mmcblk2p1 /tmp
+root@rzg2l-sbc:/tmp# ls uEnv.txt
+uEnv.txt
+root@rzg2l-sbc:/tmp# nano uEnv.txt
+```
+
+After modifying `uEnv.txt`, save the file and umount the partition:
+
+```shell
+root@rzg2l-sbc:/tmp# cd ~
+root@rzg2l-sbc:~# umount /tmp
+root@rzg2l-sbc:~# sync
+```
 
 After changing the value of overlays options, we need to run `sync` to ensure that the changes are affected. Then, execute `reboot` to apply the changes.
 
+For further details on FDT overlays and advanced configurations, refer to the `Readme.md` file located in partition 1 of the SD card.
+
 The below section shows how to configure for each GPIO function:
 
-#### GPIO
+#### Configuring GPIO Pins
 
-To set GPIO pin,set values as shown below:
+To set the state of a GPIO pin, use the `gpioset` command with the following syntax:
+
+```shell
+gpioset -c <chip> <pin> = <value>
+```
+
+- chip: Specifies the GPIO chip (e.g., gpiochip0).
+- pin: Refers to the specific GPIO pin number on that chip.
+- value: Sets the pin state (0 for low, 1 for high).
+
+Examples:
+
+To set GPIO pin 0 on gpiochip0 to a low state:
 
 ```
 root@rzg2l-sbc:~# gpioset -c gpiochip0 0=0
+```
+
+To set GPIO pin 0 on gpiochip0 to a high state:
+
+```shell
 root@rzg2l-sbc:~# gpioset -c gpiochip0 0=1
 ```
 
@@ -547,12 +745,14 @@ root@rzg2l-sbc:~# ifconfig eth1 down
 
 ### On-board Audio Codec with Stereo Jack Analog Audio IO configurations
 
-RZG2L-SBC has an On-board Audio Codec - DA7219. It is the default audio device of RZG2L-SBC
-and it will be enabled automatically when the system comes up.
+The RZ/G2L-SBC features an onboard audio codec, Renesas DA7219, enabling audio playback and recording through a 3.5mm stereo jack (connector J8, 6-pin).
+- Audio Data Interface: Connected to DAI (SSI1) using the I2S format.
+- Control Interface: Managed via I2C0.
+- Headset Jack: Marked J8 on the board.
 
-Before playing an audio file, connect an audio device such as 3.5mm headset to J8.
+Audio playback and recording are supported through ALSA tools with PCM WAV files. For other formats such as MP3, the pre-installed GStreamer framework provides compatibility.
 
-Run the following commands to play an audio file:
+Prepare the required audio files and place them in the target directory before executing the following commands. Example commands are shown below:
 
 ```
 root@rzg2l-sbc:~# aplay /home/root/audios/04_16KH_2ch_bgm_maoudamashii_healing01.wav
@@ -603,7 +803,7 @@ enable_overlay_dsi=1
 
 ### Playing Video Files on RZ/G2L-SBC
 
-Use `gst-launch-1.0` to play the video file. The playbin element in GStreamer makes it easy to play multimedia content. Run the following command:
+Use `gst-launch-1.0` to play video files. The playbin element in GStreamer makes it easy to play multimedia content. Prepare an mp4 file and run the following command:
 
 ```
 root@rzg2l-sbc:~# gst-launch-1.0 playbin uri=file:///<path/to/your/video/path>
@@ -633,28 +833,28 @@ root@rzg2l-sbc:~# ./v4l2-init.sh <resolution>
 
 The <resolution> argument specifies the resolution for the camera. Valid resolutions are:
 
+- 720x480
+- 720x576
+- 1024x768
 - 1280x720
-- 1280x960
-- 1600x900
 - 1920x1080
-- 1920x1200
-- 2560x1080
+- 2592x1944
 
-If no resolution is specified or an invalid resolution is provided, the default resolution 1280x960 will be used. For example:
+If no resolution is specified or an invalid resolution is provided, the default resolution 1280x720 will be used. For example:
 
 When use a valid resolution:
 
 ```
 root@rzg2l-sbc:~# ./v4l2-init.sh 1920x1080
-Link CRU/CSI2 to ov5640 1-003c with format UYVY8_2X8 and resolution 1920x1080
+Link CRU/CSI2 to ov5640 1-003c with format UYVY8_1X16 and resolution 1920x1080
 ```
 
 When no resolution is specified:
 
 ```
 root@rzg2l-sbc:~# ./v4l2-init.sh
-No resolution specified. Using default resolution: 1280x960
-Link CRU/CSI2 to ov5640 1-003c with format UYVY8_2X8 and resolution 1280x960
+No resolution specified. Using default resolution: 1280x720
+Link CRU/CSI2 to ov5640 1-003c with format UYVY8_1X16 and resolution 1280x720
 ```
 
 When an invalid resolution is provided:
@@ -662,17 +862,19 @@ When an invalid resolution is provided:
 ```
 root@rzg2l-sbc:~# ./v4l2-init.sh 3000x2000
 Invalid resolution: 3000x2000
-Input resolution is not available. Using default resolution: 1280x960
-Link CRU/CSI2 to ov5640 1-003c with format UYVY8_2X8 and resolution 1280x960
+Input resolution is not available. Using default resolution: 1280x720
+Link CRU/CSI2 to ov5640 1-003c with format UYVY8_1X16 and resolution 1280x720
 ```
 
-The `v4l2-init.sh` script helps to enable the CSI-2 module and select supported display resolution for the camera as well.
+The `v4l2-init.sh` script helps enable the CSI-2 module and select the camera's supported display resolution.
 
-Run the following to open Camera and preview the video on the screen.
+After running the script, initiate a video capture session using the matching width and height
 
 ```
-root@rzg2l-sbc:~# gst-launch-1.0 v4l2src device=/dev/video0 ! videoconvert ! waylandsink
+root@rzg2l-sbc:~# gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,width=1280,height=720 ! videoconvert ! waylandsink
 ```
+
+Ensure that the width and height values in the GStreamer pipeline match the resolution specified in `v4l2-init.sh`. This command starts a continuous stream of the camera feed to the active video display.
 
 ### Generic USB Bluetooth framework
 
@@ -864,10 +1066,10 @@ The distribution comes with Debian package manager `apt-get` and `dpkg` for bina
 The default configuration for the `sources.list` file, which defines the package repositories, is as follows:
 
 ```
-deb [arch=arm64] http://ports.ubuntu.com/ focal main multiverse universe
-deb [arch=arm64] http://ports.ubuntu.com/ focal-security main multiverse universe
-deb [arch=arm64] http://ports.ubuntu.com/ focal-backports main multiverse universe
-deb [arch=arm64] http://ports.ubuntu.com/ focal-updates main multiverse universe
+deb [arch=arm64] http://ports.ubuntu.com/ oracular main multiverse universe
+deb [arch=arm64] http://ports.ubuntu.com/ oracular-security main multiverse universe
+deb [arch=arm64] http://ports.ubuntu.com/ oracular-backports main multiverse universe
+deb [arch=arm64] http://ports.ubuntu.com/ oracular-updates main multiverse universe
 ```
 
 #### Configuring the Debian package repository
@@ -905,7 +1107,7 @@ This specification is to limit the existing APT sources to arm64 only, so APT wo
 However, if we use a repository which is already designed for ARM architectures, we don't need to specify `[arch=arm64]`. For example:
 
 ```
-deb http://deb.debian.org/debian bullseye main contrib non-free
+deb http://deb.debian.org/debian trixie main contrib non-free
 ```
 
 Remember that sources doesn’t have to be a single origin. It's very common to add multiple repositories and sources for packages and manage them using keys.
@@ -941,6 +1143,76 @@ After installing a package using dpkg, if you need to resolve dependency issues,
 
 ```
 root@rzg2l-sbc:~# apt-get install -f
+```
+
+### Docker Installation SetupAdd commentMore actions
+
+Step 1: Enable Docker support in Kernel build
+
+To enable Docker integration at the kernel level, set the following configuration option in the build configuration file:
+
+```
+# Enable Docker Support for Kernel Build
+# Set to "1" to enable building the kernel with Docker-based configurations
+# Set to "0" to disable Docker integration (default)
+DOCKER_SUPPORT = "1"
+```
+
+Rebuilding the kernel is required after changing this setting to apply the update.
+
+Step 2: Install Docker via APT
+
+Make sure your device has internet access, then run:
+
+```shell
+root@rzg2l-sbc:~# apt-get update
+root@rzg2l-sbc:~# apt-get install docker.io
+```
+
+Step 3: Docker supports only iptables-legacy and iptables-nft. Firewall rules created directly with nftables are not compatible with Docker. To ensure proper operation, switch to legacy iptables:
+
+```shell
+root@rzg2l-sbc:~# update-alternatives --set iptables /usr/sbin/iptables-legacy
+root@rzg2l-sbc:~# update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
+```
+
+Restart the Docker service to apply changes:
+
+```shell
+root@rzg2l-sbc:~# systemctl restart docker
+```
+
+Step 4: Verify Docker Installation
+
+Run the following command to test Docker.
+
+```
+root@rzg2l-sbc:~# docker run hello-world
+```
+
+You should see a message similar to:
+
+```
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+
+To generate this message, Docker took the following steps:
+ 1. The Docker client contacted the Docker daemon.
+ 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
+    (arm64v8)
+ 3. The Docker daemon created a new container from that image which runs the
+    executable that produces the output you are currently reading.
+ 4. The Docker daemon streamed that output to the Docker client, which sent it
+    to your terminal.
+
+To try something more ambitious, you can run an Ubuntu container with:
+ $ docker run -it ubuntu bash
+
+Share images, automate workflows, and more with a free Docker ID:
+ https://hub.docker.com/
+
+For more examples and ideas, visit:
+ https://docs.docker.com/get-started/
 ```
 
 ### Network Boot and TFTP
@@ -1338,12 +1610,10 @@ As mentioned, by default, RZ/G2L-SBC uses Open SSH. If you need to switch from O
 - Step 2: Comment the following lines in the `local.conf`
 
   ```shell
-  IMAGE_FEATURES_remove = " ssh-server-dropbear"
-  IMAGE_FEATURES_append = " ssh-server-openssh"
+  IMAGE_FEATURES:remove = " ssh-server-dropbear"
+  IMAGE_FEATURES:append = " ssh-server-openssh"
   ```
   This will remove OpenSSH and enable Dropbear for the board.
-
-- Step 3: Rebuild and deploy the image to apply the changes.
 
 ### Remote debugging using GDBServer on RZG2L-SBC
 
@@ -1360,7 +1630,7 @@ GGDB has two components to work with. One is the host side `gdb` debugger. The o
 To set up the environment that would use the GDB targeting the RZ/G2L-SBC from the eSDK, simply run the poky environment script as follows:
 
 ```shell
-$ source ~/esdk/3.1.26/environment-setup-aarch64-poky-linux
+$ source ~/esdk/5.1.4/environment-setup-armv8-2a-poky-linux
 ```
 
 To confirm GDB is ready to use, run the following command and check the result:
@@ -1600,7 +1870,7 @@ Step 3: Set Up Debug Configuration:
               "stopAtEntry": true,
               "stopAtConnect": true,
               "MIMode": "gdb",
-              "miDebuggerPath": "/home/renesas/esdk/3.1.26/tmp/sysroots/x86_64/usr/bin/aarch64-poky-linux/aarch64-poky-linux-gdb",
+              "miDebuggerPath": "/home/renesas/esdk/5.1.4/tmp/sysroots/x86_64/usr/bin/aarch64-poky-linux/aarch64-poky-linux-gdb",
               "miDebuggerServerAddress": "169.254.43.30:2000",
               "setupCommands": [
                   {
@@ -1663,15 +1933,15 @@ Step 3: Configure the Cross Toolchain
 
   For example:
   - Prefix: `aarch64-poky-linux`
-  - Path: `/home/renesas/esdk/3.1.26/tmp/sysroots/x86_64/usr/bin/aarch64-poky-linux`
+  - Path: `/home/renesas/esdk/5.1.4/tmp/sysroots/x86_64/usr/bin/aarch64-poky-linux`
 - In the Includes section, specify the include paths:
-  - Include paths: `/home/renesas/esdk/3.1.26/tmp/sysroots/rzg2l-sbc/usr/include`
+  - Include paths: `/home/renesas/esdk/5.1.4/tmp/sysroots/rzg2l-sbc/usr/include`
 
 - In the Cross GCC Linker section, go to Libraries and specify the library search path:
-  - Library search path: `/home/renesas/esdk/3.1.26/tmp/sysroots/x86_64/usr/lib`
+  - Library search path: `/home/renesas/esdk/5.1.4/tmp/sysroots/x86_64/usr/lib`
 
 - In the Miscellaneous section, specify the linker flags:
-  - Linker flags: `--sysroot=/home/renesas/esdk/3.1.26/poky_sdk/tmp/sysroots/rzg2l-sbc`
+  - Linker flags: `--sysroot=/home/renesas/esdk/5.1.4/poky_sdk/tmp/sysroots/rzg2l-sbc`
 
 Step 4: Configure Eclipse to connect to the GDB Server:
 - In Eclipse, go to the `Run` menu and select `Debug Configurations`.
@@ -1683,7 +1953,7 @@ Step 4: Configure Eclipse to connect to the GDB Server:
   - Finally, click Finish to complete the setup for the SSH session.
 - In the Remote Absolute File Path field, specify the location where Eclipse will copy the program on the RZ/G2L-SBC. Click Browse to connect via SSH and select the target location, or manually enter the path on the RZ/G2L-SBC.
 - In the Debugger tab:
-  - In GDB Debugger: Provide the path to your cross-compiled GDB (e.g., `/home/renesas/esdk/3.1.26/tmp/sysroots/x86_64/usr/bin/aarch64-poky-linux/aarch64-poky-linux-gdb`).
+  - In GDB Debugger: Provide the path to your cross-compiled GDB (e.g., `/home/renesas/esdk/5.1.4/tmp/sysroots/x86_64/usr/bin/aarch64-poky-linux/aarch64-poky-linux-gdb`).
 
 Step 5: Start the Debugging Session: 
 - After configuring the debug settings, click Apply and then Debug. 
@@ -1718,7 +1988,7 @@ Step 1: Create a simple C program that intentionally causes a segmentation fault
 Step 2: Source the environment and compile the `segfault_example.c` program
 
  ```shell
-  renesas@builder-pc:~$ source ~/esdk/3.1.26/environment-setup-aarch64-poky-linux
+  renesas@builder-pc:~$ source ~/esdk/5.1.4/environment-setup-armv8-2a-poky-linux
   SDK environment now set up; additionally you may now run devtool to perform development tasks.
   Run devtool --help for further details.
   renesas@builder-pc:~/remote-debugging/segfault_program$ $CC $CFLAGS segfault_example.c -o segfault_example
@@ -1819,7 +2089,7 @@ Here's a complete example of a `launch.json` in this example
             "stopAtEntry": true,
             "stopAtConnect": true,
             "MIMode": "gdb",
-            "miDebuggerPath": "/home/renesas/esdk/3.1.26/tmp/sysroots/x86_64/usr/bin/aarch64-poky-linux/aarch64-poky-linux-gdb",
+            "miDebuggerPath": "/home/renesas/esdk/5.1.4/tmp/sysroots/x86_64/usr/bin/aarch64-poky-linux/aarch64-poky-linux-gdb",
             "miDebuggerServerAddress": "169.254.43.30:2000",
             "coreDumpPath": "/home/renesas/remote-debugging/segfault/core.810",
             "setupCommands": [
@@ -1845,7 +2115,7 @@ Step 1: Configure Eclipse to connect to the GDB Server:
 - Under the Debugger tab, select `C/C++ Postmortem Debugger`
 - In the `Main` tab, in `Core file field`, click and specify where is core dump file.
 - In the Debugger tab:
-  - In GDB Debugger: Provide the path to your cross-compiled GDB (e.g., `/home/renesas/esdk/3.1.26/tmp/sysroots/x86_64/usr/bin/aarch64-poky-linux/aarch64-poky-linux-gdb`).
+  - In GDB Debugger: Provide the path to your cross-compiled GDB (e.g., `/home/renesas/esdk/5.1.4/tmp/sysroots/x86_64/usr/bin/aarch64-poky-linux/aarch64-poky-linux-gdb`).
 
 Step 2: Start the Debugging Session: 
 - Once the debugging session starts, Eclipse will show the line of code that caused the segmentation fault, along with the call stack.
