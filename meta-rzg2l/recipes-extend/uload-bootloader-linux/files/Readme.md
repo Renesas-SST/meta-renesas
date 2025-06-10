@@ -16,7 +16,9 @@ This directory contains files and tools used for flashing and managing the bootl
 
 ### Copy necessary images
 
-1.Place all bootloader images (.bin) in the /boot/uload-bootloader folder (optional).
+1.Place all bootloader images (.bin) in the /boot/uload-bootloader folder on the SD card (optional).
+
+**Note**: The SD card must be inserted into the board before powering it on.
 
 We've already prepared these images in the /boot/uload-bootloader folder on the SD card. If you want to change the images, replace these files.
 

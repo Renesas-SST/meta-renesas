@@ -34,7 +34,6 @@ tools
 │   │   └── Readme.md                             <---- SD card flashing guideline on Linux
 │   ├── Readme.md
 │   └── windows                                   <---- SD card flashing script package folder on Windows
-│       └── fastboot-udp-sd-flasher
 │           ├── config.ini
 │           ├── flash_filesystem.bat              <---- SD card flashing script on Windows
 │           ├── Readme.md                         <---- SD card flashing guideline on Windows

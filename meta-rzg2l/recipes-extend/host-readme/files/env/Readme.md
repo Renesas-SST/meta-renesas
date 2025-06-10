@@ -7,10 +7,21 @@ This directory contains the environment file, which includes Yocto build environ
 ## A top-level directory of env folder
 
 ```
-env                             
-├── core-image-qt.env           <---- Environment file specific to core-image-qt in yocto build
-└── Readme.md                   <---- This document
+env/
+├── core-image-bsp.env
+├── core-image-minimal.env
+├── core-image-qt.env
+├── core-image-weston.env
+├── Readme.md
+├── renesas-core-image-cli.env
+├── renesas-core-image-weston.env
+├── renesas-quickboot-cli.env
+├── renesas-quickboot-wayland.env
+└── renesas-ubuntu.env
+
+0 directories, 10 files
 ```
 
 ### Files:
-- **core-image-qt.env**: This file includes environment variables relevant to the build process of the core-image-qt image for the RZ/G2L-SBC platform using Yocto. It contains paths and configurations necessary for building, deploying, and managing the image.
+- `.env`: This file includes environment variables relevant to the build process of the target image for the RZ/G2L-SBC platform using Yocto. It contains paths and configurations necessary for building, deploying, and managing the image.
+- `Readme.md`: This Readme explains the purpose and contents of this directory.
