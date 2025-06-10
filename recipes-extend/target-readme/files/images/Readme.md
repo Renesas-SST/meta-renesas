@@ -69,8 +69,28 @@ images
 
 ```
 
-## Note
+## Content Breakdown
 
 Each of these subfolders have Readme's at the appropriate level in the file hierarchy to help you further.
 The above structure is an example when building using the target image `IMAGE=core-image-weston`. The compressed root filesystems and the environment artifacts will have names with the prefix `core-image-weston`. Other target images will have the same structure.
 
+#### Firmware Files
+- `bl2*.bin`, `bl2*.srec`: Bootloader stage 2 binaries.
+- `fip-rzg2l-sbc.*`: Firmware Image Package (FIP) containing BL31, BL32, BL33.
+- `Flash_Writer_SCIF_rzg2l-sbc.mot`: Flash writer for initial programming over SCIF.
+- `Image`, `Image--*`: Linux kernel images.
+
+#### Flashing Images
+- `.wic`, `.wic.gz`: Full disk images containing boot + rootfs partitions. These are used with tools like `dd` or Etcher to flash onto SD cards.
+- `.tar.bz2`: Root filesystem archives. These can be extracted or mounted depending on the boot method.
+
+#### Device Tree Blobs
+- `dtbs/`: Contains `.dtb` files and overlay `.dtbo` files for various hardware configurations.
+    - `overlays/`: Specific overlay files for enabling peripherals (e.g., CAN, DSI, SPI).
+
+### `rootfs/`
+- Contains root filesystem archives `.tar.bz2` that correspond to the `.wic` images found in the parent `images/` directory.
+- These archives can be extracted or used directly depending on your boot method (e.g., NFS boot, manual rootfs deployment).
+
+## Note 
+- Each of these subfolders have Readme's at the appropriate level in the file hierarchy to help you further.

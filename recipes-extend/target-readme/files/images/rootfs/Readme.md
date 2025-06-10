@@ -16,3 +16,8 @@ rootfs
 - **core-image-weston.tar.bz2**: Compressed tarball of the root filesystem image for the RZ Common.
 The above structure is an example when building using the target image `IMAGE=core-image-weston`. The compressed root filesystems and the environment artifacts will have names with the prefix `core-image-weston`. Other target images will have the same structure.
 
+### `rootfs/`
+- Contains root filesystem archives `.tar.bz2`, these archives can be extracted or used directly depending on your boot method (e.g., NFS boot, manual rootfs deployment).
+
+### `Readme.md`
+- This Readme explains the purpose and contents of this directory.
