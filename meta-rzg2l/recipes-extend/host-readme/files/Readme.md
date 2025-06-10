@@ -7,28 +7,29 @@ This directory contains files and tools used for managing and deploying images t
 ## A top-level directory of host
 
 ```
-host
+$ tree -L 1
+host/
 ├── build
-│   ├── core-image-qt-rzpi-20240717204209.rootfs.manifest                                       # Manifest file for the root filesystem
-│   ├── core-image-qt-rzpi-20240717204209.testdata.json                                         # Test data for the image
-│   ├── core-image-qt-rzpi.manifest -> core-image-qt-rzpi-20240717204209.rootfs.manifest        # Symlink to the root filesystem manifest
-│   └── core-image-qt-rzpi.testdata.json -> core-image-qt-rzpi-20240717204209.testdata.json     # Symlink to the test data JSON
-├── Readme.md                                                                                   # This document
-├── env                             
-│   ├── core-image-qt.env                                                                       # Environment file specific to core-image-qt in yocto build
-│   └── Readme.md
-├── src                                                                                         # Build script folder
-│   ├── git_patch.json
-│   ├── jq-linux-amd64
-│   ├── patches
-│   ├── README.md
-│   ├── rzsbc_yocto.sh
-│   └── site.conf
-└── tools/                                                                                      # Tools and scripts used for managing and flashing bootloaders and filesystems across different platforms
+├── env
+├── Readme.md
+├── src
+└── tools
+
+4 directories, 1 file
 ```
 
-## Note
+- `build/`: Contains build output files such as root filesystem manifests, test data, and image metadata for various Yocto-built images.
 
-- The above structure is an example when building with the target image `IMAGE=core-image-qt`. The root filesystem artifacts are then named with the prefix `core-image-qt`. Other target images will follow the same structure but with names corresponding to their respective target images.
+- `env/`: Environment variable files for Yocto builds, containing exported variables that set up the build environment for different images.
 
-- Each of these subfolders have Readme's at the appropriate level in the file hierarchy to help you further.
+- `src/`: Contains the main build scripts, including a single script that automates building the entire Yocto project from scratch.
+
+- `tools/`: Utility scripts and tools for flashing bootloaders, creating SD card images, with support for both Linux and Windows platforms.
+
+## Usage
+
+Each subdirectory includes its own `Readme.md` with detailed descriptions and instructions:
+
+- See `env/Readme.md` for environment configurations and setting up the Yocto build environment.
+- See `src/rz-cmn-srp/README.md` for details on the main build script and how to use it.
+- See `tools/Readme.md`  for instructions on platform-specific utilities and deployment tools.

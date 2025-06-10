@@ -7,14 +7,27 @@ This directory contains the compressed root filesystem image used for deploying 
 ## A top-level directory of rootfs
 
 ```
-rootfs                                                  
-├── core-image-qt-rzpi.tar.bz2                  <---- Compressed root filesystem image
-└── Readme.md                                   <---- This document
+rootfs/
+├── core-image-bsp-rzpi.tar.bz2
+├── core-image-minimal-rzpi.tar.bz2
+├── core-image-qt-rzpi.tar.bz2
+├── core-image-weston-rzpi.tar.bz2
+├── Readme.md
+├── renesas-core-image-cli-rzpi.tar.bz2
+├── renesas-core-image-weston-rzpi.tar.bz2
+├── renesas-quickboot-cli-rzpi.tar.bz2
+├── renesas-quickboot-wayland-rzpi.tar.bz2
+├── renesas-ubuntu-rzpi.tar.bz2
+├── ubuntu-core-image-qt-rzpi.tar.bz2
+└── ubuntu-lxde-image-qt-rzpi.tar.bz2
+
+0 directories, 12 files
 ```
 
-### Files
-- **core-image-qt-rzpi.tar.bz2**: Compressed tarball of the root filesystem image for the RZ/G2L-SBC.
+## Content breakdown
 
-### Note
+### `rootfs/`
+- Contains root filesystem archives `.tar.bz2`, these archives can be extracted or used directly depending on your boot method (e.g., NFS boot, manual rootfs deployment).
 
-- The above structure is an example when building with the target image `IMAGE=core-image-qt`. The compressed root filesystems is `core-image-qt-rzpi.tar.bz2` (tar.bz2 format). Other target images will follow the same structure but with names corresponding to their respective target images.
+### `Readme.md`
+- This Readme explains the purpose and contents of this directory.
