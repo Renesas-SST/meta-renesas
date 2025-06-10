@@ -65,7 +65,7 @@ addtask release_clean after do_image_complete before do_populate_lic_deploy
 addtask write_image_spdx after create_image_sbom_spdx before do_release_clean
 ROOTFS_POSTPROCESS_COMMAND += " add_bootloader_rootfs;"
 
-# Install core-image-qt.env to host/env
+# Install .env file to host/env
 python do_rootfs_wicenv:append () {
     target_dir = os.path.join(depdir, 'host/env')
     os.makedirs(target_dir, exist_ok=True)

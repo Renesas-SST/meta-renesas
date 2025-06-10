@@ -15,8 +15,8 @@ dtbs
 │   ├── rzg2l-sbc-ext-spi.dtbo                     <---- Overlay for external SPI devices
 │   ├── rzg2l-sbc-ov5640.dtbo                      <---- Overlay for OV5640 camera
 │   └── Readme.md
-├── rzg2l-sbc--6.10.14+git0+af06ad75b8_bbe3d1be4e-r0-rzg2l-sbc-20241213061340.dtbo  <---- Main device tree blob file for RZ/G2L-SBC
-└── rzg2l-sbc.dtb -> rzg2l-sbc--6.10.14+git0+af06ad75b8_bbe3d1be4e-r0-rzg2l-sbc-20241213061340.dtbo  <---- Symlink to the main dtb file
+├── rzg2l-sbc--6.10.14+git0+<commit-hash>-r0-rzg2l-sbc-<timestamp>.dtbo  <---- Main device tree blob file for RZ/G2L-SBC
+└── rzg2l-sbc.dtb -> rzg2l-sbc--6.10.14+git0+<commit-hash>-r0-rzg2l-sbc-<timestamp>.dtbo  <---- Symlink to the main dtb file
 └── Readme.md                                  <---- This document
 
 ```
