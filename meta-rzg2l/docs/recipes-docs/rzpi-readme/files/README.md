@@ -85,15 +85,16 @@ After preparing the host machine for building, download necessary packages (get 
 - Graphic: https://www.renesas.com/us/en/document/swo/rz-mpu-graphics-library-evaluation-version-rzg2l-and-rzg2lc-rtk0ef0045z13001zj-v112enzip
 - Codec: https://www.renesas.com/us/en/document/swo/rz-mpu-video-codec-library-evaluation-version-rzg2l-rtk0ef0045z15001zj-v110xxzip?r=1535641
 
-Then create a workspace folder (example: `~/Yocto`) for the build and put the files `rzsbc_yocto.sh`, `site.conf`, `README.md`, `jq-linux-amd64` and a patch folder for eSDK build support from the release package into it.
+Then create a workspace folder (example: `~/Yocto`) for the build and put the files `rzsbc_builder.sh`, `images.json`, `site.conf`, `README.md`, `jq-linux-amd64` and a patch folder for eSDK build support from the release package into it.
 ```
 $ mkdir ~/Yocto
 $ cp *.zip ~/Yocto
-$ cp rzsbc_yocto.sh ~/Yocto
-$ cp site.conf ~/Yocto
 $ cp README.md ~/Yocto
+$ cp rzsbc_builder.sh ~/Yocto
+$ cp site.conf ~/Yocto
 $ cp jq-linux-amd64 ~/Yocto
 $ cp git_patch.json ~/Yocto
+$ cp images.json ~/Yocto
 $ cp -r patches ~/Yocto
 ```
 
@@ -102,10 +103,12 @@ Step 3: Build package
 Build the package by executing the following commands:
 ```
 $ cd ~/Yocto
-$ IMAGE=<target_image> ./rzsbc_yocto.sh build
+$ IMAGE=<target_image> ./rzsbc_builder.sh build
 ```
 
-<target_image>: the target Yocto build image. It can be one from the following table of supported images
+<target_image>: Select from the supported Yocto or Ubuntu images listed in `images.json`
+
+- Yocto Images (yocto)
 
 | Target Image               | Description                                                                                 |
 |----------------------------|---------------------------------------------------------------------------------------------|
@@ -119,11 +122,30 @@ $ IMAGE=<target_image> ./rzsbc_yocto.sh build
 | renesas-quickboot-wayland  | This image has the same system functionality as the renesas-core-image-weston but with Quickboot enabled, allowing for faster boot times and efficient system validation on a graphical environment              |
 | renesas-ubuntu | Ubuntu-based image built on top of the ubuntu-tiny Yocto distro, ideal for embedded development. It includes core support for Wayland, X11, OpenGL, and Qt5, but does not include full development tools or environments. This image is not meant to be used as a Yocto rootfs, but rather as a foundation for pure Ubuntu-based systems that depend on Yocto-generated artifacts.|
 
+- Ubuntu Images (ubuntu)
+
+| Target Image               | Description                                                                                 |
+|----------------------------|---------------------------------------------------------------------------------------------|
+| ubuntu-core         | A minimal, headless Ubuntu image tailored for embedded systems. It includes Qt framework support for developing Qt-based applications in a resource-efficient environment |
+| ubuntu-lxde         | A lightweight Ubuntu image featuring the LXDE desktop environment, providing a graphical interface while maintaining low resource consumption. This image also includes Qt framework support for GUI development.|
+
+- Static Groups (static)
+
+| Target Image               | Description                                                                                 |
+|----------------------------|---------------------------------------------------------------------------------------------|
+| all-yocto-images         | Build all Yocto-based images |
+| all-ubuntu-images        | Build all Ubuntu-based images |
+| all-supported-images	   | Build all supported images listed |
+
 **Note:**
 
 **(1) Please note that this build requires internet access and will take several hours.**
 
 **(2) If `IMAGE` is not set in the build command. The default image is `core-image-qt`.**
+
+**(3) The list of supported images is defined in the images.json.**
+
+**(4) Use static groups to build multiple images in one command.**
 
 Step 4: Collect the output
 
