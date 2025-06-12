@@ -1,0 +1,96 @@
+From eb5bde0d52d08e2886fa540b60037530b4a3303c Mon Sep 17 00:00:00 2001
+From: Tien Nguyen <tien.nguyen.uh@renesas.com>
+Date: Wed, 28 May 2025 18:24:05 +0700
+Subject: [PATCH] rz-sbc: rename rzpi to rzg2l-sbc across all files (#10)
+
+Rename all instances of `rzpi` to `rzg2l-sbc` within source files.
+Upstream-Status: Pending
+Signed-off-by: Tien Nguyen <tien.nguyen.uh@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/Makefile                   |  4 ++--
+ arch/arm64/boot/dts/renesas/overlays/Makefile          | 10 +++++-----
+ .../overlays/{rzpi-can.dts => rzg2l-sbc-can.dts}       |  0
+ .../overlays/{rzpi-dsi.dts => rzg2l-sbc-dsi.dts}       |  0
+ .../{rzpi-ext-i2c.dts => rzg2l-sbc-ext-i2c.dts}        |  0
+ .../{rzpi-ext-spi.dts => rzg2l-sbc-ext-spi.dts}        |  0
+ .../overlays/{rzpi-ov5640.dts => rzg2l-sbc-ov5640.dts} |  0
+ .../arm64/boot/dts/renesas/{rzpi.dts => rzg2l-sbc.dts} |  2 +-
+ 8 files changed, 8 insertions(+), 8 deletions(-)
+ rename arch/arm64/boot/dts/renesas/overlays/{rzpi-can.dts => rzg2l-sbc-can.dts} (100%)
+ rename arch/arm64/boot/dts/renesas/overlays/{rzpi-dsi.dts => rzg2l-sbc-dsi.dts} (100%)
+ rename arch/arm64/boot/dts/renesas/overlays/{rzpi-ext-i2c.dts => rzg2l-sbc-ext-i2c.dts} (100%)
+ rename arch/arm64/boot/dts/renesas/overlays/{rzpi-ext-spi.dts => rzg2l-sbc-ext-spi.dts} (100%)
+ rename arch/arm64/boot/dts/renesas/overlays/{rzpi-ov5640.dts => rzg2l-sbc-ov5640.dts} (100%)
+ rename arch/arm64/boot/dts/renesas/{rzpi.dts => rzg2l-sbc.dts} (99%)
+
+diff --git a/arch/arm64/boot/dts/renesas/Makefile b/arch/arm64/boot/dts/renesas/Makefile
+index 0b3c6a6de0ef..b7c640c995a4 100644
+--- a/arch/arm64/boot/dts/renesas/Makefile
++++ b/arch/arm64/boot/dts/renesas/Makefile
+@@ -128,8 +128,8 @@ dtb-$(CONFIG_ARCH_R9A07G044) += r9a07g044l2-smarc-cru-csi-ov5645.dtbo
+ r9a07g044l2-smarc-cru-csi-ov5645-dtbs := r9a07g044l2-smarc.dtb r9a07g044l2-smarc-cru-csi-ov5645.dtbo
+ dtb-$(CONFIG_ARCH_R9A07G044) += r9a07g044l2-smarc-cru-csi-ov5645.dtb
+ 
+-DTC_FLAGS_rzpi += -@
+-dtb-$(CONFIG_ARCH_R9A07G044) += rzpi.dtb
++DTC_FLAGS_rzg2l-sbc += -@
++dtb-$(CONFIG_ARCH_R9A07G044) += rzg2l-sbc.dtb
+ subdir-$(CONFIG_ARCH_R9A07G044) += overlays
+ 
+ dtb-$(CONFIG_ARCH_R9A07G054) += r9a07g054l2-smarc.dtb
+diff --git a/arch/arm64/boot/dts/renesas/overlays/Makefile b/arch/arm64/boot/dts/renesas/overlays/Makefile
+index e6a0d59e40ce..8acede6e2d26 100644
+--- a/arch/arm64/boot/dts/renesas/overlays/Makefile
++++ b/arch/arm64/boot/dts/renesas/overlays/Makefile
+@@ -3,8 +3,8 @@
+ # required for overlay support
+ DTC_FLAGS += -@
+ 
+-dtb-y += rzpi-ext-i2c.dtbo
+-dtb-y += rzpi-ext-spi.dtbo
+-dtb-y += rzpi-can.dtbo
+-dtb-y += rzpi-ov5640.dtbo
+-dtb-y += rzpi-dsi.dtbo
++dtb-y += rzg2l-sbc-ext-i2c.dtbo
++dtb-y += rzg2l-sbc-ext-spi.dtbo
++dtb-y += rzg2l-sbc-can.dtbo
++dtb-y += rzg2l-sbc-ov5640.dtbo
++dtb-y += rzg2l-sbc-dsi.dtbo
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzpi-can.dts b/arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-can.dts
+similarity index 100%
+rename from arch/arm64/boot/dts/renesas/overlays/rzpi-can.dts
+rename to arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-can.dts
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzpi-dsi.dts b/arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-dsi.dts
+similarity index 100%
+rename from arch/arm64/boot/dts/renesas/overlays/rzpi-dsi.dts
+rename to arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-dsi.dts
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzpi-ext-i2c.dts b/arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-ext-i2c.dts
+similarity index 100%
+rename from arch/arm64/boot/dts/renesas/overlays/rzpi-ext-i2c.dts
+rename to arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-ext-i2c.dts
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzpi-ext-spi.dts b/arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-ext-spi.dts
+similarity index 100%
+rename from arch/arm64/boot/dts/renesas/overlays/rzpi-ext-spi.dts
+rename to arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-ext-spi.dts
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzpi-ov5640.dts b/arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-ov5640.dts
+similarity index 100%
+rename from arch/arm64/boot/dts/renesas/overlays/rzpi-ov5640.dts
+rename to arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-ov5640.dts
+diff --git a/arch/arm64/boot/dts/renesas/rzpi.dts b/arch/arm64/boot/dts/renesas/rzg2l-sbc.dts
+similarity index 99%
+rename from arch/arm64/boot/dts/renesas/rzpi.dts
+rename to arch/arm64/boot/dts/renesas/rzg2l-sbc.dts
+index 97b5a7e1ffa2..df23d8467a0e 100644
+--- a/arch/arm64/boot/dts/renesas/rzpi.dts
++++ b/arch/arm64/boot/dts/renesas/rzg2l-sbc.dts
+@@ -11,7 +11,7 @@
+ #include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
+ 
+ / {
+-	compatible = "rzpi", "renesas,r9a07g044l2", "renesas,r9a07g044";
++	compatible = "rzg2l-sbc", "renesas,r9a07g044l2", "renesas,r9a07g044";
+ 	model = "Renesas RZG2L SBC board";
+ 
+ 	aliases {
+-- 
+2.25.1

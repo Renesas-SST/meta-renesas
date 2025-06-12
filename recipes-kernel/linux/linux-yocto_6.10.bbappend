@@ -40,6 +40,7 @@ SRC_URI:append:rzg2l-sbc = "\
                     file://dts-patches/0007-drivers-rcar-du-rzg2l-add-clock-calculation-logic-fo.patch \
                     file://dts-patches/0008-rzg2l-sbc-Add-vcp4-module-to-device-tree.patch \
                     file://dts-patches/0009-rzg2l-sbc-Support-more-fourcc-format-for-CRU.patch \
+                    file://dts-patches/0010-rz-sbc-rename-rzpi-to-rzg2l-sbc-across-all-files-10.patch \
                 "
 
 KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg peripherals.cfg da7219.cfg drm_panel.cfg ov5640.cfg panfrost.cfg"
