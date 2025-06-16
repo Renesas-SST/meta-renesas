@@ -39,12 +39,13 @@ IMAGE_BOOT_FILES:rz-cmn = " \
     target/images/*.bin;uload-bootloader/ \
 "
 
-DEPENDS += " linux-yocto uenv firmware-pack"
+DEPENDS += " linux-yocto uenv firmware-pack platform-gen "
 
 add_bootloader_rootfs() {
     install -d ${IMAGE_ROOTFS}/boot/uload-bootloader
     cp -rf ${DEPLOY_DIR_IMAGE}/target/images/bl2_bp_*.bin ${IMAGE_ROOTFS}/boot/uload-bootloader
     cp -rf ${DEPLOY_DIR_IMAGE}/target/images/fip_*.bin ${IMAGE_ROOTFS}/boot/uload-bootloader
+    cp -rf ${DEPLOY_DIR_IMAGE}/target/images/*-platform-settings.bin ${IMAGE_ROOTFS}/boot/uload-bootloader
 }
 
 # Clean the output directory after the build
