@@ -1,0 +1,117 @@
+{
+    "rzg2l-evk": {
+        "model_id": 16,
+        "revision_minor": 1,
+        "revision_major": 20,
+        "model_string": "rz/g2l-evk",
+        "mfg_name": "Renesas",
+
+        "bl2_loc": 0,
+        "bl2_dtb_loc": 0,
+        "u_boot_loc": 3,
+        "u_boot_dtb_loc": 3,
+        "kernel_loc": 1,
+        "kernel_dtb_loc": 1,
+
+        "bl2_id": 10,
+        "bl2_dtb_id": 11,
+        "u_boot_id": 20,
+        "u_boot_dtb_id": 21,
+        "kernel_id": 30,
+        "kernel_dtb_id": 31,
+
+        "bl2_desc": ["11E00", "0"],
+        "bl2_dtb_desc": ["2C000"],
+        "u_boot_desc": ["0", "1D200"],
+        "u_boot_dtb_desc": ["0"],
+        "kernel_desc": ["0"],
+        "kernel_dtb_desc": ["48000000"]
+    },
+
+    "rzg2l-sbc": {
+        "model_id": 17,
+        "revision_minor": 1,
+        "revision_major": 20,
+        "model_string": "rz/g2l-sbc",
+        "mfg_name": "Renesas",
+
+        "bl2_loc": 0,
+        "bl2_dtb_loc": 0,
+        "u_boot_loc": 3,
+        "u_boot_dtb_loc": 3,
+        "kernel_loc": 1,
+        "kernel_dtb_loc": 1,
+
+        "bl2_id": 2,
+        "bl2_dtb_id": 3,
+        "u_boot_id": 6,
+        "u_boot_dtb_id": 7,
+        "kernel_id": 14,
+        "kernel_dtb_id": 15,
+
+        "bl2_desc": ["11E00", "0"],
+        "bl2_dtb_desc": ["2C000"],
+        "u_boot_desc": ["0", "1D200"],
+        "u_boot_dtb_desc": ["0"],
+        "kernel_desc": ["0"],
+        "kernel_dtb_desc": ["48000000"]
+    },
+
+    "rzv2l-evk": {
+        "model_id": 32,
+        "revision_minor": 1,
+        "revision_major": 20,
+        "model_string": "rz/v2l-evk",
+        "mfg_name": "Renesas",
+
+        "bl2_loc": 0,
+        "bl2_dtb_loc": 0,
+        "u_boot_loc": 3,
+        "u_boot_dtb_loc": 3,
+        "kernel_loc": 1,
+        "kernel_dtb_loc": 1,
+
+        "bl2_id": 2,
+        "bl2_dtb_id": 3,
+        "u_boot_id": 6,
+        "u_boot_dtb_id": 7,
+        "kernel_id": 14,
+        "kernel_dtb_id": 15,
+
+        "bl2_desc": ["11E00", "0"],
+        "bl2_dtb_desc": ["2C000"],
+        "u_boot_desc": ["0", "1D200"],
+        "u_boot_dtb_desc": ["0"],
+        "kernel_desc": ["0"],
+        "kernel_dtb_desc": ["48000000"]
+    },
+
+    "rzv2h-evk": {
+        "model_id": 48,
+        "revision_minor": 1,
+        "revision_major": 20,
+        "model_string": "rz/v2h-evk",
+        "mfg_name": "Renesas",
+
+        "bl2_loc": 0,
+        "bl2_dtb_loc": 0,
+        "u_boot_loc": 3,
+        "u_boot_dtb_loc": 3,
+        "kernel_loc": 1,
+        "kernel_dtb_loc": 1,
+
+        "bl2_id": 2,
+        "bl2_dtb_id": 3,
+        "u_boot_id": 6,
+        "u_boot_dtb_id": 7,
+        "kernel_id": 14,
+        "kernel_dtb_id": 15,
+
+        "bl2_desc": ["8101E00", "0"],
+        "bl2_dtb_desc": ["8163000"],
+        "u_boot_desc": ["0", "60000"],
+        "u_boot_dtb_desc": ["0"],
+        "kernel_desc": ["0"],
+        "kernel_dtb_desc": ["48000000"]
+    }
+}
