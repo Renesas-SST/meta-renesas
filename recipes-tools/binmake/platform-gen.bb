@@ -17,6 +17,8 @@ do_compile () {
         binmake --input=${S}/platform_info.json \
                 --board=${target} \
                 --output=${S}/${target}-platform-settings.bin
+
+        objcopy -I binary -O srec --adjust-vma=0x0000 --srec-forceS3 ${S}/${target}-platform-settings.bin ${S}/${target}-platform-settings.srec
     done
 }
 
@@ -24,6 +26,8 @@ do_compile () {
 do_deploy () {
     # Create deploy folder
     install -d ${DEPLOYDIR}/target/images
+
+    install -m 0644 ${S}/*.srec ${DEPLOYDIR}/target/images/
     install -m 0644 ${S}/*.bin ${DEPLOYDIR}/target/images/
 }
 
