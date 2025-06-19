@@ -1603,17 +1603,28 @@ To securely transfer files between local and remote systems, SCP can be used on 
    - Type `yes` to confirm the host's authenticity when prompted.
 
 #### Switching from OpenSSH to Dropbear
-
-As mentioned, by default, RZ/G2L-SBC uses Open SSH. If you need to switch from OpenSSH to Dropbear, follow these steps to modify the local.conf:
+By default, the RZ/G2L-SBC image uses OpenSSH as the SSH server. If you want to switch to Dropbear, follow these steps:
 
 - Step 1: Edit the local.conf file in Yocto build configuration
-- Step 2: Comment the following lines in the `local.conf`
+- Step 2: Step 2: Modify the SSH-related variables to disable OpenSSH and enable Dropbear by changing:
 
   ```shell
-  IMAGE_FEATURES:remove = " ssh-server-dropbear"
-  IMAGE_FEATURES:append = " ssh-server-openssh"
+  EXTRA_IMAGE_FEATURES:remove = " ssh-server-dropbear"
+  EXTRA_IMAGE_FEATURES:append = " ssh-server-openssh"
   ```
-  This will remove OpenSSH and enable Dropbear for the board.
+
+  to
+
+  ```shell
+  EXTRA_IMAGE_FEATURES:append = " ssh-server-dropbear"
+  EXTRA_IMAGE_FEATURES:remove = " ssh-server-openssh"
+  ```
+
+  This tells the build system to remove OpenSSH support and include Dropbear instead.
+
+- Step 3: Rebuild and deploy the image to apply the changes.
+
+This will automatically remove OpenSSH and enable Dropbear during the image build.
 
 ### Remote debugging using GDBServer on RZG2L-SBC
 
