@@ -326,7 +326,15 @@ QT6_INSTALL_TRANSLATIONSDIR = "${datadir}/translations/qt6"
 QT6_INSTALL_PLUGINSDIR = "${libdir}/plugins/qt6"
 QT6_INSTALL_QMLDIR = "${libdir}/qml/qt6"
 
-# Build essential and openssh packages
-IMAGE_INSTALL:append = " packagegroup-core-buildessential packagegroup-core-ssh-openssh openssh-sftp-server"
-EXTRA_IMAGE_FEATURES:append = " ssh-server-openssh"
+# Enable Docker Support for Kernel Build
+# Set to "1" to enable building the kernel with Docker-based configurations
+# Set to "0" to disable Docker integration (default)
+DOCKER_SUPPORT = "0"
 
+# Build essential and openssh packages
+IMAGE_INSTALL:append = " packagegroup-core-buildessential"
+
+# Enable SSH server selection
+# Default is set to OpenSSH
+EXTRA_IMAGE_FEATURES:remove = " ssh-server-dropbear"
+EXTRA_IMAGE_FEATURES:append = " ssh-server-openssh"
