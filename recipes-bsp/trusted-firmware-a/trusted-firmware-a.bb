@@ -10,22 +10,15 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 "
 # Set S variable to folder that includes Makefile
 S = "${WORKDIR}/git"
+B = "${S}/../build"
 UNPACKDIR = "${S}"
 
 DEPENDS:append = " dtc-native xxd-native"
 
-SRC_URI:rz-cmn = " \
-    git://github.com/Renesas-SST/rz-atf.git;name=rzg2l-sbc;subdir=rzg2l-sbc;branch=styhead/rz-cmn;protocol=https \
-    git://github.com/Renesas-SST/rz-atf.git;name=rzg2l-evk;subdir=rzg2l-evk;branch=styhead/rz-cmn;protocol=https \
-    git://github.com/Renesas-SST/rz-atf.git;name=rzv2l-evk;subdir=rzv2l-evk;branch=styhead/rz-cmn;protocol=https \
-    git://github.com/Renesas-SST/rz-atf.git;name=rzv2h-evk;subdir=rzv2h-evk;branch=styhead/rz-cmn;protocol=https \
-"
+BRANCH = "styhead/rz-cmn"
+SRC_URI:rz-cmn = "git://github.com/Renesas-SST/rz-atf.git;branch=${BRANCH};protocol=https"
 
-SRCREV_rzg2l-sbc = "${AUTOREV}"
-SRCREV_rzg2l-evk = "${AUTOREV}"
-SRCREV_rzv2l-evk = "${AUTOREV}"
-SRCREV_rzv2h-evk = "${AUTOREV}"
-SRCREV_FORMAT = "rzg2l-sbc_rzg2l-evk_rzv2l-evk_rzv2h-evk"
+SRCREV = "${AUTOREV}"
 PV = "v2.9+git"
 
 # Configuration for multi boards
@@ -58,11 +51,16 @@ LDFLAGS[unexport] = "1"
 AS[unexport] = "1"
 LD[unexport] = "1"
 
-TARGETS = "rzg2l-sbc rzg2l-evk rzv2l-evk rzv2h-evk"
+do_prepare_src() {
+	for target in ${SUPPORT_TARGETS}; do
+		mkdir -p ${B}/${target}
+		cp -r ${S}/git/* ${B}/${target}
+	done
+}
 
 do_compile() {
-    for target in ${TARGETS}; do
-        cd ${S}/${target}
+    for target in ${SUPPORT_TARGETS}; do
+        cd ${B}/${target}
         make clean
         make distclean
         BUILD_FLAGS=""
@@ -82,7 +80,7 @@ do_compile() {
 # Install bl2.bin and bl31.bin to boot folder and rename
 do_install() {
     install -d ${D}/boot
-    for target in ${TARGETS}; do
+    for target in ${SUPPORT_TARGETS}; do
         if [ ${target} = "rzg2l-sbc" ] || [ ${target} = "rzg2l-evk" ]; then
             PLATFORM="g2l"
         elif [ ${target} = "rzv2l-evk" ]; then
@@ -90,8 +88,8 @@ do_install() {
         elif [ ${target} = "rzv2h-evk" ]; then
             PLATFORM="v2h"
         fi
-        install -m 644 ${S}/${target}/build/${PLATFORM}/release/bl2.bin ${D}/boot/bl2-${target}.bin
-        install -m 644 ${S}/${target}/build/${PLATFORM}/release/bl31.bin ${D}/boot/bl31-${target}.bin
+        install -m 644 ${B}/${target}/build/${PLATFORM}/release/bl2.bin ${D}/boot/bl2-${target}.bin
+        install -m 644 ${B}/${target}/build/${PLATFORM}/release/bl31.bin ${D}/boot/bl31-${target}.bin
     done
 }
 
@@ -100,7 +98,7 @@ do_deploy() {
     install -d ${DEPLOYDIR}
     install -d ${DEPLOYDIR}/target/images
 
-    for target in ${TARGETS}; do
+    for target in ${SUPPORT_TARGETS}; do
         if [ ${target} = "rzg2l-sbc" ] || [ ${target} = "rzg2l-evk" ]; then
             PLATFORM="g2l"
         elif [ ${target} = "rzv2l-evk" ]; then
@@ -109,15 +107,16 @@ do_deploy() {
             PLATFORM="v2h"
         fi
         # Copy IPL to deploy folder
-        install -m 0644 ${S}/${target}/build/${PLATFORM}/release/bl2/bl2.elf ${DEPLOYDIR}/bl2-${target}.elf
-        install -m 0644 ${S}/${target}/build/${PLATFORM}/release/bl2.bin ${DEPLOYDIR}/bl2-${target}.bin
-        install -m 0644 ${S}/${target}/build/${PLATFORM}/release/bl31/bl31.elf ${DEPLOYDIR}/bl31-${target}.elf
-        install -m 0644 ${S}/${target}/build/${PLATFORM}/release/bl31.bin ${DEPLOYDIR}/bl31-${target}.bin
+        install -m 0644 ${B}/${target}/build/${PLATFORM}/release/bl2/bl2.elf ${DEPLOYDIR}/bl2-${target}.elf
+        install -m 0644 ${B}/${target}/build/${PLATFORM}/release/bl2.bin ${DEPLOYDIR}/bl2-${target}.bin
+        install -m 0644 ${B}/${target}/build/${PLATFORM}/release/bl31/bl31.elf ${DEPLOYDIR}/bl31-${target}.elf
+        install -m 0644 ${B}/${target}/build/${PLATFORM}/release/bl31.bin ${DEPLOYDIR}/bl31-${target}.bin
 
         install -m 0644 ${D}/boot/bl2-${target}.bin ${DEPLOYDIR}/target/images/bl2-${target}.bin
     done
 }
 
 addtask deploy after do_install
+addtask do_prepare_src after do_unpack before do_compile
 
 COMPATIBLE_MACHINE = "rz-cmn"
