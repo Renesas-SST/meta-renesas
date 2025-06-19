@@ -11,26 +11,32 @@ ENABLE_RZ_SCE		?= '0'
 
 FLASH_WRITER_URL = "git://github.com/Renesas-SST/flash-writer.git"
 BRANCH = "styhead/rz-cmn"
-SRC_URI = "${FLASH_WRITER_URL};name=rzg2l-sbc;subdir=rzg2l-sbc;protocol=https;branch=${BRANCH} \
-			${FLASH_WRITER_URL};name=rzg2l-evk;subdir=rzg2l-evk;protocol=https;branch=${BRANCH} \
-			${FLASH_WRITER_URL};name=rzv2l-evk;subdir=rzv2l-evk;protocol=https;branch=${BRANCH} \
+SRC_URI = "${FLASH_WRITER_URL};protocol=https;branch=${BRANCH} \
 			file://Flash_Writer_SCIF_RZV2H_DEV_INTERNAL_MEMORY.mot \
 "
-SRCREV_rzg2l-sbc = "8e5919a314673217d93dbb34227b8c22d71d681b"
-SRCREV_rzg2l-evk = "ff167b676547f3997906c82c9be504eb5cff8ef0"
-SRCREV_rzv2l-evk = "ff167b676547f3997906c82c9be504eb5cff8ef0"
 
-SRCREV_FORMAT = "rzg2l-sbc_rzg2l-evk_rzv2l-evk"
+SRCREV = "${AUTOREV}"
 
 inherit deploy
 #require include/provisioning.inc
 
 S = "${WORKDIR}/git"
+B = "${S}/../build"
 UNPACKDIR = "${S}"
+
+do_prepare_src() {
+	for target in ${SUPPORT_TARGETS}; do
+		if [ ${target} = "rzv2h-evk" ]; then
+			continue;
+		fi
+		mkdir -p ${B}/${target}
+		cp -r ${S}/git/* ${B}/${target}
+	done
+}
 
 do_compile() {
 	for target in ${SUPPORT_TARGETS}; do
-		PMIC_BUILD_DIR="${S}/${target}/build_pmic"
+		PMIC_BUILD_DIR="${B}/${target}/build_pmic"
 		if [ ${target} = "rzv2h-evk" ]; then
 			continue;
 		elif [ ${target} = "rzg2l-sbc" ]; then
@@ -43,13 +49,13 @@ do_compile() {
 			BOARD="RZV2L_SMARC"
 			PMIC_BOARD="RZV2L_SMARC_PMIC"
 		fi
-		cd ${S}/${target}
+		cd ${B}/${target}
 		oe_runmake BOARD=${BOARD}
 		if [ "${PMIC_SUPPORT}" = "1" ]; then
 			oe_runmake OUTPUT_DIR=${PMIC_BUILD_DIR} clean
 			oe_runmake BOARD=${PMIC_BOARD} OUTPUT_DIR=${PMIC_BUILD_DIR}
 		fi
-		mv ${S}/${target}/AArch64_output/Flash_Writer*${BOARD}*.mot ${S}/${target}/AArch64_output/Flash_Writer_SCIF_${target}.mot
+		mv ${B}/${target}/AArch64_output/Flash_Writer*${BOARD}*.mot ${B}/${target}/AArch64_output/Flash_Writer_SCIF_${target}.mot
 		mv ${PMIC_BUILD_DIR}/Flash_Writer*${PMIC_BOARD}*.mot ${PMIC_BUILD_DIR}/Flash_Writer_SCIF_${target}_PMIC.mot
 	done
 }
@@ -62,8 +68,8 @@ do_deploy() {
 		if [ ${target} = "rzv2h-evk" ]; then
 			continue;
 		fi
-		PMIC_BUILD_DIR="${S}/${target}/build_pmic"
-		install -m 644 ${S}/${target}/AArch64_output/*.mot ${DEPLOYDIR}/target/images
+		PMIC_BUILD_DIR="${B}/${target}/build_pmic"
+		install -m 644 ${B}/${target}/AArch64_output/*.mot ${DEPLOYDIR}/target/images
 		if [ "${PMIC_SUPPORT}" = "1" ]; then
 			install -m 644 ${PMIC_BUILD_DIR}/*.mot ${DEPLOYDIR}/target/images
 		fi
@@ -73,3 +79,4 @@ do_deploy() {
 
 PARALLEL_MAKE = "-j 1"
 addtask deploy after do_compile
+addtask do_prepare_src after do_unpack before do_compile
