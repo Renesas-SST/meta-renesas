@@ -4,8 +4,8 @@ LICENSE = "MIT"
 
 LIC_FILES_CHKSUM = "file://docs/license.rst;md5=b2c740efedc159745b9b31f88ff03dde"
 
-URL = "git://github.com/vudangRVC/rz-atf-sst.git"
-BRANCH = "dev-rzv2h"
+URL = "git://github.com/Renesas-SST/rz-atf.git"
+BRANCH = "styhead/rz-cmn"
 SRCREV = "${AUTOREV}"
 
 SRC_URI = "${URL};protocol=https;branch=${BRANCH}"

@@ -12,11 +12,13 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 S = "${WORKDIR}/git"
 UNPACKDIR = "${S}"
 
+DEPENDS:append = " dtc-native xxd-native"
+
 SRC_URI:rz-cmn = " \
-    git://github.com/vudangRVC/rz-atf-sst.git;name=rzg2l-sbc;subdir=rzg2l-sbc;branch=atf-pass-params;protocol=https \
-    git://github.com/vudangRVC/rz-atf-sst.git;name=rzg2l-evk;subdir=rzg2l-evk;branch=atf-pass-params-g2l;protocol=https \
-    git://github.com/vudangRVC/rz-atf-sst.git;name=rzv2l-evk;subdir=rzv2l-evk;branch=atf-pass-params-v2l;protocol=https \
-    git://github.com/vudangRVC/rz-atf-sst.git;name=rzv2h-evk;subdir=rzv2h-evk;branch=atf-pass-params-v2h;protocol=https \
+    git://github.com/Renesas-SST/rz-atf.git;name=rzg2l-sbc;subdir=rzg2l-sbc;branch=styhead/rz-cmn;protocol=https \
+    git://github.com/Renesas-SST/rz-atf.git;name=rzg2l-evk;subdir=rzg2l-evk;branch=styhead/rz-cmn;protocol=https \
+    git://github.com/Renesas-SST/rz-atf.git;name=rzv2l-evk;subdir=rzv2l-evk;branch=styhead/rz-cmn;protocol=https \
+    git://github.com/Renesas-SST/rz-atf.git;name=rzv2h-evk;subdir=rzv2h-evk;branch=styhead/rz-cmn;protocol=https \
 "
 
 SRCREV_rzg2l-sbc = "${AUTOREV}"
@@ -59,21 +61,22 @@ LD[unexport] = "1"
 TARGETS = "rzg2l-sbc rzg2l-evk rzv2l-evk rzv2h-evk"
 
 do_compile() {
-    cd ${S}/rzg2l-sbc
-    BUILD_FLAGS="PLAT=g2l BOARD=sbc_1"
-    make ${BUILD_FLAGS} bl2 bl31
-
-    cd ${S}/rzg2l-evk
-    BUILD_FLAGS="PLAT=g2l BOARD=smarc_pmic_2"
-    make ${BUILD_FLAGS} bl2 bl31
-
-    cd ${S}/rzv2l-evk
-    BUILD_FLAGS="PLAT=v2l BOARD=smarc_pmic_2"
-    make ${BUILD_FLAGS} bl2 bl31
-
-    cd ${S}/rzv2h-evk
-    BUILD_FLAGS="PLAT=v2h BOARD=evk_1 ENABLE_STACK_PROTECTOR=default"
-    make ${BUILD_FLAGS} bl2 bl31
+    for target in ${TARGETS}; do
+        cd ${S}/${target}
+        make clean
+        make distclean
+        BUILD_FLAGS=""
+        if [ ${target} = "rzg2l-sbc" ]; then
+            BUILD_FLAGS="PLAT=g2l BOARD=sbc_1"
+        elif [ ${target} = "rzg2l-evk" ]; then
+            BUILD_FLAGS="PLAT=g2l BOARD=smarc_pmic_2"
+        elif [ ${target} = "rzv2l-evk" ]; then
+            BUILD_FLAGS="PLAT=v2l BOARD=smarc_rzv2l"
+        elif [ ${target} = "rzv2h-evk" ]; then
+            BUILD_FLAGS="PLAT=v2h BOARD=v2h_evk_1 ENABLE_STACK_PROTECTOR=default"
+        fi
+        make ${BUILD_FLAGS} bl2_with_dtb bl31
+    done
 }
 
 # Install bl2.bin and bl31.bin to boot folder and rename
