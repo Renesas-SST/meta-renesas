@@ -1,4 +1,4 @@
-# HHost folder
+# Host folder
 
 ## Description
 

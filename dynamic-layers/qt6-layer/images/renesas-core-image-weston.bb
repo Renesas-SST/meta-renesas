@@ -3,7 +3,7 @@ require include/core-image-renesas-base.inc
 require include/core-image-renesas-mmp.inc
 require include/core-image-bsp.inc
 require include/core-image-renesas-cmn.inc
-require include/core-image-renesas-qt6.inc
+require include/renesas-qt6-framework.inc
 
 SUMMARY = "Renesas core image with Qt6 platform support (no demo apps) based on core-image-weston"
 
