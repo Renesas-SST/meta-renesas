@@ -182,38 +182,14 @@ CONVERSION_CMD:bz2:append() {
     mv "${out}.tar.bz2" "${target_dir}/${IMAGE_BASENAME}.tar.bz2"
 }
 
-# Linux bootloader flashing utility
-EXTRA_IMAGEDEPENDS += " bootloader-flasher-linux "
-
-# Windows bootloader flashing utility
-EXTRA_IMAGEDEPENDS += " bootloader-flasher-win "
-
-# Windows bootloader flashing readme
-EXTRA_IMAGEDEPENDS += " bootloader-flasher-readme "
-
-# Linux sd-creator-linux
-EXTRA_IMAGEDEPENDS += " sd-creator-linux "
-
-# Windows sd-creator-win
-EXTRA_IMAGEDEPENDS += " sd-creator-win "
-
-# sd-creator-readme
-EXTRA_IMAGEDEPENDS += " sd-creator-readme "
-
-# Linux uload-bootloader-linux
-EXTRA_IMAGEDEPENDS += " uload-bootloader-linux "
-
-# Windows uload-bootloader-win
-EXTRA_IMAGEDEPENDS += " uload-bootloader-win "
-
-# uload-bootloader-readme
-EXTRA_IMAGEDEPENDS += " uload-bootloader-readme "
-
-# host-readme
+# Install readme files to host folder
 EXTRA_IMAGEDEPENDS += " host-readme "
 
-# target-readme
+# Install readme files to target folder
 EXTRA_IMAGEDEPENDS += " target-readme "
+
+# Flashing utility
+EXTRA_IMAGEDEPENDS += " universal-scripts "
 
 # Readme documentation
 EXTRA_IMAGEDEPENDS += " rz-cmn-readme "
