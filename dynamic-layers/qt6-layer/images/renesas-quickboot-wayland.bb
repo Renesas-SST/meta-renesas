@@ -4,7 +4,7 @@ require include/core-image-renesas-mmp.inc
 require include/core-image-bsp.inc
 require include/core-image-renesas-cmn.inc
 require include/core-image-renesas-quickboot.inc
-require include/core-image-renesas-qt6.inc
+require include/renesas-qt6-framework.inc
 
 SUMMARY = "Renesas core image for Linux quickboot with Wayland, QT support"
 

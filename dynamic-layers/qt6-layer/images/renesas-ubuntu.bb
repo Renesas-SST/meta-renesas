@@ -1,7 +1,7 @@
-SUMMARY = "Custom RZ/G2L-SBC Image"
+SUMMARY = "Custom RZ UbuntuUbuntu Image"
 LICENSE = "MIT"
 require include/core-image-renesas-mmp.inc
-require include/core-image-renesas-qt.inc
+require include/renesas-qt6-framework.inc
 require include/core-image-renesas-base.inc
 inherit core-image
 
@@ -33,12 +33,12 @@ CORE_IMAGE_BASE_INSTALL += "weston"
 
 # compatible machine comes with linux-yocto but not available in this build
 # so bring back these parameters
-COMPATIBLE_MACHINE = "(rzg2l-sbc)"
+COMPATIBLE_MACHINE = "^(aarch64|rz-cmn)$"
 
 IMAGE_FSTYPES = " tar.bz2"
 # bootloader for rzsbc
 DEPENDS += " firmware-pack"
-MACHINEOVERRIDES =. "rzg2l:"
+MACHINEOVERRIDES =. "rz-cmn:"
 
 # Ignore vte-local-en-gb package because it has incompatible license GPL-3.0
 BAD_RECOMMENDATIONS += " vte-locale-en-gb"
