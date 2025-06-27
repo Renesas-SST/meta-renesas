@@ -7,8 +7,18 @@ This directory contains the compressed root filesystem image used for deploying 
 ## A top-level directory of rootfs
 
 ```
-rootfs                                                  
-├── core-image-weston.tar.bz2            <---- Compressed root filesystem image
+rootfs/
+├── core-image-bsp.tar.bz2
+├── core-image-minimal.tar.bz2
+├── core-image-weston.tar.bz2
+├── Readme.md
+├── renesas-core-image-cli.tar.bz2
+├── renesas-core-image-weston.tar.bz2
+├── renesas-quickboot-cli.tar.bz2
+├── renesas-quickboot-wayland.tar.bz2
+├── renesas-ubuntu.tar.bz2
+├── ubuntu-core-image.tar.bz2
+├── ubuntu-lxde-image.tar.bz2
 └── Readme.md                                   <---- This document
 ```
 

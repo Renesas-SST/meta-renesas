@@ -1,4 +1,4 @@
-# RZ/G2L-SBC overlays Folder
+# RZ overlays Folder
 
 ## Description
 

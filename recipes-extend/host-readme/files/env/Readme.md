@@ -1,4 +1,4 @@
-# RZ Common env folder
+# RZ env folder
 
 ## Description
 
@@ -7,12 +7,20 @@ This directory contains the environment file, which includes Yocto build environ
 ## A top-level directory of env folder
 
 ```
-env                             
-├── core-image-weston.env                   <---- Environment file specific to core-image-weston in yoctobuild
-└── Readme.md                               <---- This document
+env/
+├── core-image-bsp.env
+├── core-image-minimal.env
+├── core-image-weston.env
+├── Readme.md
+├── renesas-core-image-cli.env
+├── renesas-core-image-weston.env
+├── renesas-quickboot-cli.env
+├── renesas-quickboot-wayland.env
+└── renesas-ubuntu.env
+
+0 directories, 10 files
 ```
 
 ### Files:
-**core-image-weston.env**: This file includes environment variables relevant to the build process of the core-image-weston image for the RZ Common platform using Yocto. It contains paths and configurations necessary for building, deploying, and managing the image.
-
-The above structure is an example when building using the target image `IMAGE=core-image-weston`. The compressed root filesystems and the environment artifacts will have names with the prefix `core-image-weston`. Other target images will have the same structure.
+- `.env`: This file includes environment variables relevant to the build process of the target image for the RZ/G2L-SBC platform using Yocto. It contains paths and configurations necessary for building, deploying, and managing the image.
+- `Readme.md`: This Readme explains the purpose and contents of this directory.
