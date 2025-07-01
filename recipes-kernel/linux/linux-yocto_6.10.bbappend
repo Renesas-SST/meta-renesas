@@ -28,6 +28,7 @@ SRC_URI:append:rzg2l-sbc =	"\
 					file://ov5640.cfg \
 					file://panfrost.cfg \
 					${@bb.utils.contains('DOCKER_SUPPORT', '1', 'file://docker.cfg', '', d)} \
+					${@bb.utils.contains('DISTRO', 'ubuntu-tiny', 'file://docker.cfg', '', d)} \
 				"
 # Apply patches for novtech board
 SRC_URI:append:rzg2l-sbc = "\

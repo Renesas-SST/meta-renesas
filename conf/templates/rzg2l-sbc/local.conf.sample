@@ -326,6 +326,9 @@ QT6_INSTALL_TRANSLATIONSDIR = "${datadir}/translations/qt6"
 QT6_INSTALL_PLUGINSDIR = "${libdir}/plugins/qt6"
 QT6_INSTALL_QMLDIR = "${libdir}/qml/qt6"
 
+# Enable tkinter installation for python3
+PACKAGECONFIG:append_pn-python3 = " tk"
+
 # Enable Docker Support for Kernel Build
 # Set to "1" to enable building the kernel with Docker-based configurations
 # Set to "0" to disable Docker integration (default)
