@@ -138,6 +138,10 @@ rzg2l-sbc/
 │   ├── Readme.md
 │   ├── src
 │   │   └── rz-cmn-srp
+│   │       ├── files_to_add
+│   │       │   └── meta-rz-features
+│   │       │       ├── 0001-rzg2l-sbc-Bring-compat_alloc_user_space-back.patch
+│   │       │       └── 0004-rzg2l-sbc-Get-interrupt-number.patch
 │   │       ├── git_patch.json
 │   │       ├── images.json
 │   │       ├── jq-linux-amd64
@@ -149,16 +153,19 @@ rzg2l-sbc/
 │   │       │       └── 0002-rz-sbc-summit-radio-support-eSDK-build.patch
 │   │       ├── README.md
 │   │       ├── rzsbc_builder.sh
+│   │       ├── site.conf                                <----- Optional
 │   │       └── ubuntu
 │   │           ├── config
 │   │           │   ├── ubuntu_core
 │   │           │   │   ├── network_interfaces.conf
+│   │           │   │   ├── NetworkManager.conf
 │   │           │   │   └── resolved.conf
 │   │           │   └── ubuntu_lxde
 │   │           │       ├── connman-gtk.desktop
 │   │           │       ├── interfaces
 │   │           │       ├── lightdm.conf
 │   │           │       ├── NetworkManager.conf
+│   │           │       ├── panel
 │   │           │       ├── rsyslog
 │   │           │       ├── ttyS0.conf
 │   │           │       └── v4l2-init.sh
@@ -204,22 +211,25 @@ rzg2l-sbc/
 │   │           │   │   ├── create_wic.sh
 │   │           │   │   ├── install_gstreamer.sh
 │   │           │   │   ├── install_weston.sh
+│   │           │   │   ├── mount.sh
 │   │           │   │   ├── prepare_env_rootfs.sh
 │   │           │   │   ├── prepare_env.sh
 │   │           │   │   ├── prepare_ubuntu_base.sh
 │   │           │   │   └── yocto_working.sh
 │   │           │   ├── ubuntu_core
-│   │           │   │   ├── mount.sh
 │   │           │   │   ├── prepare_conf.sh
 │   │           │   │   ├── prepare_env.sh
 │   │           │   │   ├── prepare_rootfs_qt.sh
 │   │           │   │   └── setup_dns.sh
 │   │           │   └── ubuntu_lxde
 │   │           │       ├── create_swap.sh
-│   │           │       ├── mount.sh
 │   │           │       ├── prepare_conf.sh
 │   │           │       └── prepare_rootfs_qt.sh
+│   │           ├── README.md
 │   │           ├── script
+│   │           │   ├── common
+│   │           │   │   ├── dpkg-install-lock-fix.sh
+│   │           │   │   └── setup_dns_and_time.sh
 │   │           │   ├── ubuntu_core
 │   │           │   │   ├── apt_install_base.sh
 │   │           │   │   ├── link_to_leagcy_iptables.sh
@@ -230,7 +240,6 @@ rzg2l-sbc/
 │   │           │       ├── apt_install_base.sh
 │   │           │       ├── apt_lxde_desktop.sh
 │   │           │       ├── apt_wifi_ble.sh
-│   │           │       ├── create_rzpi_user.sh
 │   │           │       ├── create_user.sh
 │   │           │       ├── set_root_password.sh
 │   │           │       ├── set_swap_enable.sh
@@ -301,7 +310,8 @@ rzg2l-sbc/
 ├── license
 │   ├── Disclaimer051.pdf
 │   └── Disclaimer052.pdf
-├── r12uz0158eu0102-rz-g2l-sbc-single-board-computer.pdf
+├── <xxxxxx>-rz-srp-yocto5-um.pdf                                     # <xxxxxx> is a placeholder for the internal tracking code
+├── <xxxxxx>-r11qs0062eu0200-rz-srp-yocto5-um-quick-start-guide.pdf   # <xxxxxx> is a placeholder for the internal tracking code
 ├── README.md
 ├── RZG2L-SBC_Evaluation_license.pdf
 └── target
@@ -375,10 +385,10 @@ The eSDK installer will have the extension “.sh”.
 
 ```shell
 $ ls
-poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rzg2l-sbc-toolchain-ext-5.1.4.sh
-poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rzg2l-sbc-toolchain-ext-5.1.4.host.manifest
-poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rzg2l-sbc-toolchain-ext-5.1.4.testdata.json
-poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rzg2l-sbc-toolchain-ext-5.1.4.target.manifest
+poky-glibc-x86_64-renesas-core-image-weston-cortexa55-rzg2l-sbc-toolchain-ext-5.1.4.sh
+poky-glibc-x86_64-renesas-core-image-weston-cortexa55-rzg2l-sbc-toolchain-ext-5.1.4.host.manifest
+poky-glibc-x86_64-renesas-core-image-weston-cortexa55-rzg2l-sbc-toolchain-ext-5.1.4.testdata.json
+poky-glibc-x86_64-renesas-core-image-weston-cortexa55-rzg2l-sbc-toolchain-ext-5.1.4.target.manifest
 ```
 
 **Note:**
@@ -391,13 +401,13 @@ poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rzg2l-sbc-toolchain-ext-5.1
 The eSDK allows you to develop and test custom applications for RZG2L-SBC on different systems. This section covers setting up your development environment and with the setup, you can develop your applications that run on RZG2L-SBC.
 
 ```shell
-$ sh ./build/tmp/deploy/sdk/poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rzg2l-sbc-toolchain-ext-5.1.4.sh
+$ sh ./build/tmp/deploy/sdk/poky-glibc-x86_64-renesas-core-image-weston-cortexa55-rzg2l-sbc-toolchain-ext-5.1.4.sh
 ```
 
 Everytime you want to build your applications, run the environment setup script first (`~/esdk/5.1.4` is the location that the eSDK is installed):
 
 ```shell
-$ source ~/esdk/5.1.4/environment-setup-armv8-2a-poky-linux
+$ source ~/esdk/5.1.4/environment-setup-cortexa55-poky-linux
 ```
 
 ## Programming/Flashing images for RZG2L-SBC
@@ -1629,7 +1639,7 @@ GGDB has two components to work with. One is the host side `gdb` debugger. The o
 To set up the environment that would use the GDB targeting the RZ/G2L-SBC from the eSDK, simply run the poky environment script as follows:
 
 ```shell
-$ source ~/esdk/5.1.4/environment-setup-armv8-2a-poky-linux
+$ source ~/esdk/5.1.4/environment-setup-cortexa55-poky-linux
 ```
 
 To confirm GDB is ready to use, run the following command and check the result:
@@ -1987,7 +1997,7 @@ Step 1: Create a simple C program that intentionally causes a segmentation fault
 Step 2: Source the environment and compile the `segfault_example.c` program
 
  ```shell
-  renesas@builder-pc:~$ source ~/esdk/5.1.4/environment-setup-armv8-2a-poky-linux
+  renesas@builder-pc:~$ source ~/esdk/5.1.4/environment-setup-cortexa55-poky-linux
   SDK environment now set up; additionally you may now run devtool to perform development tasks.
   Run devtool --help for further details.
   renesas@builder-pc:~/remote-debugging/segfault_program$ $CC $CFLAGS segfault_example.c -o segfault_example
