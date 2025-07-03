@@ -1,7 +1,7 @@
 SUMMARY = "Custom RZ/G2L-SBC Image"
 LICENSE = "MIT"
 require include/core-image-renesas-mmp.inc
-require include/core-image-renesas-qt.inc
+require include/renesas-qt5-framework.inc
 require include/core-image-renesas-base.inc
 inherit core-image
 
