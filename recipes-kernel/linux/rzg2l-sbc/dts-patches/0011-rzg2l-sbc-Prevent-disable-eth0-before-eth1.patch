@@ -1,0 +1,106 @@
+From c0d3bd81a8e7a6229466d6bf8ef24c2dc8a015dd Mon Sep 17 00:00:00 2001
+From: khanhduydo-rvc <khanh.do.yg@bp.renesas.com>
+Date: Thu, 20 Mar 2025 10:44:25 +0000
+Subject: [PATCH 11/11] rzg2l-sbc: Prevent disable eth0 before eth1
+
+Fix an issue where eth1 fails to operate if eth0 is disabled.
+On the RZ/G2L-SBC board, eth1 depends on eth0 and cannot function independently.
+If eth0 is brought down before eth1, eth1 stops working.
+To address this, the logic has been updated to ensure eth0 remains active whenever eth1 is enabled.
+
+Upstream-Status: Pending
+
+Signed-off-by: khanhduydo-rvc <khanh.do.yg@bp.renesas.com>
+---
+ drivers/net/ethernet/renesas/ravb.h      |  1 +
+ drivers/net/ethernet/renesas/ravb_main.c | 41 ++++++++++++++++++++----
+ 2 files changed, 35 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/ravb.h b/drivers/net/ethernet/renesas/ravb.h
+index b48935ec7e28..df8ea31e5c93 100644
+--- a/drivers/net/ethernet/renesas/ravb.h
++++ b/drivers/net/ethernet/renesas/ravb.h
+@@ -1112,6 +1112,7 @@ struct ravb_private {
+ 	struct work_struct work;
+ 	/* MII transceiver section. */
+ 	struct mii_bus *mii_bus;	/* MDIO bus control */
++	int dev_id;
+ 	int link;
+ 	phy_interface_t phy_interface;
+ 	int msg_enable;
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 067357b2495c..6d91e1692fdc 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -33,6 +33,8 @@
+ 
+ #include "ravb.h"
+ 
++static struct net_device *ndevs[2] = { NULL, NULL };
++
+ #define RAVB_DEF_MSG_ENABLE \
+ 		(NETIF_MSG_LINK	  | \
+ 		 NETIF_MSG_TIMER  | \
+@@ -1922,6 +1924,20 @@ static int ravb_open(struct net_device *ndev)
+ 	if (info->gptp || info->ccc_gac)
+ 		ravb_ptp_init(ndev, priv->pdev);
+ 
++	/* Since eth1 cannot operate independently, eth0 must be enabled before using eth1. */
++	if (priv->dev_id == 1 && ndevs[0] && !netif_running(ndevs[0])) {
++		struct ravb_private *priv_eth0 = netdev_priv(ndevs[0]);
++
++		error = pm_runtime_resume_and_get(&priv_eth0->pdev->dev);
++		if (error)
++			goto out_set_reset;
++
++		/* Set AVB config mode. */
++		error = ravb_set_config_mode(ndevs[0]);
++		if (error)
++			goto out_set_reset;
++	}
++
+ 	/* PHY control start */
+ 	error = ravb_phy_start(ndev);
+ 	if (error)
+@@ -2331,13 +2347,15 @@ static int ravb_close(struct net_device *ndev)
+ 	/* Update statistics. */
+ 	ravb_get_stats(ndev);
+ 
+-	/* Set reset mode. */
+-	error = ravb_set_opmode(ndev, CCC_OPC_RESET);
+-	if (error)
+-		return error;
+-
+-	pm_runtime_mark_last_busy(dev);
+-	pm_runtime_put_autosuspend(dev);
++	/* Since eth1 cannot operate independently, if eth1 is still active,
++	 * do not set eth0 to RESET mode and suspend it in the ravb_close function. */
++	if (priv->dev_id == 0 && (!ndevs[1] || !netif_running(ndevs[1]))) {
++		error = ravb_set_opmode(ndev, CCC_OPC_RESET);
++		if (error)
++			return error;
++		pm_runtime_mark_last_busy(dev);
++		pm_runtime_put_autosuspend(dev);
++	}
+ 
+ 	return 0;
+ }
+@@ -2866,6 +2884,15 @@ static int ravb_probe(struct platform_device *pdev)
+ 		priv->num_rx_ring[RAVB_NC] = NC_RX_RING_SIZE;
+ 	}
+ 
++	priv->dev_id = of_alias_get_id(np, "ethernet");
++	if (priv->dev_id < 0) {
++		dev_err(&pdev->dev, "Failed to get ethernet alias ID\n");
++		return -EINVAL;
++	}
++
++	if (priv->dev_id < 2)
++		ndevs[priv->dev_id] = ndev;
++
+ 	error = ravb_setup_irqs(priv);
+ 	if (error)
+ 		goto out_reset_assert;
+-- 
+2.43.0
+
