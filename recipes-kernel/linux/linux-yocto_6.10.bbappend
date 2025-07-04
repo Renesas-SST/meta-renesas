@@ -41,6 +41,7 @@ SRC_URI:append:rz-cmn = "\
                     file://rzg2l-sbc/0008-rzg2l-sbc-Add-vcp4-module-to-device-tree.patch \
                     file://rzg2l-sbc/0009-rzg2l-sbc-Support-more-fourcc-format-for-CRU.patch \
                     file://rzg2l-sbc/0010-rz-sbc-rename-rzpi-to-rzg2l-sbc-across-all-files-10.patch \
+                    file://rzg2l-sbc/0011-rzg2l-sbc-Prevent-disable-eth0-before-eth1.patch \
                 "
 
 SRC_URI:append:rz-cmn =	"\
