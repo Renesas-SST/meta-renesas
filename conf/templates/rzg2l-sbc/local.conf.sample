@@ -341,3 +341,12 @@ IMAGE_INSTALL:append = " packagegroup-core-buildessential"
 # Default is set to OpenSSH
 EXTRA_IMAGE_FEATURES:remove = " ssh-server-dropbear"
 EXTRA_IMAGE_FEATURES:append = " ssh-server-openssh"
+
+# Configures BitBake's task scheduling based on host resource pressure (CPU, Mem, I/O).
+# Utilizes Linux PSI (/proc/pressure). Values are internal pressure units; higher
+# values allow more pressure before throttling.
+# Recommended default is "15000" for balanced performance/stability.
+# Adjust as needed for your specific build host and workload.
+BB_PRESSURE_MAX_MEMORY = "100000"
+#BB_PRESSURE_MAX_CPU = "15000"
+#BB_PRESSURE_MAX_IO = "15000"
