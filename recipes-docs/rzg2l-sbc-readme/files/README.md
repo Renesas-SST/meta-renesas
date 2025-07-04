@@ -24,7 +24,7 @@ Known issues:
 
 ## Building
 
-### Core-image
+### Prepare build environment
 Step 1: Prepare environment for building package
 
 Linux Ubuntu 24.04 is recommended for Yocto build.
@@ -62,7 +62,38 @@ $ cp -r patches/ ~/renesas/rz-cmn-srp
 $ cp -r files_to_add/ ~/renesas/rz-cmn-srp
 ```
 
-Step 3: Build package
+### Build Host Resource Configuration
+
+Building certain recipes or the overall Yocto image can be resource-intensive for the build host (in terms of CPU and memory). To contribute to a stable and efficient build process and to assist in preventing Out-Of-Memory (OOM) conditions, configuration of BitBake's resource pressure monitoring is available.
+
+BitBake utilizes **Linux Kernel's Pressure Stall Information (PSI)**, which provides insights into CPU, I/O, and Memory resource contention. PSI data is exposed via `/proc/pressure` and is supported in Linux kernels from version 4.20 onwards. If resource pressure exceeds configured thresholds, BitBake's scheduler may pause the initiation of new tasks, which can assist in preventing system unresponsiveness or Out-Of-Memory (OOM) conditions.
+
+The following variables can be set in the `conf/local.conf` file to control BitBake's behavior under resource pressure:
+
+* `BB_PRESSURE_MAX_CPU`: Configures the maximum tolerable CPU pressure threshold.
+* `BB_PRESSURE_MAX_MEMORY`: Configures the maximum tolerable Memory pressure threshold.
+* `BB_PRESSURE_MAX_IO`: *(Optional)* Configures the maximum tolerable I/O pressure threshold.
+
+**Operation:**
+
+The values assigned to these variables are expressed in internal "pressure units," which are not direct measurements (e.g., MiB/GiB). They represent the difference in "total" pressure from the preceding second. If the actual resource pressure on the build host surpasses the configured threshold, BitBake's scheduler is designed to temporarily suspend the commencement of new tasks until the pressure alleviates.
+
+#### Suggested Default Pressure Thresholds
+
+Based on Yocto Project documentation ([BitBake User Manual - Reference Variables](https://github.com/yoctoproject/poky/blob/master/bitbake/doc/bitbake-user-manual/bitbake-user-manual-ref-variables.rst)), the following values are used as initial configurations, intended to balance build execution speed with the stability of the build host:
+
+```bash
+# In conf/local.conf
+BB_PRESSURE_MAX_MEMORY = "100000"
+#BB_PRESSURE_MAX_CPU = "15000"
+#BB_PRESSURE_MAX_IO = "15000" # May be included for disk-intensive builds
+```
+
+In the default `local.conf` configuration provided with this project, `BB_PRESSURE_MAX_MEMORY` is enabled with a value of "100000". `BB_PRESSURE_MAX_CPU` and `BB_PRESSURE_MAX_IO` are commented out by default.
+
+**Note**: To enable or adjust any of these resource pressure variables, modify the corresponding lines in the `conf/local.conf` file by uncommenting them (if necessary) and setting the desired values. Please adjust these values as needed based on your specific build host and workload requirements.
+
+### Build package
 
 Build the package by executing the following commands:
 ```
