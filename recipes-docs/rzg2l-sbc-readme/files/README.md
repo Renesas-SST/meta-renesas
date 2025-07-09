@@ -339,12 +339,11 @@ rzg2l-sbc/
 │               │   └── uload-flash_bootloader.ttl
 │               └── uload-flash_bootloader.bat
 ├── license
-│   ├── Disclaimer051.pdf
-│   └── Disclaimer052.pdf
-├── <xxxxxx>-rz-srp-yocto5-um.pdf                                     # <xxxxxx> is a placeholder for the internal tracking code
-├── <xxxxxx>-r11qs0062eu0200-rz-srp-yocto5-um-quick-start-guide.pdf   # <xxxxxx> is a placeholder for the internal tracking code
+│   └── Disclaimer051.pdf
+├── <xxxxxx>-rz-srp-<yocto-version>-um.pdf          # <xxxxxx> is a placeholder for the internal tracking code, <yocto-version> represents the specific Yocto Project version used (e.g., "yocto3", "yocto5", etc.)
+├── <xxxxxx>-rz-srp-<yocto-version>-um-quick-start-guide.pdf   # <xxxxxx> is a placeholder for the internal tracking code, <yocto-version> represents the specific Yocto Project version used (e.g., "yocto3", "yocto5", etc.)
 ├── README.md
-├── RZG2L-SBC_Evaluation_license.pdf
+├── RZ_System_Release_Package_Evaluation_license.pdf
 └── target
     ├── env
     │   ├── Readme.md
