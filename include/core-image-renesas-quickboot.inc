@@ -80,7 +80,6 @@ optimize_service_systemd_wayland() {
     if [ -d "$target_folder" ]; then
         rm -rf $target_folder/"sysinit.target.wants"
         rm -rf $target_folder/"dbus-org.freedesktop.resolve1.service"
-        rm -rf $target_folder/"dbus-org.freedesktop.timesync1.service"
         rm -rf $target_folder/"dbus-org.freedesktop.network1.service"
         rm -rf $target_folder/"banner.service"
 
@@ -280,7 +279,6 @@ optimize_service_systemd_wayland() {
         rm -rf $target_folder/systemd-random-seed.service
         rm -rf $target_folder/systemd-reboot.service
         rm -rf $target_folder/systemd-remount-fs.service
-        rm -rf $target_folder/systemd-resolved.service
         rm -rf $target_folder/systemd-rfkill.service
         rm -rf $target_folder/systemd-rfkill.socket
         rm -rf $target_folder/systemd-soft-reboot.service
@@ -291,7 +289,6 @@ optimize_service_systemd_wayland() {
         rm -rf $target_folder/systemd-sysusers.service
         rm -rf $target_folder/systemd-time-wait-sync.service
         rm -rf $target_folder/systemd-timedated.service
-        rm -rf $target_folder/systemd-timesyncd.service
         rm -rf $target_folder/systemd-vconsole-setup.service
         rm -rf $target_folder/systemd-volatile-root.service
         rm -rf $target_folder/systemd-update-utmp-runlevel.service
