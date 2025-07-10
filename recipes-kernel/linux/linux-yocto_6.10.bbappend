@@ -26,6 +26,8 @@ SRC_URI:append:rz-cmn =	"\
 					file://rzg2l-sbc/drm_panel.cfg \
 					file://rzg2l-sbc/ov5640.cfg \
 					file://rzg2l-sbc/panfrost.cfg \
+					${@bb.utils.contains('DOCKER_SUPPORT', '1', 'file://docker.cfg', '', d)} \
+					${@bb.utils.contains('DISTRO', 'ubuntu-tiny', 'file://docker.cfg', '', d)} \
 				"
 # Apply patches for novtech board
 SRC_URI:append:rz-cmn = "\
