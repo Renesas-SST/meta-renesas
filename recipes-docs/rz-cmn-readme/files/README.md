@@ -70,7 +70,38 @@ This section details the steps to build the core Yocto images and extensible SDK
     $ cp -r files_to_add/ ~/renesas/rz-cmn-srp
     ```
 
-### 2.3. Build Core Images
+### 2.3. Build Host Resource Configuration
+
+Building certain recipes or the overall Yocto image can be resource-intensive for the build host (in terms of CPU and memory). To contribute to a stable and efficient build process and to assist in preventing Out-Of-Memory (OOM) conditions, configuration of BitBake's resource pressure monitoring is available.
+
+BitBake utilizes **Linux Kernel's Pressure Stall Information (PSI)**, which provides insights into CPU, I/O, and Memory resource contention. PSI data is exposed via `/proc/pressure` and is supported in Linux kernels from version 4.20 onwards. If resource pressure exceeds configured thresholds, BitBake's scheduler may pause the initiation of new tasks, which can assist in preventing system unresponsiveness or Out-Of-Memory (OOM) conditions.
+
+The following variables can be set in the `conf/local.conf` file to control BitBake's behavior under resource pressure:
+
+* `BB_PRESSURE_MAX_CPU`: Configures the maximum tolerable CPU pressure threshold.
+* `BB_PRESSURE_MAX_MEMORY`: Configures the maximum tolerable Memory pressure threshold.
+* `BB_PRESSURE_MAX_IO`: *(Optional)* Configures the maximum tolerable I/O pressure threshold.
+
+**Operation:**
+
+The values assigned to these variables are expressed in internal "pressure units," which are not direct measurements (e.g., MiB/GiB). They represent the difference in "total" pressure from the preceding second. If the actual resource pressure on the build host surpasses the configured threshold, BitBake's scheduler is designed to temporarily suspend the commencement of new tasks until the pressure alleviates.
+
+#### Suggested Default Pressure Thresholds
+
+Based on Yocto Project documentation ([BitBake User Manual - Reference Variables](https://github.com/yoctoproject/poky/blob/master/bitbake/doc/bitbake-user-manual/bitbake-user-manual-ref-variables.rst)), the following values are used as initial configurations, intended to balance build execution speed with the stability of the build host:
+
+```bash
+# In conf/local.conf
+BB_PRESSURE_MAX_MEMORY = "100000"
+#BB_PRESSURE_MAX_CPU = "15000"
+#BB_PRESSURE_MAX_IO = "15000" # May be included for disk-intensive builds
+```
+
+In the default `local.conf` configuration provided with this project, `BB_PRESSURE_MAX_MEMORY` is enabled with a value of "100000". `BB_PRESSURE_MAX_CPU` and `BB_PRESSURE_MAX_IO` are commented out by default.
+
+**Note**: To enable or adjust any of these resource pressure variables, modify the corresponding lines in the `conf/local.conf` file by uncommenting them (if necessary) and setting the desired values. Please adjust these values as needed based on your specific build host and workload requirements.
+
+### 2.4. Build Core Images
 
 Navigate to your workspace folder and execute the build script.
 
@@ -100,7 +131,7 @@ $ MACHINE<target_machine> IMAGE=<target_image> ./rzsbc_builder.sh build
 
 **(3) - If MACHINE is not set in the build command, the default machine is `rz-cmn`, which builds for multiple board platforms.**
 
-### 2.4. Collect the Output
+### 2.5. Collect the Output
 
 Upon successful Yocto build, the output folder will be located at:
 `~/renesas/rz-cmn-srp/yocto_<target_board>/build/tmp/deploy/images/<target_board>`
@@ -155,7 +186,7 @@ system settings.
 - README.md (root level): This is the comprehensive guide that provides an overview of the 
   entire release package, including instructions on how to use, build, and deploy the system.
 
-### 2.5. Build the Extensible SDK (eSDK)
+### 2.6. Build the Extensible SDK (eSDK)
 
 The extensible SDK (eSDK) simplifies the process of adding new applications and libraries to an image, modifying existing components, testing changes on RZ boards, and integrating with the OpenEmbedded Build System.
 
@@ -178,10 +209,10 @@ The eSDK installer will have the extension ".sh".
 
 ```shell
 $ ls
-poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rz-cmn-toolchain-ext-5.1.4.sh
-poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rz-cmn-toolchain-ext-5.1.4.host.manifest
-poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rz-cmn-toolchain-ext-5.1.4.testdata.json
-poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rz-cmn-toolchain-ext-5.1.4.target.manifest
+poky-glibc-x86_64-renesas-core-image-weston-cortexa55-rz-cmn-toolchain-ext-5.1.4.sh
+poky-glibc-x86_64-renesas-core-image-weston-cortexa55-rz-cmn-toolchain-ext-5.1.4.host.manifest
+poky-glibc-x86_64-renesas-core-image-weston-cortexa55-rz-cmn-toolchain-ext-5.1.4.testdata.json
+poky-glibc-x86_64-renesas-core-image-weston-cortexa55-rz-cmn-toolchain-ext-5.1.4.target.manifest
 ```
 
 **Note:**
@@ -194,13 +225,13 @@ poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rz-cmn-toolchain-ext-5.1.4.
 The eSDK enables development and testing of custom applications for RZ boards across various systems. This section describes the setup process.
 
 ```shell
-$ sh ./build/tmp/deploy/sdk/poky-glibc-x86_64-renesas-core-image-weston-armv8-2a-rz-cmn-toolchain-ext-5.1.4.sh
+$ sh ./build/tmp/deploy/sdk/poky-glibc-x86_64-renesas-core-image-weston-cortexa55-rz-cmn-toolchain-ext-5.1.4.sh
 ```
 
 Before building applications with the eSDK, source the environment setup script. Replace `~/esdk/5.1.4` with the actual installation path:
 
 ```shell
-$ source ~/esdk/5.1.4/environment-setup-armv8-2a-poky-linux
+$ source ~/esdk/5.1.4/environment-setup-cortexa55-poky-linux
 ```
 
 This step is required for each new terminal session before running eSDK tools or compiling applications.
@@ -959,7 +990,7 @@ GGDB has two components to work with. One is the host side `gdb` debugger. The o
 To set up the environment that would use the GDB targeting the RZ board from the eSDK, simply run the poky environment script as follows:
 
 ```shell
-$ source ~/esdk/5.1.4/environment-setup-armv8-2a-poky-linux
+$ source ~/esdk/5.1.4/environment-setup-cortexa55-poky-linux
 ```
 
 To confirm GDB is ready to use, run the following command and check the result:
@@ -1317,7 +1348,7 @@ Step 1: Create a simple C program that intentionally causes a segmentation fault
 Step 2: Source the environment and compile the `segfault_example.c` program
 
  ```shell
-  renesas@builder-pc:~$ source ~/esdk/5.1.4/environment-setup-armv8-2a-poky-linux
+  renesas@builder-pc:~$ source ~/esdk/5.1.4/environment-setup-cortexa55-poky-linux
   SDK environment now set up; additionally you may now run devtool to perform development tasks.
   Run devtool --help for further details.
   renesas@builder-pc:~/remote-debugging/segfault_program$ $CC $CFLAGS segfault_example.c -o segfault_example
