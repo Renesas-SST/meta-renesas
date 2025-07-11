@@ -314,6 +314,9 @@ SDKIMAGE_FEATURES:append = " staticdev-pkgs dev-pkgs dbg-pkgs"
 # Disable generating JSON SPDX for images
 INHERIT:remove = "create-spdx"
 
+# Enable tkinter installation for python3
+PACKAGECONFIG:append:pn-python3 = " tk"
+
 # Override install lib in sysroot for Qt5 and Qt6
 QT_DIR_NAME = "/qt5"
 
