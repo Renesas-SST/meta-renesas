@@ -3,11 +3,11 @@ This is the quick startup guide for RZG2L SBC board (hereinafter referred to as 
 The below will describe the current status of development, how to build, set up environment for RZG2L-SBC.
 
 ## Status
-This is a VLP v3.0.5 release of the RZG2L development product for RZG2L-SBC.
+This is a system release of the RZG2L development product for RZG2L-SBC
 
 This release provides the following features:
 
- - Yocto build compatible with RZG2L SoC (VLP v3.0.5)
+ - Yocto (Styhead) build compatible with RZG2L SoC
  - RZG2L-SBC Linux BSP functionalities (customized with upstream kernel 6.10)
  - Codec libraries supported
  - 40 IO expansion interface supported
