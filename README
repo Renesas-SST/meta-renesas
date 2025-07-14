@@ -39,5 +39,4 @@ Recipes added for linux kernel 6.10.
 III. Known Issues:
 ==================
 
-	- Kernel compilation starts but config is incomplete. Work in progress.
-
+_None at this time._
