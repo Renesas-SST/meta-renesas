@@ -1,0 +1,38 @@
+From c96f835ac029b375a13ceaf1c0d9a37bcc96b4f4 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Tue, 25 Jun 2024 18:01:16 +0100
+Subject: [PATCH] dmaengine: sh: rz-dmac: Fix lockdep assert warning
+
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0e53aa3464e9a0a82bd3b926ba5999a11569c9ba]
+
+Fix the below lockdep assert warning by holding vc.lock for
+vchan_get_all_descriptors().
+
+WARNING: virt-dma.h:188 rz_dmac_terminate_all
+pc : rz_dmac_terminate_all
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://lore.kernel.org/r/20240625170119.173595-1-biju.das.jz@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+---
+ drivers/dma/sh/rz-dmac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/dma/sh/rz-dmac.c b/drivers/dma/sh/rz-dmac.c
+index 1f1e86ba5c66..65a27c5a7bce 100644
+--- a/drivers/dma/sh/rz-dmac.c
++++ b/drivers/dma/sh/rz-dmac.c
+@@ -540,8 +540,8 @@ static int rz_dmac_terminate_all(struct dma_chan *chan)
+ 	spin_lock_irqsave(&channel->vc.lock, flags);
+ 	list_splice_tail_init(&channel->ld_active, &channel->ld_free);
+ 	list_splice_tail_init(&channel->ld_queue, &channel->ld_free);
+-	spin_unlock_irqrestore(&channel->vc.lock, flags);
+ 	vchan_get_all_descriptors(&channel->vc, &head);
++	spin_unlock_irqrestore(&channel->vc.lock, flags);
+ 	vchan_dma_desc_free_list(&channel->vc, &head);
+ 
+ 	return 0;
+-- 
+2.43.0
+
