@@ -334,6 +334,11 @@ PACKAGECONFIG:append:pn-python3 = " tk"
 # Set to "0" to disable Docker integration (default)
 DOCKER_SUPPORT = "0"
 
+# Optimized Linux Kernel Support: Build with optimizations for the Linux kernel
+# Default: 0 - Disable
+# Set to : 1 - Enable
+OPTIMIZE_KERN = "0"
+
 # Build essential and openssh packages
 IMAGE_INSTALL:append = " packagegroup-core-buildessential"
 
