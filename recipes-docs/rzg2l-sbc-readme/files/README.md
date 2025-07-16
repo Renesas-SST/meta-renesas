@@ -1173,7 +1173,7 @@ After installing a package using dpkg, if you need to resolve dependency issues,
 root@rzg2l-sbc:~# apt-get install -f
 ```
 
-### Docker Installation SetupAdd commentMore actions
+### Docker Installation Setup
 
 Step 1: Enable Docker support in Kernel build
 

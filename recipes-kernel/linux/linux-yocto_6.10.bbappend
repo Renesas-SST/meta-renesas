@@ -31,6 +31,7 @@ SRC_URI:append:rzg2l-sbc =	"\
 	file://panfrost.cfg \
 	${@bb.utils.contains('DOCKER_SUPPORT', '1', 'file://docker.cfg', '', d)} \
 	${@bb.utils.contains('DISTRO', 'ubuntu-tiny', 'file://docker.cfg', '', d)} \
+	${@oe.utils.conditional("OPTIMIZE_KERN", "1", "file://optimize.cfg", "", d)} \
 "
 
 # Apply patches for novtech board
@@ -49,7 +50,7 @@ SRC_URI:append:rzg2l-sbc = "\
 	file://dts-patches/0012-dmaengine-sh-rz-dmac-Fix-lockdep-assert-warning.patch \
 "
 
-KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg peripherals.cfg da7219.cfg drm_panel.cfg ov5640.cfg panfrost.cfg kernel-common.cfg"
+KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg peripherals.cfg da7219.cfg drm_panel.cfg ov5640.cfg panfrost.cfg kernel-common.cfg ${@oe.utils.conditional('OPTIMIZE_KERN', '1', ' optimize.cfg', '', d)}"
 
 KCONFIG_MODE:rzg2l-sbc = "alldefconfig"
 KMACHINE:rzg2l-sbc ?= "rzg2l-sbc_defconfig"
