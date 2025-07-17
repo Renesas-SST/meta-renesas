@@ -329,6 +329,11 @@ QT6_INSTALL_TRANSLATIONSDIR = "${datadir}/translations/qt6"
 QT6_INSTALL_PLUGINSDIR = "${libdir}/plugins/qt6"
 QT6_INSTALL_QMLDIR = "${libdir}/qml/qt6"
 
+# Optimized Linux Kernel Support: Build with optimizations for the Linux kernel
+# Default: 0 - Disable
+# Set to : 1 - Enable
+OPTIMIZE_KERN = "0"
+
 # Enable Docker Support for Kernel Build
 # Set to "1" to enable building the kernel with Docker-based configurations
 # Set to "0" to disable Docker integration (default)
