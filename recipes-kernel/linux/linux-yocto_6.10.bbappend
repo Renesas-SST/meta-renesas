@@ -24,6 +24,7 @@ SRC_URI:append:rz-cmn = "\
 	file://common/panfrost.cfg \
 	${@bb.utils.contains('DOCKER_SUPPORT', '1', 'file://common/docker.cfg', '', d)} \
 	${@bb.utils.contains('DISTRO', 'ubuntu-tiny', 'file://common/docker.cfg', '', d)} \
+	${@oe.utils.conditional("OPTIMIZE_KERN", "1", "file://common/optimize.cfg", "", d)} \
 "
 
 # RZ/G2L-SBC specific config fragments
@@ -62,7 +63,7 @@ SRC_URI:append:rz-cmn =	"\
 	file://rzv2h-evk/0001-rzv2h-evk-Support-RZV2H-EVK.patch \
 "
 
-KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg peripherals.cfg da7219.cfg drm_panel.cfg ov5640.cfg panfrost.cfg"
+KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg peripherals.cfg da7219.cfg drm_panel.cfg ov5640.cfg panfrost.cfg kernel-common.cfg ${@oe.utils.conditional('OPTIMIZE_KERN', '1', ' optimize.cfg', '', d)}"
 
 KCONFIG_MODE:rz-cmn = "alldefconfig"
 KMACHINE:rz-cmn ?= "renesas_defconfig"
