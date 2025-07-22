@@ -1,0 +1,182 @@
+From 443b91203ea5a92cb5f0650ce8e3bd9bebecdaf6 Mon Sep 17 00:00:00 2001
+From: Vu Dang <vu.dang.te@renesas.com>
+Date: Thu, 17 Jul 2025 18:10:39 +0700
+Subject: [PATCH 2/2] arm64: dts: renesas: enable OV5645 MIPI-CSI Camera
+
+This patch enables the OV5645 MIPI-CSI Camera for RZG2L-EVK and RZV2L-EVK.
+
+Currently, these boards support this camera through the use of device tree overlays.
+To enable the camera, please select the corresponding DTB:
+- r9a07g044l2-smarc-cru-csi-ov5645.dtb
+- r9a07g054l2-smarc-cru-csi-ov5645.dtb
+
+Upstream-Status: Pending
+
+Signed-off-by: Vu Dang <vu.dang.te@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g044.dtsi    | 16 +++++++
+ arch/arm64/boot/dts/renesas/r9a07g054.dtsi    | 16 +++++++
+ .../dts/renesas/rzg2l-smarc-pinfunction.dtsi  | 12 +++++
+ arch/arm64/boot/dts/renesas/rzg2l-smarc.dtsi  | 48 +++++++++++++++++++
+ 4 files changed, 92 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044.dtsi b/arch/arm64/boot/dts/renesas/r9a07g044.dtsi
+index 99d19b148ec3..64ef5686db8b 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g044.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g044.dtsi
+@@ -174,6 +174,22 @@ soc: soc {
+ 		#size-cells = <2>;
+ 		ranges;
+ 
++		poe3: poe3@10049800 {
++			compatible = "renesas,rz-poe3",
++				     "renesas,r9a07g044-poe3";
++			reg = <0 0x10049800 0 0x18>;
++			interrupts = <GIC_SPI 214 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 216 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 217 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "oei1", "oei2", "oei3", "oei4";
++			clocks = <&cpg CPG_MOD R9A07G044_POE3_CLKM_POE>;
++			clock-names = "fck";
++			resets = <&cpg R9A07G044_POE3_RST_M_REG>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
+ 		mtu3: timer@10001200 {
+ 			compatible = "renesas,r9a07g044-mtu3",
+ 				     "renesas,rz-mtu3";
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g054.dtsi b/arch/arm64/boot/dts/renesas/r9a07g054.dtsi
+index ca6d5c7b4b7b..20f65851d37f 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g054.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g054.dtsi
+@@ -174,6 +174,22 @@ soc: soc {
+ 		#size-cells = <2>;
+ 		ranges;
+ 
++		poe3: poe3@10049800 {
++			compatible = "renesas,r9a07g054-poe3",
++				     "renesas,rz-poe3";
++			reg = <0 0x10049800 0 0x18>;
++			interrupts = <GIC_SPI 214 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 216 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 217 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "oei1", "oei2", "oei3", "oei4";
++			clocks = <&cpg CPG_MOD R9A07G054_POE3_CLKM_POE>;
++			clock-names = "fck";
++			resets = <&cpg R9A07G054_POE3_RST_M_REG>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
+ 		mtu3: timer@10001200 {
+ 			compatible = "renesas,r9a07g054-mtu3",
+ 				     "renesas,rz-mtu3";
+diff --git a/arch/arm64/boot/dts/renesas/rzg2l-smarc-pinfunction.dtsi b/arch/arm64/boot/dts/renesas/rzg2l-smarc-pinfunction.dtsi
+index 18c526c7a4cf..db29337a258b 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2l-smarc-pinfunction.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2l-smarc-pinfunction.dtsi
+@@ -143,6 +143,18 @@ ssi0_pins: ssi0 {
+ 			 <RZG2L_PORT_PINMUX(45, 3, 1)>; /* RXD */
+ 	};
+ 
++	ssi1_pins: ssi1 {
++		pinmux = <RZG2L_PORT_PINMUX(46, 0, 1)>, /* BCK */
++			 <RZG2L_PORT_PINMUX(46, 1, 1)>, /* RCK */
++			 <RZG2L_PORT_PINMUX(46, 2, 1)>, /* TXD */
++			 <RZG2L_PORT_PINMUX(46, 3, 1)>; /* RXD */
++	};
++
++	gpt4_pins: gpt4 {
++		pinmux = <RZG2L_PORT_PINMUX(43, 0, 2)>, /* Channel A */
++			 <RZG2L_PORT_PINMUX(43, 1, 2)>; /* Channel B */
++	};
++
+ 	usb0_pins: usb0 {
+ 		pinmux = <RZG2L_PORT_PINMUX(4, 0, 1)>, /* VBUS */
+ 			 <RZG2L_PORT_PINMUX(5, 0, 1)>, /* OVC */
+diff --git a/arch/arm64/boot/dts/renesas/rzg2l-smarc.dtsi b/arch/arm64/boot/dts/renesas/rzg2l-smarc.dtsi
+index 887dffe14910..b652c6015ded 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2l-smarc.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2l-smarc.dtsi
+@@ -8,6 +8,9 @@
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
+ 
++#define OV5645_PARENT_I2C i2c0
++#include "rz-smarc-cru-csi-ov5645.dtsi"
++
+ / {
+ 	aliases {
+ 		serial1 = &scif2;
+@@ -30,6 +33,12 @@ hdmi_con_out: endpoint {
+ 			};
+ 		};
+ 	};
++
++	sound_card {
++		compatible = "audio-graph-card";
++		label = "HDMI-Audio";
++		dais = <&i2s2_port>;
++	};
+ };
+ 
+ &cpu_dai {
+@@ -88,6 +97,13 @@ adv7535_out: endpoint {
+ 					remote-endpoint = <&hdmi_con_out>;
+ 				};
+ 			};
++
++			port@2 {
++				reg = <2>;
++				codec_endpoint: endpoint {
++					remote-endpoint = <&i2s2_cpu_endpoint>;
++				};
++			};
+ 		};
+ 	};
+ };
+@@ -170,6 +186,38 @@ &ssi0 {
+ 	status = "okay";
+ };
+ 
++&ssi1 {
++	pinctrl-0 = <&ssi1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	i2s2_port: port {
++		i2s2_cpu_endpoint: endpoint {
++			remote-endpoint = <&codec_endpoint>;
++			dai-format = "i2s";
++
++			bitclock-master = <&i2s2_cpu_endpoint>;
++			frame-master = <&i2s2_cpu_endpoint>;
++		};
++	};
++};
++
++&poe3 {
++       status = "okay";
++
++       mtu3_ch34 {
++               mtu3_outputs = <0>; /* MTIOC3B-MTIOC3D */
++       };
++};
++
+ &vccq_sdhi1 {
+ 	gpios = <&pinctrl RZG2L_GPIO(39, 1) GPIO_ACTIVE_HIGH>;
+ };
++
++
++&ov5645 {
++	enable-gpios = <&pinctrl RZG2L_GPIO(2, 0) GPIO_ACTIVE_HIGH>;
++	reset-gpios = <&pinctrl RZG2L_GPIO(40, 2) GPIO_ACTIVE_LOW>;
++};
++
+-- 
+2.43.0
+

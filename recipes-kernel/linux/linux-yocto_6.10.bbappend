@@ -17,14 +17,16 @@ FILESEXTRAPATHS:prepend := "${THISDIR}:"
 # Default use of yocto git repositories. Uncomment the following to overrride it to use renesas sst git repo.
 # SRC_URI:rz-cmn = "git://github.com/Renesas-SST/linux-rz.git;name=machine;branch=${KBRANCH};protocol=https"
 
-# Common config fragments
-SRC_URI:append:rz-cmn = "\
+# Common config fragments and patches
+SRC_URI:append:rz-cmn = " \
 	file://common/kernel-common.cfg \
 	file://common/renesas_defconfig \
 	file://common/panfrost.cfg \
 	${@bb.utils.contains('DOCKER_SUPPORT', '1', 'file://common/docker.cfg', '', d)} \
 	${@bb.utils.contains('DISTRO', 'ubuntu-tiny', 'file://common/docker.cfg', '', d)} \
 	${@oe.utils.conditional("OPTIMIZE_KERN", "1", "file://common/optimize.cfg", "", d)} \
+        file://common/0001-arm64-dts-renesas-enable-hardware-video-codec.patch \
+        file://common/0002-arm64-dts-renesas-enable-OV5645-MIPI-CSI-Camera.patch \
 "
 
 # RZ/G2L-SBC specific config fragments
@@ -70,7 +72,7 @@ KMACHINE:rz-cmn ?= "renesas_defconfig"
 #KBUILD_DEFCONFIG:rz-cmn ?= "defconfig"
 
 # List of device tree names for rz-cmn
-DEVICETREE_NAME:rz-cmn = "rzg2l-sbc r9a07g044l2-smarc r9a07g054l2-smarc r9a09g057h4-evk-ver1"
+DEVICETREE_NAME:rz-cmn = "rzg2l-sbc r9a07g044l2-smarc r9a07g044l2-smarc-cru-csi-ov5645 r9a07g054l2-smarc r9a07g054l2-smarc-cru-csi-ov5645 r9a09g057h4-evk-ver1"
 
 # Supported device tree and device tree overlays
 KERNEL_DEVICETREE:rz-cmn = "${@' '.join(['renesas/%s.dtb' % devicetree_name for devicetree_name in d.getVar('DEVICETREE_NAME').split()])}"
