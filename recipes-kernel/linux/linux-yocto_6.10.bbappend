@@ -25,8 +25,9 @@ SRC_URI:append:rz-cmn = " \
 	${@bb.utils.contains('DOCKER_SUPPORT', '1', 'file://common/docker.cfg', '', d)} \
 	${@bb.utils.contains('DISTRO', 'ubuntu-tiny', 'file://common/docker.cfg', '', d)} \
 	${@oe.utils.conditional("OPTIMIZE_KERN", "1", "file://common/optimize.cfg", "", d)} \
-        file://common/0001-arm64-dts-renesas-enable-hardware-video-codec.patch \
-        file://common/0002-arm64-dts-renesas-enable-OV5645-MIPI-CSI-Camera.patch \
+	file://common/0001-arm64-dts-renesas-enable-hardware-video-codec.patch \
+	file://common/0002-arm64-dts-renesas-enable-OV5645-MIPI-CSI-Camera.patch \
+	file://common/0003-linux-yocto-update-kernel-to-support-multiple-featur.patch \
 "
 
 # RZ/G2L-SBC specific config fragments
