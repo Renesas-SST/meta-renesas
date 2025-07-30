@@ -1,5 +1,5 @@
-SUMMARY = "V4L2 initialization script"
-DESCRIPTION = "This script initializes V4L2 settings on system startup."
+SUMMARY = "audio initialization script"
+DESCRIPTION = "This script initializes audio settings on system startup."
 
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
@@ -10,17 +10,13 @@ S = "${WORKDIR}/sources"
 UNPACKDIR = "${S}"
 
 SRC_URI = " \
-	file://v4l2-init.sh \
+	file://audio-init.sh \
 "
 
 do_install() {
-	install -d ${D}/home/root
-	install -m 0755 ${UNPACKDIR}/v4l2-init.sh ${D}/home/root
+	install -d ${D}/${sysconfdir}/profile.d
+	install -m 0755 ${UNPACKDIR}/audio-init.sh ${D}/${sysconfdir}/profile.d
 }
-
-FILES:${PN} += " \
-    /home/root/v4l2-init.sh \
-"
 
 RDEPENDS:${PN} += "bash"
 
