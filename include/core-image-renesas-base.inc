@@ -197,5 +197,7 @@ EXTRA_IMAGEDEPENDS += " rz-cmn-docs "
 
 IMAGE_INSTALL:append = " kernel-modules"
 
+IMAGE_INSTALL:append = " audio-init"
+
 # Force image rebuild before SDK creation (changes when building multiple images lead to re-deploy but not clean because images are not re-built)
 SDK_POSTPROCESS_COMMAND:prepend = " do_release_clean;"
