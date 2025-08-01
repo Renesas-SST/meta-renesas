@@ -16,9 +16,14 @@ do_compile () {
     for target in ${SUPPORT_TARGETS}; do
         binmake --input=${S}/platform_info.json \
                 --board=${target} \
-                --output=${S}/${target}-platform-settings.bin
+                --output=${S}/${target}-platform-settings.bin \
+                --all-revisions
+    done
 
-        objcopy -I binary -O srec --adjust-vma=0x0000 --srec-forceS3 ${S}/${target}-platform-settings.bin ${S}/${target}-platform-settings.srec
+    # Convert every generated .bin to .srec
+    for binfile in ${S}/*.bin; do
+        objcopy -I binary -O srec --adjust-vma=0x0000 --srec-forceS3 \
+            "${binfile}" "${binfile%.bin}.srec"
     done
 }
 
