@@ -25,9 +25,6 @@ SRC_URI:append:rz-cmn = " \
 	${@bb.utils.contains('DOCKER_SUPPORT', '1', 'file://common/docker.cfg', '', d)} \
 	${@bb.utils.contains('DISTRO', 'ubuntu-tiny', 'file://common/docker.cfg', '', d)} \
 	${@oe.utils.conditional("OPTIMIZE_KERN", "1", "file://common/optimize.cfg", "", d)} \
-	file://common/0001-arm64-dts-renesas-enable-hardware-video-codec.patch \
-	file://common/0002-arm64-dts-renesas-enable-OV5645-MIPI-CSI-Camera.patch \
-	file://common/0003-linux-yocto-update-kernel-to-support-multiple-featur.patch \
 "
 
 # RZ/G2L-SBC specific config fragments
@@ -46,7 +43,7 @@ SRC_URI:append:rz-cmn =	"\
 	file://rzv2l-evk/wm8978.cfg \
 "
 
-# RZG2L-SBC patches
+# RZ Linux patches
 SRC_URI:append:rz-cmn = "\
 	file://rzg2l-sbc/0001-arm64-dts-renesas-Refactor-RZ-SBC-device-tree-and-re.patch \
 	file://rzg2l-sbc/0002-arm64-dts-rzpi-restore-power-domains-property.patch \
@@ -59,11 +56,11 @@ SRC_URI:append:rz-cmn = "\
 	file://rzg2l-sbc/0009-rzg2l-sbc-Support-more-fourcc-format-for-CRU.patch \
 	file://rzg2l-sbc/0010-rz-sbc-rename-rzpi-to-rzg2l-sbc-across-all-files-10.patch \
 	file://rzg2l-sbc/0011-rzg2l-sbc-Prevent-disable-eth0-before-eth1.patch \
-"
-
-# RZ/V2H-EVK patches
-SRC_URI:append:rz-cmn =	"\
 	file://rzv2h-evk/0001-rzv2h-evk-Support-RZV2H-EVK.patch \
+	file://common/0001-arm64-dts-renesas-enable-hardware-video-codec.patch \
+	file://common/0002-arm64-dts-renesas-enable-OV5645-MIPI-CSI-Camera.patch \
+	file://common/0003-linux-yocto-update-kernel-to-support-multiple-featur.patch \
+	file://common/0004-driver-renesas-Add-initial-RZ-V2H-and-RZ-G2L-RZ-V2L-.patch \
 "
 
 KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg peripherals.cfg da7219.cfg drm_panel.cfg ov5640.cfg panfrost.cfg kernel-common.cfg ${@oe.utils.conditional('OPTIMIZE_KERN', '1', ' optimize.cfg', '', d)}"
