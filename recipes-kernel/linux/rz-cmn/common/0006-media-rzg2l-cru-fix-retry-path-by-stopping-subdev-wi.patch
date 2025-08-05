@@ -1,0 +1,52 @@
+From 91ddd5d4b1c62ba070001ac08ef051181087f047 Mon Sep 17 00:00:00 2001
+From: Tien Nguyen <tien.nguyen.uh@renesas.com>
+Date: Fri, 8 Aug 2025 06:49:34 +0000
+Subject: [PATCH] media: rzg2l-cru: fix retry path by stopping subdev with
+ s_stream(0)
+
+The retry thread was stopping the camera subdevice with
+post_streamoff(), which does not actually stop the subdevice.
+As a result, the next s_stream(1) failed and the camera would not
+produce frames after a retry.
+
+Observed WARN from the V4L2 core and the camera failed to stream after
+a retry:
+    WARNING: CPU: 0 PID: 539 at v4l2-subdev.c:442 call_s_stream+0xb8/0xe4
+    pc : call_s_stream+0xb8/0xe4
+    Call trace:
+    call_s_stream+0xb8/0xe4
+    retry_streaming_func+0x11c/0x1f0
+    kthread+0x10c/0x110
+    ret_from_fork+0x10/0x20
+    irq event stamp: 132
+    rzg2l-cru 10830000.video: CRU retry init: 1 times
+
+Fix this by replacing post_streamoff() with:
+    v4l2_subdev_call(sd, video, s_stream, 0);
+
+This ensures the subdevice is cleanly stopped before restarting, which
+restores streaming after retries and stabilizes the pipeline.
+
+Upstream-Status: Pending
+
+Signed-off-by: Tien Nguyen <tien.nguyen.uh@renesas.com>
+---
+ drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+index 3e637d2b731a..54e38130a02c 100644
+--- a/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
++++ b/drivers/media/platform/renesas/rzg2l-cru/rzg2l-video.c
+@@ -671,7 +671,7 @@ static int retry_streaming_func(void *data)
+ 
+ 		/* Stop CRU reception */
+ 		rzg2l_cru_write(cru, ICnEN, 0);
+-		v4l2_subdev_call(sd, video, post_streamoff);
++		v4l2_subdev_call(sd, video, s_stream, 0);
+ 		rzg2l_cru_stop_image_processing(cru);
+ 		pm_runtime_put(cru->dev);
+ 		msleep(20);
+-- 
+2.43.0
+
