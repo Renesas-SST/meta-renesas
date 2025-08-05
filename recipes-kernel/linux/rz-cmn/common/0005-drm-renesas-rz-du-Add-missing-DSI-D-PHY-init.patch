@@ -1,0 +1,43 @@
+From ffefd84d5520824634456125f6594597370f8954 Mon Sep 17 00:00:00 2001
+From: Tien Nguyen <tien.nguyen.uh@renesas.com>
+Date: Tue, 5 Aug 2025 08:22:36 +0000
+Subject: [PATCH] drm: renesas: rz-du: Add missing DSI D-PHY init
+
+Ensure that `rzg2l_mipi_dsi_dphy_init()` is called during DSI startup
+for platforms that do not use the RZ/V2H-specific D-PHY handler.
+
+Previously, the D-PHY initialization was skipped, resulting in a non-functional
+DSI interface. This commit restores the missing initialization path.
+
+Upstream-Status: Pending
+
+Signed-off-by: Tien Nguyen <tien.nguyen.uh@renesas.com>
+---
+ drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c b/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
+index 3ef01527091e..838545033ee0 100644
+--- a/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
++++ b/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
+@@ -728,13 +728,14 @@ static int rzg2l_mipi_dsi_startup(struct rzg2l_mipi_dsi *dsi,
+ 	ret = pm_runtime_resume_and_get(dsi->dev);
+ 	if (ret < 0)
+ 		return ret;
++
+ 	if (dsi->info->type == MIPI_DSI_DPHY_RZV2H) {
+ 		clk_set_rate(dsi->vclk, mode->clock * 1000);
++
++		ret = dsi->info->dphy_init(dsi, hsfreq);
+ 	} else {
+-		clk_set_rate(dsi->vclk, mode->clock);
++		ret = rzg2l_mipi_dsi_dphy_init(dsi, hsfreq);
+ 	}
+-
+-	ret = dsi->info->dphy_init(dsi, hsfreq);
+ 	if (ret < 0)
+ 		goto err_phy;
+ 
+-- 
+2.43.0
+

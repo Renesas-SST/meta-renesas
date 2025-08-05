@@ -61,6 +61,8 @@ SRC_URI:append:rz-cmn = "\
 	file://common/0002-arm64-dts-renesas-enable-OV5645-MIPI-CSI-Camera.patch \
 	file://common/0003-linux-yocto-update-kernel-to-support-multiple-featur.patch \
 	file://common/0004-driver-renesas-Add-initial-RZ-V2H-and-RZ-G2L-RZ-V2L-.patch \
+	file://common/0005-drm-renesas-rz-du-Add-missing-DSI-D-PHY-init.patch \
+	file://common/0006-media-rzg2l-cru-fix-retry-path-by-stopping-subdev-wi.patch \
 "
 
 KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg peripherals.cfg da7219.cfg drm_panel.cfg ov5640.cfg panfrost.cfg kernel-common.cfg ${@oe.utils.conditional('OPTIMIZE_KERN', '1', ' optimize.cfg', '', d)}"
