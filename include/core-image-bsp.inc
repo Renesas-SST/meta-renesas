@@ -20,6 +20,7 @@ IMAGE_INSTALL:append = " \
     yavta \
     watchdog \
     alsa-utils \
+    audio-init \
 "
 
 # Additional tools for support Tool develop
