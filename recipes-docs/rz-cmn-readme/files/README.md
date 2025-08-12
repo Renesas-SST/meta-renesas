@@ -57,11 +57,11 @@ This section details the steps to build the core Yocto images and extensible SDK
     $ mkdir ~/renesas/rz-cmn-srp
     ```
 
-3.  **Copy Release Files:** Copy the following files and folders from your release package into your workspace: `rzsbc_builder.sh`, `site.conf`, `README.md`, `jq-linux-amd64`, `images.json`, and the `patches/` and `files_to_add/` folders. Also, copy any downloaded proprietary `.zip` files.
+3.  **Copy Release Files:** Copy the following files and folders from your release package into your workspace: `rz_builder.sh`, `site.conf`, `README.md`, `jq-linux-amd64`, `images.json`, and the `patches/` and `files_to_add/` folders. Also, copy any downloaded proprietary `.zip` files.
     ```bash
     $ cp *.zip ~/renesas/rz-cmn-srp           # Copy downloaded proprietary packages
     $ cp README.md ~/renesas/rz-cmn-srp
-    $ cp rzsbc_builder.sh ~/renesas/rz-cmn-srp
+    $ cp rz_builder.sh ~/renesas/rz-cmn-srp
     $ cp site.conf ~/renesas/rz-cmn-srp
     $ cp jq-linux-amd64 ~/renesas/rz-cmn-srp
     $ cp git_patch.json ~/renesas/rz-cmn-srp
@@ -107,7 +107,7 @@ Navigate to your workspace folder and execute the build script.
 
 ```
 $ cd ~/renesas/rz-cmn-srp
-$ MACHINE<target_machine> IMAGE=<target_image> ./rzsbc_builder.sh build
+$ MACHINE<target_machine> IMAGE=<target_image> ./rz_builder.sh build
 ```
 - <target_image>: the target Yocto build image. It can be one from the following list of supported images
 - <machine_name>: the target machine name (e.g., rz-cmn, rzg2l-sbc, etc.)
@@ -153,7 +153,7 @@ and preparing the system images.
     - rz-cmn-srp/: The folder that contains artifacts to build Yocto and Ubuntu images.
       - Patches: Located in the patches/ subdirectory, these files (For example, 
   0001-...patch) apply for necessary modifications.
-      - Build scripts: The master script rzsbc_builder.sh automates the build process 
+      - Build scripts: The master script rz_builder.sh automates the build process 
   for both Ubuntu and Yocto packages, handling setup, configuration, and 
   image generation based on user-selected build options.
       - Configuration files: site.conf, which is used to set up a specific build tag.
@@ -195,13 +195,13 @@ The eSDK build process generates an installer, which is intended to be used on t
 To build the eSDK, run the following command:
 
 ```shell
-$ IMAGE=<target_image> ./rzsbc_builder.sh build-sdk
+$ IMAGE=<target_image> ./rz_builder.sh build-sdk
 ```
 
 For example:
 
 ```shell
-$ IMAGE=renesas-core-image-weston ./rzsbc_builder.sh build-sdk
+$ IMAGE=renesas-core-image-weston ./rz_builder.sh build-sdk
 ```
 
 The resulting eSDK installer will be located in `~/renesas/rz-cmn-srp/yocto_rzsbc_board/build/tmp/deploy/sdk`.
