@@ -2,121 +2,60 @@
 
 ## Description
 
-This directory contains various image files used for deploying and booting the RZ Common platform. These images include the core operating system images, Device Tree Blobs (DTBs), and any additional overlays required for the hardware configuration.
+This directory contains all required files to flash and boot supported Renesas RZ boards. Artifacts are organized by function, including TF-A firmware, Linux kernel and device trees, U-Boot, and root file systems, along with board-specific flash writers and board identification files.
 
 ## A top-level directory of images
 
 ```
 images/
-├── bl2_bp_esd_rzg2l-evk.bin
-├── bl2_bp_esd_rzg2l-sbc.bin
-├── bl2_bp_esd_rzv2h-evk.bin
-├── bl2_bp_esd_rzv2h-evk.srec
-├── bl2_bp_esd_rzv2l-evk.bin
-├── bl2_bp_mmc_rzv2h-evk.bin
-├── bl2_bp_mmc_rzv2h-evk.srec
-├── bl2_bp_rzg2l-evk.bin
-├── bl2_bp_rzg2l-evk.srec
-├── bl2_bp_rzg2l-sbc.bin
-├── bl2_bp_rzg2l-sbc.srec
-├── bl2_bp_rzv2l-evk.bin
-├── bl2_bp_rzv2l-evk.srec
-├── bl2_bp_spi_rzv2h-evk.bin
-├── bl2_bp_spi_rzv2h-evk.srec
-├── bl2-rzg2l-evk.bin
-├── bl2-rzg2l-sbc.bin
-├── bl2-rzv2h-evk.bin
-├── bl2-rzv2l-evk.bin
-├── core-image-bsp.wic
-├── core-image-minimal.wic
-├── dtbs
-│   ├── overlays
-│   │   ├── Readme.md
-│   │   ├── rzg2l-sbc-can.dtbo
-│   │   ├── rzg2l-sbc-dsi.dtbo
-│   │   ├── rzg2l-sbc-ext-i2c.dtbo
-│   │   ├── rzg2l-sbc-ext-spi.dtbo
-│   │   └── rzg2l-sbc-ov5640.dtbo
-│   ├── r9a07g044l2-smarc--6.10.14+git0+<commit-hash>-r0-rz-cmn-<timestamp>.dtbo
-│   ├── r9a07g044l2-smarc-cru-csi-ov5645--6.10.14+git0+<commit-hash>-r0-rz-cmn-<timestamp>.dtbo
-│   ├── r9a07g044l2-smarc-cru-csi-ov5645.dtb -> r9a07g044l2-smarc-cru-csi-ov5645--6.10.14+git0+<commit-hash>-r0-rz-cmn-<timestamp>.dtbo
-│   ├── r9a07g044l2-smarc.dtb -> r9a07g044l2-smarc--6.10.14+git0+<commit-hash>-r0-rz-cmn-<timestamp>.dtbo
-│   ├── r9a07g054l2-smarc--6.10.14+git0+<commit-hash>-r0-rz-cmn-<timestamp>.dtbo
-│   ├── r9a07g054l2-smarc-cru-csi-ov5645--6.10.14+git0+<commit-hash>-r0-rz-cmn-<timestamp>.dtbo
-│   ├── r9a07g054l2-smarc-cru-csi-ov5645.dtb -> r9a07g054l2-smarc-cru-csi-ov5645--6.10.14+git0+<commit-hash>-r0-rz-cmn-<timestamp>.dtbo
-│   ├── r9a07g054l2-smarc.dtb -> r9a07g054l2-smarc--6.10.14+git0+<commit-hash>-r0-rz-cmn-<timestamp>.dtbo
-│   ├── r9a09g057h4-evk-ver1--6.10.14+git0+<commit-hash>-r0-rz-cmn-<timestamp>.dtbo
-│   ├── r9a09g057h4-evk-ver1.dtb -> r9a09g057h4-evk-ver1--6.10.14+git0+<commit-hash>-r0-rz-cmn-<timestamp>.dtbo
-│   ├── Readme.md
-│   ├── rzg2l-sbc--6.10.14+git0+<commit-hash>-r0-rz-cmn-<timestamp>.dtbo
-│   └── rzg2l-sbc.dtb -> rzg2l-sbc--6.10.14+git0+<commit-hash>-r0-rz-cmn-<timestamp>.dtbo
-├── fip_rzg2l-evk.bin
-├── fip_rzg2l-evk.srec
-├── fip_rzg2l-sbc.bin
-├── fip_rzg2l-sbc.srec
-├── fip_rzv2h-evk.bin
-├── fip_rzv2h-evk.srec
-├── fip_rzv2l-evk.bin
-├── fip_rzv2l-evk.srec
-├── Flash_Writer_SCIF_rzg2l-evk.mot
-├── Flash_Writer_SCIF_rzg2l-evk_PMIC.mot
-├── Flash_Writer_SCIF_rzg2l-sbc.mot
-├── Flash_Writer_SCIF_rzg2l-sbc_PMIC.mot
-├── Flash_Writer_SCIF_RZV2H_DEV_INTERNAL_MEMORY.mot
-├── Flash_Writer_SCIF_rzv2l-evk.mot
-├── Flash_Writer_SCIF_rzv2l-evk_PMIC.mot
-├── Image -> Image--6.10.14+git0+<commit-hash>-r0-rz-cmn-<timestamp>.bin
-├── Image--6.10.14+git0+<commit-hash>-r0-rz-cmn-<timestamp>.bin
-├── Readme.md
-├── renesas-core-image-cli.wic
-├── renesas-core-image-weston.wic
-├── renesas-quickboot-cli.wic
-├── renesas-quickboot-wayland.wic
-├── rootfs
-│   ├── core-image-bsp.tar.bz2
-│   ├── core-image-minimal.tar.bz2
-│   ├── Readme.md
-│   ├── renesas-core-image-cli.tar.bz2
-│   ├── renesas-core-image-weston.tar.bz2
-│   ├── renesas-quickboot-cli.tar.bz2
-│   ├── renesas-quickboot-wayland.tar.bz2
-│   ├── renesas-ubuntu.tar.bz2
-│   ├── ubuntu-core-image.tar.bz2
-│   └── ubuntu-lxde-image.tar.bz2
-├── rzg2l-evk-platform-settings.bin
-├── rzg2l-evk-platform-settings.srec
-├── rzg2l-sbc-platform-settings.bin
-├── rzg2l-sbc-platform-settings.srec
-├── rzv2h-evk-ver1.0-platform-settings.bin
-├── rzv2h-evk-ver1.0-platform-settings.srec
-├── rzv2h-evk-ver2.0-platform-settings.bin
-├── rzv2h-evk-ver2.0-platform-settings.srec
-├── rzv2l-evk-platform-settings.bin
-├── rzv2l-evk-platform-settings.srec
-├── ubuntu-core-image.wic.gz
-└── ubuntu-lxde-image.wic.gz
+├── atf/                    # Arm TF-A (BL2/BL31) and TF-A DTBs (FDTS)
+├── linux/                  # Linux kernel Image + DTBs/overlays
+├── u-boot/                 # U-Boot (no DTB) + U-Boot DTBs
+├── rootfs/                 # Root filesystem tarballs
+├── *.wic / *.wic.gz        # Full-disk images (boot + rootfs)
+├── Flash_Writer_SCIF_*.mot # Renesas Flash Writer binaries
+├── *_platform-settings.*   # Board-specific platform settings (bin/srec)
+└── Readme.md
 ```
 
 ## Content Breakdown
 
 Each of these subfolders have Readme's at the appropriate level in the file hierarchy to help you further.
-The above structure is an example when building using the target image `IMAGE=core-image-weston`. The compressed root filesystems and the environment artifacts will have names with the prefix `core-image-weston`. Other target images will have the same structure.
 
-#### Firmware Files
-- `bl2-<machine-name>.bin`, `bl2-<machine-name>.srec`: Bootloader stage 2 binaries.
-- `fip-<machine-name>.*`: Firmware Image Package (FIP) containing BL31, BL32, BL33.
-- `Flash_Writer_SCIF_<machine-name>.mot`: Flash writer for initial programming over SCIF.
-- `Image`, `Image--*`: Linux kernel images.
+### Trusted Firmware-A (TF-A) - images/atf
 
-#### Flashing Images
+- `bl2-*.bin`— BL2 (early boot; clocks/mem bring-up; loads BL31/U-Boot).
+- `bl31-*.bin` — BL31 (EL3 runtime firmware).
+- `fdts/*.dtb` — TF-A configuration DTBs (FDTS), consumed by FCONF at runtime: HW_CONFIG (per-board hardware config for TF-A).
+
+BL2 and its device tree are intentionally kept as separate binaries. This enables a common BL2 to be reused across boards, with per-board changes handled primarily through the device tree - typically avoiding BL2 rebuilds when new boards are added. BL31 and U-Boot are not merged into a single FIP, and no FIP is generated by the Yocto build; artifacts are provided as standalone binaries for the boot flow.
+
+**Note**: The flashing script automatically pairs bl2-<machine>.bin with the appropriate FCONF device tree for the selected board at flash time.
+
+### Linux kernel — images/linux/
+
+- Image → symlink to versioned Image--<ver>...bin.
+- dtbs/*.dtb — per-board Linux device trees (often symlinks to versioned blobs).
+- dtbs/overlays/*.dtbo — optional overlays to enable peripherals (e.g., CAN, DSI, extra I2C/SPI, cameras) for RZ/G2L-SBC.
+
+### U-Boot — images/u-boot/
+
+- `u-boot-nodtb-*.bin` — U-Boot without an embedded DTB.
+- `dtbs/*.dtb` — per-board U-Boot DTBs (not identical to Linux DTBs).
+
+**Note**: The flashing script pairs u-boot-nodtb-*.bin with the correct U-Boot DTB for the selected board at flash time.
+
+### Flash writers & platform settings
+
+- `Flash_Writer_SCIF_<board>.mot` — Renesas Flash Writer binaries for initial programming over SCIF/serial.
+- `*_platform-settings.(bin|srec) `— board-specific configuration payloads used by the flash process.
+
+### Full-disk images and root filesystem
+
 - `.wic`, `.wic.gz`: Full disk images containing boot + rootfs partitions. These are used with tools like `dd` or Etcher to flash onto SD cards.
 - `.tar.bz2`: Root filesystem archives. These can be extracted or mounted depending on the boot method.
 
-#### Device Tree Blobs
-- `dtbs/`: Contains `.dtb` files and overlay `.dtbo` files for various hardware configurations.
-    - `overlays/`: Specific overlay files for enabling peripherals (e.g., CAN, DSI, SPI).
-
-### `rootfs/`
+#### `rootfs/`
 - Contains root filesystem archives `.tar.bz2` that correspond to the `.wic` images found in the parent `images/` directory.
 - These archives can be extracted or used directly depending on your boot method (e.g., NFS boot, manual rootfs deployment).
 

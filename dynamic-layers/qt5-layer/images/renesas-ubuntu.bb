@@ -36,8 +36,6 @@ CORE_IMAGE_BASE_INSTALL += "weston"
 COMPATIBLE_MACHINE = "^(aarch64|rz-cmn)$"
 
 IMAGE_FSTYPES = " tar.bz2"
-# bootloader for rzsbc
-DEPENDS += " firmware-pack"
 MACHINEOVERRIDES =. "rz-cmn:"
 
 # Ignore vte-local-en-gb package because it has incompatible license GPL-3.0
