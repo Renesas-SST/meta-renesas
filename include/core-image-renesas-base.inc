@@ -31,20 +31,18 @@ IMAGE_ROOTFS_ALIGNMENT = "16"
 
 # Move images to boot partition
 IMAGE_BOOT_FILES:rz-cmn = " \
-    target/images/dtbs/*.dtb;dtb/renesas/ \
-    target/images/dtbs/overlays/*;dtb/renesas/overlays/ \
-    target/images/Image;Image \
+    target/images/linux/dtbs/*.dtb;dtb/renesas/ \
+    target/images/linux/dtbs/overlays/*;dtb/renesas/overlays/ \
+    target/images/linux/Image;Image \
     target/env/uEnv.txt;uEnv.txt \
     Readme.md;Readme.md \
     target/images/*.bin;uload-bootloader/ \
 "
 
-DEPENDS += " linux-yocto uenv firmware-pack platform-gen "
+DEPENDS += " linux-yocto uenv platform-gen "
 
 add_bootloader_rootfs() {
     install -d ${IMAGE_ROOTFS}/boot/uload-bootloader
-    cp -rf ${DEPLOY_DIR_IMAGE}/target/images/bl2_bp_*.bin ${IMAGE_ROOTFS}/boot/uload-bootloader
-    cp -rf ${DEPLOY_DIR_IMAGE}/target/images/fip_*.bin ${IMAGE_ROOTFS}/boot/uload-bootloader
     cp -rf ${DEPLOY_DIR_IMAGE}/target/images/*-platform-settings.bin ${IMAGE_ROOTFS}/boot/uload-bootloader
 }
 
@@ -154,11 +152,11 @@ IMAGE_CMD:wic:prepend() {
 
     # Check if the build artifact for the wic image exists; if not, copy it to the build directory
     if [ ! -f "${DEPLOY_DIR_IMAGE}/Image" ]; then
-        cp "${DEPLOY_DIR_IMAGE}/target/images/Image" "${DEPLOY_DIR_IMAGE}/"
+        cp "${DEPLOY_DIR_IMAGE}/target/images/linux/Image" "${DEPLOY_DIR_IMAGE}/"
     fi
 
     if [ ! -f "${DEPLOY_DIR_IMAGE}/rzg2l-sbc.dtb" ]; then
-        cp "${DEPLOY_DIR_IMAGE}/target/images/dtbs/rzg2l-sbc.dtb" "${DEPLOY_DIR_IMAGE}/"
+        cp "${DEPLOY_DIR_IMAGE}/target/images/linux/dtbs/rzg2l-sbc.dtb" "${DEPLOY_DIR_IMAGE}/"
     fi
 }
 
