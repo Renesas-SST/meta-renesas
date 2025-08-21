@@ -17,37 +17,27 @@ FILES:${PN} = "/boot ${sysconfdir}"
 # Add the /boot directory to the target's sysroot
 SYSROOT_DIRS += "/boot"
 
-# Define the U-Boot srec file name format
-UBOOT_SREC_SUFFIX = "srec"
-UBOOT_SREC ?= "u-boot-elf.${UBOOT_SREC_SUFFIX}"
-UBOOT_SREC_IMAGE ?= "u-boot-elf-${MACHINE}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}"
-UBOOT_SREC_SYMLINK ?= "u-boot-elf-${MACHINE}.${UBOOT_SREC_SUFFIX}"
+DEVICETREE_NAME:rz-cmn = "rzg2l-sbc smarc-rzg2l smarc-rzv2l rzv2h-evk-ver1"
 
-# Copy the U-Boot file to the deployment directory and create symbolic links to easily access this file with a simpler name.
-do_deploy:append() {
-    # UBOOT_CONFIG variable is name folder stored uboot srec files. It's defined in rzg2l-sbc.conf
-    if [ -n "${UBOOT_CONFIG}" ]
-    then
-        for config in ${UBOOT_MACHINE}; do
-            i=$(expr $i + 1);
-            for type in ${UBOOT_CONFIG}; do
-                j=$(expr $j + 1);
-                if [ $j -eq $i ]
-                then
-                    install -m 644 ${B}/${config}/${UBOOT_SREC} ${DEPLOYDIR}/u-boot-elf-${type}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}
-                    cd ${DEPLOYDIR}
-                    ln -sf u-boot-elf-${type}-${PV}-${PR}.${UBOOT_SREC_SUFFIX} u-boot-elf-${type}.${UBOOT_SREC_SUFFIX}
-                fi
-            done
-            unset j
-        done
-        unset i
-    else
-        install -m 644 ${B}/${UBOOT_SREC} ${DEPLOYDIR}/${UBOOT_SREC_IMAGE}
-        cd ${DEPLOYDIR}
-        rm -f ${UBOOT_SREC} ${UBOOT_SREC_SYMLINK}
-        ln -sf ${UBOOT_SREC_IMAGE} ${UBOOT_SREC_SYMLINK}
-        ln -sf ${UBOOT_SREC_IMAGE} ${UBOOT_SREC}
-    fi
+# Install u-boot-nodtb.bin and u-boot device tree to temp location
+do_install() {
+    install -d ${D}/boot
+    install -d ${D}/boot/dtbs
+
+    install -m 644 ${KCONFIG_CONFIG_ROOTDIR}/u-boot-nodtb.bin ${D}/boot/
+    for dtb_name in ${DEVICETREE_NAME}; do
+        install -m 644 ${KCONFIG_CONFIG_ROOTDIR}/arch/arm/dts/${dtb_name}.dtb ${D}/boot/dtbs
+    done
 }
 
+do_deploy() {
+    # Create deploy folder
+    install -d ${DEPLOYDIR}/target/images/u-boot/dtbs
+
+    install -m 0644 ${D}/boot/u-boot-nodtb.bin ${DEPLOYDIR}/target/images/u-boot/u-boot-nodtb-${MACHINE}.bin
+    for dtb_name in ${DEVICETREE_NAME}; do
+        install -m 644 ${D}/boot/dtbs/${dtb_name}.dtb ${DEPLOYDIR}/target/images/u-boot/dtbs
+    done
+}
+
+addtask deploy after do_install
