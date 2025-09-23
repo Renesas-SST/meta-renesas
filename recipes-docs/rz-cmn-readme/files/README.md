@@ -9,12 +9,12 @@ This guide provides a quick startup for all supported board in the current relea
 
 ## 1. Overview
 
-This release is based on the latest VLP of the Renesas RZ/G2L, RZ/V2L, and RZ/V2H-EVK development products. It provides a comprehensive Linux BSP (Board Support Package) with various features and tools for developing embedded applications on the supported Renesas boards.
+This release targets the Renesas RZ/G2L, RZ/V2L, and RZ/V2H-EVK development products. It provides a comprehensive Linux BSP (Board Support Package) with various features and tools for developing embedded applications on the supported Renesas boards.
 
 **Key Features (Common to most boards unless specified):**
 
 * Verified Linux Package (VLP) Yocto build support
-* Linux BSP functionality (based on latest BSP release per platform)
+* Linux BSP functionality (pinned to the 6.10 baseline per platform)
 * Codec libraries supported.
 * On-board Audio Codec with Stereo Jack Analog Audio IO.
 * Generic USB Bluetooth framework support.
@@ -57,7 +57,7 @@ This section details the steps to build the core Yocto images and extensible SDK
     $ mkdir ~/renesas/rz-cmn-srp
     ```
 
-3.  **Copy Release Files:** Copy the following files and folders from your release package into your workspace: `rz_builder.sh`, `site.conf`, `README.md`, `jq-linux-amd64`, `images.json`, and the `patches/` and `files_to_add/` folders. Also, copy any downloaded proprietary `.zip` files.
+3.  **Copy Release Files:** Copy the following files and folders from your release package into your workspace: `rz_builder.sh`, `site.conf`, `README.md`, `jq-linux-amd64`, `config.json`, and the `patches/` and `files_to_add/` folders. Also, copy any downloaded proprietary `.zip` files.
     ```bash
     $ cp *.zip ~/renesas/rz-cmn-srp           # Copy downloaded proprietary packages
     $ cp README.md ~/renesas/rz-cmn-srp
@@ -65,7 +65,7 @@ This section details the steps to build the core Yocto images and extensible SDK
     $ cp site.conf ~/renesas/rz-cmn-srp
     $ cp jq-linux-amd64 ~/renesas/rz-cmn-srp
     $ cp git_patch.json ~/renesas/rz-cmn-srp
-    $ cp images.json ~/renesas/rz-cmn-srp
+    $ cp config.json ~/renesas/rz-cmn-srp
     $ cp -r patches/ ~/renesas/rz-cmn-srp
     $ cp -r files_to_add/ ~/renesas/rz-cmn-srp
     ```
@@ -157,7 +157,7 @@ and preparing the system images.
   for both Ubuntu and Yocto packages, handling setup, configuration, and 
   image generation based on user-selected build options.
       - Configuration files: site.conf, which is used to set up a specific build tag.
-      - images.json: Contains the available build image options grouped by build 
+      - config.json: Contains the available build image options grouped by build
   type, including Yocto images, Ubuntu images, and static image collections 
   (all-yocto-images, all-ubuntu-images, all-supported-images).
       - git_patch.json: Contains json keys and repository configuration such as: url, 
@@ -265,28 +265,41 @@ Location: Please find the script in Yocto build output: `</path/to/your/yocto/pa
 
 **Hierarchy**
 ```
-.
-├── bootloader_flasher
-│   ├── bootloader_flash.py
-│   └── Readme.md
-├── config
-│   ├── boards_flash_config.toml
-│   └── README.md
-├── flash_images.json
-├── README.md
-├── sd_creator
-│   ├── Readme.md
-│   ├── sd_flash.py
-│   └── tools
-│       ├── AdbWinApi.dll
-│       └── fastboot.exe
-├── uload_bootloader
-│   ├── Readme.md
-│   └── uload_bootloader_flash.py
-└── universal_flash.py
-
-6 directories, 13 files
-
+universal-scripts/
+├── host
+│   └── tools
+│       ├── bin
+│       │   ├── linux
+│       │   │   ├── bpgen
+│       │   │   ├── fiptool
+│       │   │   └── Readme.md
+│       │   ├── Readme.md
+│       │   └── windows
+│       │       ├── bpgen.exe
+│       │       ├── fiptool.exe
+│       │       └── Readme.md
+│       ├── bootloader_flasher
+│       │   ├── bootloader_flash.py
+│       │   └── README.md
+│       ├── config
+│       │   ├── boards_flash_config.toml
+│       │   └── README.md
+│       ├── firmware_compile
+│       │   ├── firmware_compile.py
+│       │   └── Readme.md
+│       ├── flash_images.json
+│       ├── README.md
+│       ├── sd_creator
+│       │   ├── README.md
+│       │   ├── sd_flash.py
+│       │   └── tools
+│       │       ├── AdbWinApi.dll
+│       │       └── fastboot.exe
+│       ├── uload_bootloader
+│       │   ├── README.md
+│       │   └── uload_bootloader_flash.py
+│       └── universal_flash.py
+└── README.md
 ```
 #### 3.2.1. JSON Configuration for a New Board
 
@@ -294,9 +307,12 @@ The `flash_images.json` file is located at the same level as the universal scrip
 
 `flash_images.json` supports several default boards. Custom board can be added to the configuration file by providing the following information:
 
+- **soc**: SoC type
 - **bl2**: BL2 image name
 - **board_identification**: Board identification image name
 - **fip**: FIP image name
+- **atf_fdts**: FCONF device tree name
+- **uboot_dtb**: U-boot device tree name
 - **flash_writer**: Flash Writer image name
 - **ipl_flash_method**: Method used by the IPL bootloader for flashing (`qspi` or `emmc`)
 - **rootfs**: Root filesystem image name (`*.wic`)
@@ -306,15 +322,47 @@ Example of a sample board configuration in JSON:
 
 ```json
 "rzg2l-sbc": {
-    "bl2": "bl2_bp-rzg2l-sbc.srec",
+    "soc": "g2l",
+    "bl2": "bl2_bp_rzg2l-sbc.srec",
     "board_identification": "rzg2l-sbc-platform-settings.bin",
-    "fip": "fip-rzg2l-sbc.srec",
+    "fip": "fip_rzg2l-sbc.srec",
+    "atf_fdts": "rzg2l-sbc.dtb",
+    "uboot_dtb": "rzg2l-sbc.dtb",
     "flash_writer": "Flash_Writer_SCIF_rzg2l-sbc.mot",
-    "ipl_flash_method": "qspi",
-    "rootfs": "core-image-qt-rzg2l-sbc.wic",
+    "ipl_flash_method": "xspi",
+    "rootfs": "core-image-minimal.wic",
     "rootfs_flash_method": "udp"
 }
 ```
+
+This table below lists the available options (and sensible defaults) for `ipl_flash_method` and `rootfs_flash_method` per board.
+
+| Board        | SoC | `ipl_flash_method` (options) | Default | `rootfs_flash_method` (options) | Default |
+|--------------|-----|------------------------------|---------|----------------------------------|---------|
+| **rzg2l-sbc** | g2l | `xspi`                | `xspi`  | `udp`              | `udp`   |
+| **rzg2l-evk** | g2l | `xspi`, `emmc`        | `xspi`  | `udp`              | `udp`   |
+| **rzv2l-evk** | v2l | `xspi`, `emmc`        | `xspi`  | `udp`              | `udp`   |
+| **rzv2h-evk** | v2h | `xspi`                | `xspi`  | `udp`              | `udp`   |
+
+**Notes:**
+- *IPL flash method*: `emmc` for `rzv2h-evk` is **not supported yet**.
+- *IPL flash method*: `eSD` for all boards is **not supported yet**.
+- *Rootfs flash method*: `OTG` for all boards is **not supported yet**.
+- *Stability*: Rootfs flashing via `udp` on `rzg2l-evk` and `rzv2l-evk` is not stable and not recommended. Use balenaEtcher or the dd command to write the image instead.
+
+---
+
+## Field Reference
+
+- **`ipl_flash_method`**
+  Defines where the **IPL/BL2** image is flashed:
+  - `xspi` — xSPI flash for RZ/V2H, QSPI for RZV2L/RZG2L
+  - `emmc` — eMMC device
+
+- **`rootfs_flash_method`**
+  How the **root filesystem (.wic)** is delivered to the SD/eMMC target:
+  - `udp` — U-Boot `fastboot udp` over Ethernet
+  - `otg` — U-Boot `fastboot usb` (USB-OTG)
 
 #### 3.2.1. Flow chart
 
@@ -325,17 +373,22 @@ flowchart TD
     classDef action fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
     classDef terminal fill:#d1fae5,stroke:#10b981,stroke-width:2px,font-weight:bold
 
-    A[Start]:::terminal --> B[Display available boards]:::action
+    A((Start)):::terminal --> B[Display available boards]:::action
     B --> C[User selects board]:::action
     C --> D[Display available serial ports]:::action
     D --> E[User selects port and baud rate]:::action
-    E --> F["Ask: Write rootfs (y/n)"]:::decision
-    F -->|n| G["Ask: Write IPL (y/n)"]:::decision
-    G -->|y| H["Ask: Select IPL method"]:::decision
-    H --> I{Method}:::decision
-    I -->|1| J[Write IPL by BootloaderFlash]:::action
-    I -->|2| K[Write IPL by UloadFlash]:::action
-    G -->|n| L[End]:::terminal
+
+    E --> F{Write RootFS?}:::decision
+    F -->|y| FR[Write RootFS to SD/eMMC]:::action
+    FR --> G{Write IPL?}:::decision
+    F -->|n| G{Write IPL?}:::decision
+
+    G -->|y| H{Select IPL method}:::decision
+    H -->|BootloaderFlash| M[Compile firmware: build BL2 & FIP with per-board DTB at runtime]:::action
+    M --> J[Write IPL by BootloaderFlash]:::action
+    H -->|ULoadFlash| K[Write IPL by ULoadFlash]:::action
+
+    G -->|n| L((End)):::terminal
     J --> L
     K --> L
 ```
@@ -408,10 +461,10 @@ The distribution comes with Debian package manager `apt-get` and `dpkg` for bina
 The default configuration for the `sources.list` file, which defines the package repositories, is as follows:
 
 ```
-deb [arch=arm64] http://ports.ubuntu.com/ oracular main multiverse universe
-deb [arch=arm64] http://ports.ubuntu.com/ oracular-security main multiverse universe
-deb [arch=arm64] http://ports.ubuntu.com/ oracular-backports main multiverse universe
-deb [arch=arm64] http://ports.ubuntu.com/ oracular-updates main multiverse universe
+deb [arch=arm64] http://old-releases.ubuntu.com/ubuntu/ oracular main multiverse universe
+deb [arch=arm64] http://old-releases.ubuntu.com/ubuntu/ oracular-security main multiverse universe
+deb [arch=arm64] http://old-releases.ubuntu.com/ubuntu/ oracular-backports main multiverse universe
+deb [arch=arm64] http://old-releases.ubuntu.com/ubuntu/ oracular-updates main multiverse universe
 ```
 
 ##### 4.1.1.2. Configuring the Debian package repository
@@ -1528,7 +1581,6 @@ The following table details the available configuration options that can be set 
 \---------------------------------------------------------------------------
 
 default settings:
-    fdtfile=rzg2l-sbc.dtb
     #enable_overlay_i2c=1
     #enable_overlay_spi=1
     #enable_overlay_can=1

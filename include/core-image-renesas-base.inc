@@ -60,7 +60,7 @@ do_release_clean() {
     rm -f ${DEPLOY_DIR_IMAGE}/Readme.md
 }
 
-addtask do_release_clean after do_image_complete before do_populate_lic_deploy
+addtask release_clean after do_image_complete before do_populate_lic_deploy
 addtask write_image_spdx after create_image_sbom_spdx before do_release_clean
 ROOTFS_POSTPROCESS_COMMAND += " add_bootloader_rootfs;"
 
