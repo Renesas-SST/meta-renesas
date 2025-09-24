@@ -11,9 +11,7 @@ ENABLE_RZ_SCE		?= '0'
 
 FLASH_WRITER_URL = "git://github.com/Renesas-SST/flash-writer.git"
 BRANCH = "styhead/rz-cmn"
-SRC_URI = "${FLASH_WRITER_URL};protocol=https;branch=${BRANCH} \
-			file://Flash_Writer_SCIF_RZV2H_DEV_INTERNAL_MEMORY.mot \
-"
+SRC_URI = "${FLASH_WRITER_URL};protocol=https;branch=${BRANCH}"
 
 SRCREV = "${AUTOREV}"
 
@@ -26,9 +24,6 @@ UNPACKDIR = "${S}"
 
 do_prepare_src() {
 	for target in ${SUPPORT_TARGETS}; do
-		if [ ${target} = "rzv2h-evk" ]; then
-			continue;
-		fi
 		mkdir -p ${B}/${target}
 		cp -r ${S}/git/* ${B}/${target}
 	done
@@ -36,45 +31,57 @@ do_prepare_src() {
 
 do_compile() {
 	for target in ${SUPPORT_TARGETS}; do
+		# Need to reset every iteration
+		PMIC_BOARD=""
 		PMIC_BUILD_DIR="${B}/${target}/build_pmic"
+
 		if [ ${target} = "rzv2h-evk" ]; then
-			continue;
+				BOARD="RZV2H_DEV"
 		elif [ ${target} = "rzg2l-sbc" ]; then
-			BOARD="RZG2L_SBC"
-			PMIC_BOARD="RZG2L_SMARC_PMIC"
+				BOARD="RZG2L_SBC"
 		elif [ ${target} = "rzg2l-evk" ]; then
-			BOARD="RZG2L_SMARC_PMIC"
-			PMIC_BOARD="RZG2L_SMARC_PMIC"
+				BOARD="RZG2L_SMARC_PMIC"
+				PMIC_BOARD="RZG2L_SMARC_PMIC"
 		elif [ ${target} = "rzv2l-evk" ]; then
-			BOARD="RZV2L_SMARC"
-			PMIC_BOARD="RZV2L_SMARC_PMIC"
+				BOARD="RZV2L_SMARC"
+				PMIC_BOARD="RZV2L_SMARC_PMIC"
 		fi
+
 		cd ${B}/${target}
 		oe_runmake BOARD=${BOARD}
-		if [ "${PMIC_SUPPORT}" = "1" ]; then
-			oe_runmake OUTPUT_DIR=${PMIC_BUILD_DIR} clean
-			oe_runmake BOARD=${PMIC_BOARD} OUTPUT_DIR=${PMIC_BUILD_DIR}
-		fi
+
+		# Rename base artifact
 		mv ${B}/${target}/AArch64_output/Flash_Writer*${BOARD}*.mot ${B}/${target}/AArch64_output/Flash_Writer_SCIF_${target}.mot
-		mv ${PMIC_BUILD_DIR}/Flash_Writer*${PMIC_BOARD}*.mot ${PMIC_BUILD_DIR}/Flash_Writer_SCIF_${target}_PMIC.mot
+
+		# Build PMIC only when enabled and have PMIC_BOARD variable set
+		if [ "${PMIC_SUPPORT}" = "1" ] && [ -n "${PMIC_BOARD}" ]; then
+				oe_runmake OUTPUT_DIR=${PMIC_BUILD_DIR} clean
+				oe_runmake BOARD=${PMIC_BOARD} OUTPUT_DIR=${PMIC_BUILD_DIR}
+
+				mv ${PMIC_BUILD_DIR}/Flash_Writer*${PMIC_BOARD}*.mot ${PMIC_BUILD_DIR}/Flash_Writer_SCIF_${target}_PMIC.mot
+		fi
 	done
 }
 
 do_install[noexec] = "1"
 
+
 do_deploy() {
-	install -d ${DEPLOYDIR}/target/images
+	install -d "${DEPLOYDIR}/target/images"
 	for target in ${SUPPORT_TARGETS}; do
-		if [ ${target} = "rzv2h-evk" ]; then
-			continue;
-		fi
 		PMIC_BUILD_DIR="${B}/${target}/build_pmic"
-		install -m 644 ${B}/${target}/AArch64_output/*.mot ${DEPLOYDIR}/target/images
-		if [ "${PMIC_SUPPORT}" = "1" ]; then
-			install -m 644 ${PMIC_BUILD_DIR}/*.mot ${DEPLOYDIR}/target/images
+
+		base_out="${B}/${target}/AArch64_output/Flash_Writer_SCIF_${target}.mot"
+		if [ -f "${base_out}" ]; then
+			install -m 0644 "${base_out}" "${DEPLOYDIR}/target/images/"
+		fi
+
+		# Deploy PMIC artifact only if it exists
+		pmic_out="${PMIC_BUILD_DIR}/Flash_Writer_SCIF_${target}_PMIC.mot"
+		if [ "${PMIC_SUPPORT}" = "1" ] && [ -f "${pmic_out}" ]; then
+			install -m 0644 "${pmic_out}" "${DEPLOYDIR}/target/images/"
 		fi
 	done
-	install -m 644 ${S}/Flash_Writer_SCIF_RZV2H_DEV_INTERNAL_MEMORY.mot ${DEPLOYDIR}/target/images
 }
 
 PARALLEL_MAKE = "-j 1"
