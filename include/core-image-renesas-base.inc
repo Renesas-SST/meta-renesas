@@ -197,3 +197,4 @@ IMAGE_INSTALL:append = " kernel-modules"
 
 # Force image rebuild before SDK creation (changes when building multiple images lead to re-deploy but not clean because images are not re-built)
 SDK_POSTPROCESS_COMMAND:prepend = " do_release_clean;"
+do_release_clean[nostamp] = "1"
