@@ -19,7 +19,7 @@ inherit deploy
 #require include/provisioning.inc
 
 S = "${WORKDIR}/git"
-B = "${S}/../build"
+B = "${S}/../build/${DISTRO}"
 UNPACKDIR = "${S}"
 
 do_prepare_src() {
