@@ -346,6 +346,7 @@ SUPPORT_TARGETS = " \
     rzv2l-evk \
     rzv2h-evk \
     rzv2h-rdk \
+    imdt-v2h-sbc \
 "
 
 # Build essential and openssh packages

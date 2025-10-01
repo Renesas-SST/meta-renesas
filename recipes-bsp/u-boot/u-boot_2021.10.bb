@@ -25,6 +25,7 @@ DEVICETREE_NAME:rz-cmn = " \
     rzv2h-evk-ver1 \
     rzv2h-rdk-ver1 \
     rs-g2l100 \
+    imdt-v2h-sbc \
 "
 
 # Install u-boot-nodtb.bin and u-boot device tree to temp location
