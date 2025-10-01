@@ -17,7 +17,13 @@ FILES:${PN} = "/boot ${sysconfdir}"
 # Add the /boot directory to the target's sysroot
 SYSROOT_DIRS += "/boot"
 
-DEVICETREE_NAME:rz-cmn = "rzg2l-sbc smarc-rzg2l smarc-rzv2l rzv2h-evk-ver1"
+DEVICETREE_NAME:rz-cmn = " \
+    rzg2l-sbc \
+    smarc-rzg2l \
+    smarc-rzv2l \
+    rzv2h-evk-ver1 \
+    rzv2h-rdk-ver1 \
+"
 
 # Install u-boot-nodtb.bin and u-boot device tree to temp location
 do_install() {
