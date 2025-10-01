@@ -19,6 +19,7 @@ SRC_URI:append:rz-cmn = " \
 	file://common/usb-serial.cfg \
 	file://common/usb-can.cfg \
 	file://common/firmware-edid.cfg \
+	file://common/nvme.cfg \
 	${@bb.utils.contains('DOCKER_SUPPORT', '1', 'file://common/docker.cfg', '', d)} \
 	${@bb.utils.contains('DISTRO', 'ubuntu-tiny', 'file://common/docker.cfg', '', d)} \
 	${@oe.utils.conditional("OPTIMIZE_KERN", "1", "file://common/optimize.cfg", "", d)} \
@@ -42,17 +43,24 @@ DEVICETREE_NAME:rz-cmn = " \
 	r9a07g054l2-smarc \
 	r9a07g054l2-smarc-cru-csi-ov5645 \
 	r9a09g057h4-evk-ver1 \
+	r9a09g057h4-rdk-ver1 \
 "
 
 # Supported device tree and device tree overlays
 KERNEL_DEVICETREE:rz-cmn = "${@' '.join(['renesas/%s.dtb' % devicetree_name for devicetree_name in d.getVar('DEVICETREE_NAME').split()])}"
 
 KERNEL_DEVICETREE:append:rz-cmn = " \
-	renesas/overlays/rzg2l-sbc-can.dtbo \
-	renesas/overlays/rzg2l-sbc-ext-i2c.dtbo \
-	renesas/overlays/rzg2l-sbc-ext-spi.dtbo \
-	renesas/overlays/rzg2l-sbc-dsi.dtbo \
-	renesas/overlays/rzg2l-sbc-ov5640.dtbo \
+	renesas/overlays/rzg2l-sbc-1.0-can.dtbo \
+	renesas/overlays/rzg2l-sbc-1.0-ext-i2c.dtbo \
+	renesas/overlays/rzg2l-sbc-1.0-ext-spi.dtbo \
+	renesas/overlays/rzg2l-sbc-1.0-dsi.dtbo \
+	renesas/overlays/rzg2l-sbc-1.0-ov5640.dtbo \
+	renesas/overlays/rzg2l-evk-1.0-cru-csi-ov5645.dtbo \
+	renesas/overlays/rzv2l-evk-1.0-cru-csi-ov5645.dtbo \
+	renesas/overlays/rzv2h-rdk-1.0-audio-codec.dtbo \
+	renesas/overlays/rzv2h-rdk-1.0-audio-hdmi.dtbo \
+	renesas/overlays/rzv2h-rdk-1.0-can.dtbo \
+	renesas/overlays/rzv2h-rdk-1.0-ext-spi.dtbo \
 "
 
 # Override the dtc flags to support dtbo build in kernel-devicetree.bbclass
@@ -78,4 +86,3 @@ LINUX_VERSION:rz-cmn ?= "6.10.14"
 # COMPATIBLE_MACHINE is regex matcher.
 COMPATIBLE_MACHINE:rz-cmn = "(rz-cmn)"
 COMPATIBLE_MACHINE = "^(aarch64|rz-cmn)$"
-
