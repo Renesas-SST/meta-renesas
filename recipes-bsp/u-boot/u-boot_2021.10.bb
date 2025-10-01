@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 
 UBOOT_URL = "git://github.com/Renesas-SST/u-boot.git"
 SRC_URI = "${UBOOT_URL};name=machine;protocol=https;branch=${BRANCH}"
-BRANCH = "styhead/rz-cmn-3.1"
+BRANCH = "styhead/rz-cmn"
 SRCREV_machine = "${AUTOREV}"
 
 FILES:${PN} = "/boot ${sysconfdir}"
