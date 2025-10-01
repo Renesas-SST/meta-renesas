@@ -35,16 +35,16 @@ do_compile() {
 		PMIC_BOARD=""
 		PMIC_BUILD_DIR="${B}/${target}/build_pmic"
 
-		if [ ${target} = "rzv2h-evk" ]; then
-				BOARD="RZV2H_DEV"
-		elif [ ${target} = "rzg2l-sbc" ]; then
-				BOARD="RZG2L_SBC"
-		elif [ ${target} = "rzg2l-evk" ]; then
-				BOARD="RZG2L_SMARC_PMIC"
-				PMIC_BOARD="RZG2L_SMARC_PMIC"
-		elif [ ${target} = "rzv2l-evk" ]; then
-				BOARD="RZV2L_SMARC"
-				PMIC_BOARD="RZV2L_SMARC_PMIC"
+		if [ "${target}" = "rzv2h-evk" ] || [ "${target}" = "rzv2h-rdk" ]; then
+			BOARD="RZV2H_DEV"
+		elif [ "${target}" = "rzg2l-sbc" ]; then
+			BOARD="RZG2L_SBC"
+		elif [ "${target}" = "rzg2l-evk" ]; then
+			BOARD="RZG2L_SMARC_PMIC"
+			PMIC_BOARD="RZG2L_SMARC_PMIC"
+		elif [ "${target}" = "rzv2l-evk" ]; then
+			BOARD="RZV2L_SMARC"
+			PMIC_BOARD="RZV2L_SMARC_PMIC"
 		fi
 
 		cd ${B}/${target}
