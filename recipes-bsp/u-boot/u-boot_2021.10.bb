@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 
 UBOOT_URL = "git://github.com/Renesas-SST/u-boot.git"
 SRC_URI = "${UBOOT_URL};name=machine;protocol=https;branch=${BRANCH}"
-BRANCH = "styhead/rz-cmn"
+BRANCH = "styhead/rz-cmn-3.1"
 SRCREV_machine = "${AUTOREV}"
 
 FILES:${PN} = "/boot ${sysconfdir}"
@@ -17,7 +17,7 @@ FILES:${PN} = "/boot ${sysconfdir}"
 # Add the /boot directory to the target's sysroot
 SYSROOT_DIRS += "/boot"
 
-DEVICETREE_NAME:rz-cmn = "rzg2l-sbc smarc-rzg2l smarc-rzv2l rzv2h-evk-ver1"
+DEVICETREE_NAME:rz-cmn = "rzg2l-sbc smarc-rzg2l smarc-rzv2l rzv2h-evk-ver1 rzv2h-rdk-ver1"
 
 # Install u-boot-nodtb.bin and u-boot device tree to temp location
 do_install() {
