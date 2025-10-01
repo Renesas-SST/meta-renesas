@@ -339,7 +339,7 @@ OPTIMIZE_KERN = "0"
 # Set to "0" to disable Docker integration (default)
 DOCKER_SUPPORT = "0"
 
-SUPPORT_TARGETS = "rzg2l-sbc rzg2l-evk rzv2l-evk rzv2h-evk"
+SUPPORT_TARGETS = "rzg2l-sbc rzg2l-evk rzv2l-evk rzv2h-evk rzv2h-rdk"
 # Build essential and openssh packages
 IMAGE_INSTALL:append = " packagegroup-core-buildessential"
 
