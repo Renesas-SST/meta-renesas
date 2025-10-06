@@ -1589,6 +1589,93 @@ For more examples and ideas, visit:
  https://docs.docker.com/get-started/
 ```
 
+#### 4.1.9 Generic USB WiFi framework
+
+The system supports the generic USB WiFi framework, which is derived from the Linux kernel mainline. A wide range of common USB WiFi adapters are supported, including those based on the following chipsets (module support is indicated in parentheses):
+
+* **MediaTek (MTK):** MT7601U, MT76x0U, MT76x2U, MT7663U, MT7921U (Wi-Fi 6), and MT7925U (Wi-Fi 6E).
+* **Realtek (RTL):** RTL8187, RTL8192CU, RTL8XXXU (various 802.11n/ac chips), and the modern **RTW88** family (RTL8822BU, RTL8822CU, RTL8723DU, RTL8821CU).
+* **Ralink (RT2x00):** RT2500USB, RT73USB, and RT2800USB (including RT3573, RT53XX, and RT55XX variants).
+* **Broadcom (BRCM):** BRCMFMAC (including specific USB support, enabled as built-in).
+* **Atheros/Qualcomm:** CARL9170, ATH6KL (USB), and AR5523.
+* **Others:** Libertas (USB/THINFIRM), AT76C50X (USB), RTL8187, and ZD1211RW.
+
+**Note:** For many chipsets (especially Realtek and Broadcom), operation requires providing the necessary proprietary firmware files to the system.
+
+The following steps describe how to enable support for a USB WiFi adapter that is not supported by default:
+
+---
+
+##### Step 1: Download and install the appropriate firmware
+
+Each WiFi chipset requires a specific firmware file that the kernel loads during initialization.
+Some public firmware files are available from the official Linux firmware repository:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/
+
+If they are missing there, please download the latest firmware files from the manufacturer's website.
+Store the firmware file in the system firmware directory so it can be loaded automatically:
+
+```shell
+root@rz-cmn:~# mkdir -p /lib/firmware
+root@rz-cmn:~# curl -s https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/<firmware_file_name> -o /lib/firmware/<firmware_file_name>
+root@rz-cmn:~# cp /lib/firmware/<firmware_file_name> /lib/firmware/$(uname -r)/
+root@rz-cmn:~# chmod 644 /lib/firmware/<firmware_file_name> /lib/firmware/$(uname -r)/<firmware_file_name>
+```
+**Notes:**
+
+- Only follow these steps if the firmware is missing.
+- Ensure the board has internet access before running the commands.
+- If the firmware is downloaded for the first time, a reboot may be required for proper initialization.
+- For a customized kernel that requires the Wi-Fi driver to be built-in (`=y`), embedding the firmware using
+  `CONFIG_EXTRA_FIRMWARE="<firmware_file_name>"` in the kernel configuration is recommended.
+
+---
+
+##### Step 2: Verify firmware loading and device recognition
+
+After connecting the USB WiFi adapter, verify that the kernel has recognized it and successfully loaded the firmware:
+
+```shell
+root@rz-cmn:~# dmesg | tail -n 100
+```
+If you see an error such as Direct firmware load failed with error -2, ensure the firmware file exists in `/lib/firmware/` and `/lib/firmware/$(uname -r)/`.
+
+##### Step 3: Connect to a WiFi network
+
+Once the device is detected, use standard Linux networking tools to connect:
+
+```
+root@rz-cmn:~# connmanctl
+connmanctl> enable wifi
+Enabled wifi
+connmanctl> agent on
+Agent registered
+connmanctl> scan wifi
+Scan completed for wifi
+connmanctl> services
+    xDredme10zW          wifi_0025ca329da3_78447265646d6531307a57_managed_psk
+                         wifi_0025ca329da3_hidden_managed_psk
+    REL-GLOBAL           wifi_0025ca329da3_52454c2d474c4f42414c_managed_ieee8021x
+    R-GUEST              wifi_0025ca329da3_522d4755455354_managed_none
+    RVC-WLS              wifi_0025ca329da3_5256432d574c53_managed_ieee8021x
+connmanctl> connect wifi_0025ca329da3_78447265646d6531307a57_managed_psk
+Agent RequestInput wifi_0025ca329da3_78447265646d6531307a57_managed_psk
+  Passphrase = [ Type=psk, Requirement=mandatory ]
+Passphrase? nFjey48aT9pk
+connmanctl> exit
+```
+
+To confirm the Wi-Fi is connected, ping to the outside world:
+
+```
+root@rz-cmn:~# ping www.google.com
+PING www.google.com(hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004)) 56 data bytes
+64 bytes from hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004): icmp_seq=1 ttl=57 time=43.2 ms
+64 bytes from hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004): icmp_seq=2 ttl=57 time=81.1 ms
+64 bytes from hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004): icmp_seq=3 ttl=57 time=124 ms
+```
+
 ### 4.2. RZ/G2L-SBC Yocto Features
 #### 4.2.1. 40-Pin IO Expansion Interface
 
