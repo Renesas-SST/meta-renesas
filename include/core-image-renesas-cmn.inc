@@ -11,6 +11,22 @@ IMAGE_INSTALL:append = " \
     bluez5 \
     bluez5-dev \
     obexftp \
+    linux-firmware-mt7601u \
+    linux-firmware-mt7650 \
+    linux-firmware-mt76x2 \
+    linux-firmware-ralink \
+    linux-firmware-rtl8188 \
+    linux-firmware-rtl8192cu \
+    linux-firmware-rtl8192su \
+    linux-firmware-rtl8723 \
+    linux-firmware-rtl8821 \
+    linux-firmware-rtl8822 \
+    linux-firmware-ath3k \
+    linux-firmware-carl9170 \
+    linux-firmware-ath9k \
+    linux-firmware-bcm43xx \
+    linux-firmware-bcm43362 \
+    linux-firmware-usb8997 \
 "
 
 # Packages for users application development
