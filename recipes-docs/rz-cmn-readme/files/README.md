@@ -57,17 +57,10 @@ This section details the steps to build the core Yocto images and extensible SDK
     $ mkdir ~/renesas/rz-cmn-srp
     ```
 
-3.  **Copy Release Files:** Copy the following files and folders from your release package into your workspace: `rz_builder.sh`, `site.conf`, `README.md`, `jq-linux-amd64`, `config.json`, and the `patches/` and `files_to_add/` folders. Also, copy any downloaded proprietary `.zip` files.
+3.  **Copy Release Files:** Copy all the contents in folder `host/src/rz-cmn-srp/` from the release package into `~/renesas/rz-cmn-srp` folder. Also, copy any downloaded proprietary `.zip` files.
     ```bash
-    $ cp *.zip ~/renesas/rz-cmn-srp           # Copy downloaded proprietary packages
-    $ cp README.md ~/renesas/rz-cmn-srp
-    $ cp rz_builder.sh ~/renesas/rz-cmn-srp
-    $ cp site.conf ~/renesas/rz-cmn-srp
-    $ cp jq-linux-amd64 ~/renesas/rz-cmn-srp
-    $ cp git_patch.json ~/renesas/rz-cmn-srp
-    $ cp config.json ~/renesas/rz-cmn-srp
-    $ cp -r patches/ ~/renesas/rz-cmn-srp
-    $ cp -r files_to_add/ ~/renesas/rz-cmn-srp
+    $ cp *.zip ~/renesas/rz-cmn-srp                               # Copy downloaded proprietary packages
+    $ cp -r host/src/rz-cmn-srp/* ~/renesas/rz-cmn-srp
     ```
 
 ### 2.3. Build Host Resource Configuration
@@ -127,16 +120,16 @@ $ MACHINE<target_machine> IMAGE=<target_image> ./rz_builder.sh build
 
 **(1) Please note that this build requires internet access and will take several hours.**
 
-**(2) - If `IMAGE` is not set in the build command. The default image is `core-image-weston`.**
+**(2) If `IMAGE` is not set in the build command. The default image is `core-image-weston`.**
 
-**(3) - If MACHINE is not set in the build command, the default machine is `rz-cmn`, which builds for multiple board platforms.**
+**(3) If `MACHINE` is not set in the build command, the default machine is `rz-cmn`, which builds for multiple board platforms.**
 
 ### 2.5. Collect the Output
 
 Upon successful Yocto build, the output folder will be located at:
 `~/renesas/rz-cmn-srp/yocto_<target_board>/build/tmp/deploy/images/<target_board>`
 
-For example: `~/renesas/rz-cmn-srp/yocto_rzsbc_board/build/tmp/deploy/images/rz-cmn`
+For example: `~/renesas/rz-cmn-srp/yocto_cmn_board/build/tmp/deploy/images/rz-cmn`
 
 The output directory generally contains:
 
@@ -179,10 +172,13 @@ system settings.
   Key file:
   o uEnv.txt: A file that holds boot configuration parameters.
   - images/: Holds the final system images and associated files required for the target device.
-      - Firmware files: Files like bl2_bp-<machine>.bin and bl2-<machine>.bin are used to boot the device.
-      - System images: Files with the ‘.wic’ extension corresponding to different build variants (BSP, minimal, Qt, Weston, Renesas images).
-      - dtbs folder: Directory containing ‘.dtb’ and ‘.dtbo’ files necessary for hardware configuration.
+      - atf: The RZ Common Arm Trusted-firmware (TF-A) directory contains BL2, BL31 binaries and TF-A configuration DTBs (FDTS).
+      - u-boot/: The RZ Common U-Boot directory contains the U-Boot binaries and device tree blobs (DTBs) used across all supported boards.
+      - linux/: The directory contains linux kernel and device trees for the target images.
+      - System images: Files with the ‘.wic’ extension corresponding to different build variant (BSP, minimal, Weston, Renesas images).
       - rootfs folder: Compressed archives (For example, core-image-bsp.tar.bz2) contain the root file system for each image.
+      - Flash writer binary files for all supported boards.
+      - Board identification binary files for all supported boards.
 - README.md (root level): This is the comprehensive guide that provides an overview of the 
   entire release package, including instructions on how to use, build, and deploy the system.
 
@@ -204,7 +200,7 @@ For example:
 $ IMAGE=renesas-core-image-weston ./rz_builder.sh build-sdk
 ```
 
-The resulting eSDK installer will be located in `~/renesas/rz-cmn-srp/yocto_rzsbc_board/build/tmp/deploy/sdk`.
+The resulting eSDK installer will be located in `~/renesas/rz-cmn-srp/yocto_cmn_board/build/tmp/deploy/sdk`.
 The eSDK installer will have the extension ".sh".
 
 ```shell
@@ -218,9 +214,9 @@ poky-glibc-x86_64-renesas-core-image-weston-cortexa55-rz-cmn-toolchain-ext-5.1.4
 **Note:**
 **(1) The SDK build may fail depending on the build environment. At that time, please run the build again after a period of time.**
 
-**(2) The SDK result of the `ls` command is built using the target image `IMAGE=renesas-core-image-weston`. Other SDKs will be located in the same location `~/renesas/rz-cmn-srp/yocto_rzsbc_board/build/tmp/deploy/sdk` but will have different names according to the target image.**
+**(2) The SDK result of the `ls` command is built using the target image `IMAGE=renesas-core-image-weston`. Other SDKs will be located in the same location `~/renesas/rz-cmn-srp/yocto_cmn_board/build/tmp/deploy/sdk` but will have different names according to the target image.**
 
-#### 2.5.1. Installing the eSDK on the Host System
+#### 2.6.1. Installing the eSDK on the Host System
 
 The eSDK enables development and testing of custom applications for RZ boards across various systems. This section describes the setup process.
 
@@ -236,72 +232,349 @@ $ source ~/esdk/5.1.4/environment-setup-cortexa55-poky-linux
 
 This step is required for each new terminal session before running eSDK tools or compiling applications.
 
+#### 2.6.2. Using `devtool` in the Yocto eSDK
+
+This section shows how to use the eSDK's `devtool` workspace for modifying, testing, and maintaining recipes without touching upstream metadata. It focuses on Linux kernel, device tree, and driver changes on the Renesas RZ Common System.
+
+##### 2.6.2.1 Overview
+
+`devtool` is part of the Yocto Project **Extensible SDK (eSDK)**. It provides an isolated workspace to:
+- fetch and modify recipe sources locally,
+- build those changes,
+- and integrate them into a full image for testing.
+
+##### 2.6.2.2 Prerequisites
+1. Install/extract the Yocto eSDK (see Section 2.6.1. Installing the eSDK on the Host System).  
+2. Source the eSDK environment:
+   ```bash
+   source /path/to/poky_sdk/environment-setup-<arch>-poky-linux
+   # Example:
+   source ~/poky_sdk/environment-setup-cortexa55-poky-linux
+   ```
+   You should see:
+   ```
+   SDK environment now set up; additionally you may now run devtool to perform development tasks.
+   Run devtool --help for further details.
+   ```
+
+##### 2.6.2.3 Common Usage Scenarios
+
+###### A) `devtool modify` — Prepare a workspace
+
+Checks out the recipe's source into the workspace so changes don't touch upstream layers.
+
+**Syntax**
+```bash
+devtool modify <recipe>
+```
+
+**Example (Linux kernel)**
+
+```bash
+devtool modify linux-yocto
+```
+
+This will:
+- create the kernel source under `~/poky_sdk/workspace/sources/linux-yocto/`,
+- create a `.bbappend` for `linux-yocto` in `~/poky_sdk/workspace/appends/`,
+- prepare the environment for kernel edits.
+
+**(1) Applying kernel patches (linux-yocto)**  
+In this BSP, `linux-yocto` is out-of-tree:
+- Patches are stored in: `workspace/sources/linux-yocto/.kernel-meta/`
+- The default config (e.g., `renesas_defconfig`) is managed out-of-tree.
+
+Apply the patch queue after `devtool modify`:
+
+```bash
+cd ~/poky_sdk/workspace/sources/linux-yocto/.kernel-meta
+git am $(cat patch.queue)
+```
+
+After applying patches you may:
+- add kernel config fragments,
+- or directly build with `devtool build linux-yocto`.
+
+**(2) Adding kernel configuration**
+
+*Method 1 — Edit out‑of‑tree defconfig*  
+
+Edit the defconfig shipped in your layer (example path):
+```
+~/poky_sdk/layers/meta-renesas/recipes-kernel/linux/rz-cmn/common/renesas_defconfig
+```
+
+*Method 2 — Add a config fragment (.cfg)*
+
+```bash
+# Create the append skeleton
+mkdir -p ~/poky_sdk/workspace/appends/linux-yocto/files
+
+# Example fragment: enable USB-serial and FTDI
+cat > ~/poky_sdk/workspace/appends/linux-yocto/files/usb-serial-ch341.cfg <<'EOF'
+CONFIG_USB_SERIAL=y
+CONFIG_USB_SERIAL_CH341=y
+EOF
+```
+
+Create/modify the bbappend (version may vary):
+
+```bash
+vim ~/poky_sdk/workspace/appends/linux-yocto/linux-yocto_6.10.bbappend
+```
+
+Append the fragment to `SRC_URI`:
+
+```bitbake
+SRC_URI:append = " file://usb-serial-ch341.cfg"
+```
+
+###### B) `devtool build` — Build the recipe
+Compiles the currently‑modified recipe from the workspace.
+
+**Syntax**
+```bash
+devtool build <recipe>
+```
+
+**Example**
+```bash
+devtool build linux-yocto
+```
+
+**What it does**
+- Uses the workspace sources (`devtool modify <recipe>`).
+- Runs normal BitBake tasks (`do_compile`, `do_install`, packaging).
+- Produces deployable artifacts depending on the recipe.
+
+**What it does *not* do**
+- It does **not** build a complete image. Use `devtool build-image <image>` for that.
+
+**Typical output locations**
+- Workdir (per recipe/machine):  
+  `<sdk-root>/tmp/work/<machine>-poky-linux/<recipe>/<version>/`
+- Deployed artifacts (if the recipe deploys output):  
+  `<sdk-root>/tmp/deploy/`
+
+For `linux-yocto`, examples:
+- Kernel modules (`.ko`):  
+  `~/poky_sdk/tmp/work/rz-cmn-poky-linux/linux-yocto/6.10.14+git/image/usr/lib/modules/6.10.14-yocto-standard/kernel/`
+- Kernel Image & DTBs (examples):  
+  - In workdir:  
+    `~/poky_sdk/tmp/work/rz-cmn-poky-linux/linux-yocto/6.10.14+git/image/boot/`  
+  - In deploy (if deployed by recipe):  
+    `~/poky_sdk/tmp/deploy/images/rz-cmn/target/images/linux`
+
+> **Note (Ubuntu-based rootfs):** If artifacts from `devtool build` (e.g., `Image`, DTBs, modules) are intended for Ubuntu-based images (`ubuntu-core-image`, `ubuntu-lxde-image`), build with `DISTRO=ubuntu-tiny`:
+> ```bash
+> export DISTRO=ubuntu-tiny
+> devtool build <recipe>
+> ```
+
+###### C) `devtool reset` — Clean up the workspace
+Removes the workspace copy and restores the original recipe.
+
+**Syntax**
+```bash
+devtool reset <recipe>
+```
+
+**Example**
+```bash
+devtool reset linux-yocto
+```
+This deletes the workspace sources and temporary `.bbappend` files. Changes not captured with `devtool update-recipe` will be lost.
+
+###### D) `devtool build-image` — Build a full target image
+Builds a complete image **including** outputs from workspace recipes (useful for end‑to‑end tests).
+
+**Syntax**
+```bash
+devtool build-image <image>
+```
+
+**Example**
+```bash
+devtool build-image core-image-weston
+```
+
+**Behavior**
+- Rebuilds the specified image.
+- Auto‑includes outputs from modified workspace recipes.
+- Produces bootable images in deploy, e.g.:
+  - `.wic` (complete image):  
+    `<sdk-root>/tmp/deploy/images/<machine>/target/images/`
+  - compressed rootfs (for flashing/NFS):  
+    `<sdk-root>/tmp/deploy/images/<machine>/target/images/rootfs`
+
+Use this after testing a single recipe (e.g., `linux-yocto`) to validate integration across the full system.
+
+**Note:** If the workspace got into a bad state, reset and re-import:
+
+```
+devtool reset <recipe>
+devtool modify <recipe>
+# re-apply patches/config (if needed), then:
+devtool build <recipe>
+
+# or build the image
+devtool build-image <target-image>
+```
+
 ## 3. Programming/Flashing Images
 
-This section explains how to flash the bootloader and root filesystem onto Renesas boards using provided scripts. Both unified and dedicated tools are available, depending on user preference or platform.
+This section explains how to program and flash various firmware and root file system images onto  Renesas boards. It covers firmware components, prerequisites hardware setup for each board, and usage of the universal flashing script for seamless flashing workflows.
 
-### 3.1. Prerequisites:
+This package contains the following firmware components.
 
-- Python
-  - For Windows install: please refer to [this page](https://www.python.org/downloads/) to download the setup file.
-  - For Linux install: `sudo apt install python3`
+### 3.1. Firmware Description
 
-- Python packages: Follows package is required to be using the flashing script. Please install if one of them is missing:
+| Module                     | Binary / Files                                   | Stack Layer | Description |
+|---------------------------|--------------------------------------------------|-------------|-------------|
+| ROM code                  | N/A                                              | BL1         | Internal ROM executed by the SoC's primary core at power‑on reset (POR). |
+| Flash Writer              | `Flash_Writer_SCIF_<board>.mot`                  | BL2         | Factory serial loader: BL1 (ROM) loads it into SRAM via UART **SCIF0**; it then receives another image over SCIF0 and flashes to **xSPI/QSPI** or **eMMC** boot sectors. Provides a command‑based UI. |
+| Arm Trusted Firmware‑A    | `bl2-rz-cmn.bin`, `bl31-rz-cmn.bin`, `<board>.dtb` | BL2 & BL31  | Minimal TF‑A (without DTB embedded). The flashing script dynamically combines `bl2-rz-cmn.bin` with the device tree during flashing. Distributed in **.bin** format only (raw in‑system flashing). |
+| U‑Boot (BL33)             | `u-boot-nodtb-rz-cmn.bin`, `<board>.dtb`         | BL33        | U‑Boot (nodtb) binary and matching device tree; the flashing script packages these into the FIP. |
+| Board Identification      | `<board>-platform-settings.bin`                  | —           | Stores platform settings (model IDs, revisions, memory locations, image sizes) so firmware/bootloaders can identify hardware and locate boot components efficiently during startup or flashing. |
 
+> **Note**: A prebuilt FIP is **not** shipped. The flashing script builds a valid FIP at flash time from `bl31-rz-cmn.bin`, `u-boot-nodtb-rz-cmn.bin`, and `<board>.dtb`. It also merges `bl2-rz-cmn.bin` with `<board>.dtb` to create the BL2 image flashed to the boot sector.
+
+### 3.2. Prerequisites:
+
+Before flashing any images, ensure the following system requirements are met on your host PC and 
+that necessary files and tools are available.
+
+- Operating Systems
+  - Linux (Ubuntu 20.04 or newer recommended)
+  - Windows 10 or newer
+- Software
+  - Python 3.8 or later
+  - GNU Binutils (for `objcopy`)
+  - Firmware release package (images and tools)
+- Hardware
+  - Required cables: USB and UART debug cable
+  - SD card (8 GB or larger)
+
+#### Linux setup
+
+1. **Install Python, Binutils, and build tools**
+   ```bash
+   sudo apt update
+   sudo apt install -y python3 python3-pip binutils build-essential libssl-dev
+   ```
+   - `python3`, `python3-pip`: run host scripts  
+   - `binutils`: provides `objcopy`  
+   - `build-essential` *(optional)*: `gcc`, `g++`, `make` for rebuilding firmware  
+   - `libssl-dev`: OpenSSL headers
+
+2. **Install Python dependencies**  
+  It is recommended to use a virtual environment with any supported Python version (3.10, 3.11, or 3.12).
+
+    Example for Python 3.12
+
+    ```bash
+    sudo apt install -y python3.12-venv
+    python3 -m venv .venv
+    source .venv/bin/activate
+    ```
+
+    If the distribution uses a different Python 3 version (for example, 3.10 or 3.11), replace 3.12 with the appropriate version.
+    
+    After activating the virtual environment, install the required tools using requirements.txt.
+
+    ```
+    cd <path/to/package>/host/tools/
+    pip3 install -r requirements.txt
+    ```
+
+#### Windows Setup
+1. **Install Python 3**
+   - Download and install from <https://www.python.org/>.  
+   - Enable **“Add Python to environment variables.”**  
+   If `pip` is missing, repair your Python installation or download [get-pip.py](https://bootstrap.pypa.io/get-pip.py) and run:
+
+    ```powershell
+    py get-pip.py
+    ```
+
+2. **Install Python dependencies (run as Administrator)**  
+   Open **PowerShell**:
+   - **Option 1 — Using `requirements.txt` (recommended)**
+     ```powershell
+     cd <path\to\the\package>\host\tools
+     py -m pip install -r requirements.txt
+     ```
+   - **Option 2 — Install manually**
+     Using the Python launcher:
+     ```powershell
+     py -m pip install pyserial
+     py -m pip install tomli
+     # Only if using Python < 3.7
+     # py -m pip install dataclasses
+     ```
+     Or using `pip` directly (if already on PATH):
+     ```powershell
+     pip install pyserial
+     pip install tomli
+     # Only if using Python < 3.7
+     # pip install dataclasses
+     ```
+
+3. **Environment and tool dependencies**
+   - **GNU Binutils**
+     - Download and install [MinGW-w64](https://sourceforge.net/projects/mingw/)
+     - Install to default location (`C:\MinGW`).
+     - Add `C:\MinGW\bin` to **Environment Variables → Path**.
+   - **OpenSSL (for MinGW-w64)**
+     - Download the package from [MinGW-w64 OpenSSL](https://packages.msys2.org/packages/mingw-w64-x86_64-openssl)
+     - Extract the package into: `C:/mingw64`
+     - Tools (e.g., `fiptool.exe`) depend on OpenSSL runtime DLLs.
+       - Add `C:\mingw64\bin` to **Path**, or copy `C:\mingw64\bin\libcrypto-3-x64.dll` into `<path\to\the\package>\host\tools\bin\windows\`.
+
+   > **Note**: `firmware_compile.py` uses `objcopy` (Binutils). Ensure `C:\MinGW\bin` is on **Path**, or SREC/ELF conversions will fail.
+
+### 3.3. Universal Flashing Script
+
+`universal_script.py` is a cross-platform tool that simplifies flashing workflows. It uses a board configuration JSON (`flash_images.json`) to map images and procedures.
+
+**Location**
 ```
-pip install pyserial
-pip install dataclasses (if using python <3.7)
+<path/to/package>/host/tools/universal_script.py
 ```
 
-### 3.2. Universal Flashing Script
-
-A cross-platform script, `universal_script.py`, is provided to simplify flashing workflows. It uses a board configuration JSON and supports:
-
-- Bootloader flashing
-- uload-bootloader flashing
-- Root filesystem flashing to microSD card
-
-Location: Please find the script in Yocto build output: `</path/to/your/yocto/package>/host/tools/universal_script.py`
-
-**Hierarchy**
+**Tools directory hierarchy** (excerpt)
 ```
-universal-scripts/
-├── host
-│   └── tools
-│       ├── bin
-│       │   ├── linux
-│       │   │   ├── bpgen
-│       │   │   ├── fiptool
-│       │   │   └── Readme.md
-│       │   ├── Readme.md
-│       │   └── windows
-│       │       ├── bpgen.exe
-│       │       ├── fiptool.exe
-│       │       └── Readme.md
-│       ├── bootloader_flasher
-│       │   ├── bootloader_flash.py
-│       │   └── README.md
-│       ├── config
-│       │   ├── boards_flash_config.toml
-│       │   └── README.md
-│       ├── firmware_compile
-│       │   ├── firmware_compile.py
-│       │   └── Readme.md
-│       ├── flash_images.json
-│       ├── README.md
-│       ├── sd_creator
-│       │   ├── README.md
-│       │   ├── sd_flash.py
-│       │   └── tools
-│       │       ├── AdbWinApi.dll
-│       │       └── fastboot.exe
-│       ├── uload_bootloader
-│       │   ├── README.md
-│       │   └── uload_bootloader_flash.py
-│       └── universal_flash.py
-└── README.md
+host/tools/
+├─ universal_script.py
+├─ bootloader_flasher/
+├─ firmware_compile/
+└─ sd_creator/
 ```
-#### 3.2.1. JSON Configuration for a New Board
+
+#### 3.3.1. `flash_images.json` — File Overview and Usage
+
+`flash_images.json` maps **boards → binaries → flashing operations**. It lists which images belong to each board, where they are located, and which flashing methods (e.g., **xSPI** vs **eMMC**, **UDP** vs **OTG**) apply.
+
+**Location**
+- Must reside beside `universal_script.py`.
+- Images are typically under `<path_to_release>/target/images/` (optionally with subfolders like `atf/`, `u-boot/dtbs/`).
+
+##### JSON Structure (Schema)
+
+| Key                   | Description                                                                 | Allowed / Example Values                  |
+|-----------------------|-----------------------------------------------------------------------------|-------------------------------------------|
+| `soc`                 | SoC/MPU family identifier                                                   | `g2l`, `v2l`, `v2h`                       |
+| `bl2`                 | BL2 (stage 2) image containing FCONF device tree                            | `bl2_bp_<board>.srec`                     |
+| `board_identification`| Board‑info binary from `binmake` (not the JSON source)                      | `<board>-platform-settings.bin`           |
+| `fip`                 | FIP image containing BL31 and U‑Boot nodtb+DTB                              | `fip_<board>.srec`                        |
+| `atf_fdts`            | FCONF DTB(s) for BL2                                                         | `<board>.dtb`                             |
+| `uboot_dtb`           | U‑Boot device tree blob                                                      | `<board>.dtb`                             |
+| `flash_writer`        | Flash Writer binary for low‑level programming                                | `Flash_Writer_SCIF_<board>.mot`           |
+| `ipl_flash_method`    | IPL media used for flashing                                                  | `xspi`, `emmc`                            |
+| `rootfs`              | Root filesystem image                                                        | `core-image-minimal.wic`                  |
+| `rootfs_flash_method` | Method to flash rootfs                                                       | `udp`, `otg`                              |
+
+##### JSON Configuration for a New Board
 
 The `flash_images.json` file is located at the same level as the universal script and contains predefined image mappings for supported devices. The images referenced for flashing must be placed in the directory:`</path/to/your/yocto/package>/target/images`.
 
@@ -352,7 +625,7 @@ This table below lists the available options (and sensible defaults) for `ipl_fl
 
 ---
 
-## Field Reference
+Field Reference
 
 - **`ipl_flash_method`**
   Defines where the **IPL/BL2** image is flashed:
@@ -364,33 +637,51 @@ This table below lists the available options (and sensible defaults) for `ipl_fl
   - `udp` — U-Boot `fastboot udp` over Ethernet
   - `otg` — U-Boot `fastboot usb` (USB-OTG)
 
-#### 3.2.1. Flow chart
+#### 3.3.2. Flow chart
 
 ```mermaid
 flowchart TD
+    %% ============ Styles ============
     classDef default fill:#f0f4f8,stroke:#333,stroke-width:1px,font-size:14px
     classDef decision fill:#fef6e4,stroke:#c89b3c,stroke-width:2px,font-weight:bold
-    classDef action fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    classDef actionHost fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    classDef actionTarget fill:#ede9fe,stroke:#7c3aed,stroke-width:2px
     classDef terminal fill:#d1fae5,stroke:#10b981,stroke-width:2px,font-weight:bold
 
-    A((Start)):::terminal --> B[Display available boards]:::action
-    B --> C[User selects board]:::action
-    C --> D[Display available serial ports]:::action
-    D --> E[User selects port and baud rate]:::action
+    %% Smaller legend variants (no class chaining)
+    classDef terminalLegend fill:#d1fae5,stroke:#10b981,stroke-width:1px,font-size:10px,font-weight:bold
+    classDef decisionLegend fill:#fef6e4,stroke:#c89b3c,stroke-width:1px,font-size:10px,font-weight:bold
+    classDef actionHostLegend fill:#dbeafe,stroke:#3b82f6,stroke-width:1px,font-size:10px
+    classDef actionTargetLegend fill:#ede9fe,stroke:#7c3aed,stroke-width:1px,font-size:10px
+
+    %% ============ Flow ============
+    A[Start]:::terminal --> B[Display available boards]:::actionHost
+    B --> C[User selects board]:::actionHost
+    C --> D[Display available serial ports]:::actionHost
+    D --> E[User selects port and baud rate]:::actionHost
 
     E --> F{Write RootFS?}:::decision
-    F -->|y| FR[Write RootFS to SD/eMMC]:::action
+    F -->|y| FR[Write RootFS to SD or eMMC]:::actionTarget
     FR --> G{Write IPL?}:::decision
     F -->|n| G{Write IPL?}:::decision
 
     G -->|y| H{Select IPL method}:::decision
-    H -->|BootloaderFlash| M[Compile firmware: build BL2 & FIP with per-board DTB at runtime]:::action
-    M --> J[Write IPL by BootloaderFlash]:::action
-    H -->|ULoadFlash| K[Write IPL by ULoadFlash]:::action
+    H -->|BootloaderFlash| M[Compile firmware: build BL2 and FIP with per-board DTB at runtime]:::actionHost
+    M --> J[Write IPL by BootloaderFlash]:::actionTarget
+    H -->|ULoadFlash| K[Write IPL by ULoadFlash]:::actionTarget
 
-    G -->|n| L((End)):::terminal
+    G -->|n| L[End]:::terminal
     J --> L
     K --> L
+
+    %% ============ Legend ============
+    subgraph LEGEND[Legend]
+      direction LR
+      L1[Terminal]:::terminalLegend
+      L2{Decision}:::decisionLegend
+      L3[Action – Host: PC tools]:::actionHostLegend
+      L4[Action – Target: Board]:::actionTargetLegend
+    end
 ```
 
 **Notes:**
@@ -399,7 +690,7 @@ flowchart TD
 - For Bootloader-flash: set boot switches to SCIF download mode.
 - For Uload-flash or rootfs flashing: set boot switches to normal mode.
 
-#### 3.2.2. Usage
+#### 3.3.3. Usage
 - Linux:
 ```
 python3 universal_script.py
@@ -410,11 +701,11 @@ python3 universal_script.py
 py universal_script.py
 ```
 
-### 3.3. Dedicated Flashing Scripts
+### 3.4. Dedicated Flashing Scripts
 
 If preferred, individual scripts can be used for each flashing operation.
 
-#### 3.3.1. Flash Bootloader
+#### 3.4.1. Flash Bootloader
 
 This script is used to flash the initial bootloader image onto the board via a serial interface. It is typically used when setting up the board for the first time or recovering from a corrupted bootloader.
 
@@ -425,7 +716,7 @@ host/tools/bootloader_flasherr/
 
 Refer to the `Readme.md` file in that folder for detail instructions.
 
-#### 3.3.2. Flash Bootloader from U-Boot Console
+#### 3.4.2. Flash Bootloader from U-Boot Console
 
 This method allows bootloader updates directly from the U-Boot console without requiring changes to hardware boot modes. It is ideal for in-system updates after the system is already running.
 
@@ -436,7 +727,7 @@ host/tools/uload_bootloader/
 
 Refer to the `Readme.md` file in that folder for detail instructions.
 
-#### 3.3.3. Flash Root Filesystem to microSD Card
+#### 3.4.3. Flash Root Filesystem to microSD Card
 
 This script is used to write the root filesystem and related images to a SD card, which the board uses to boot and run Linux.
 
@@ -453,11 +744,431 @@ Refer to the `Readme.md` file in that folder for detail instructions.
 
 This section describes features generally supported across Renesas RZ/G2L and RZ/V2L series and RZ/V2H boards. Specific peripheral availability may depend on the board design will introduce later.
 
-#### 4.1.1. Package Management
+#### 4.1.1. Generic USB Bluetooth Framework
+
+The RZ boards support the generic USB Bluetooth framework, which is back-ported from the Linux kernel mainline. TP-Link UB500 Bluetooth 5.0 Nano USB Adapter (Realtek chipset) has been tested and proven to work on the board.
+
+The following steps will guide how to enable the TP-Link UB500 adapter:
+
+- Step 1: Download the appropriate firmware for the TP-Link UB500 adapter and store it on the root filesystem. This will ensure it is loaded each time the board boots (one-time setup).
+
+```shell
+root@rz-cmn:~# mkdir -p /lib/firmware/rtl_bt
+root@rz-cmn:~# curl -s https://raw.githubusercontent.com/Realtek-OpenSource/android_hardware_realtek/rtk1395/bt/rtkbt/Firmware/BT/rtl8761b_fw -o /lib/firmware/rtl_bt/rtl8761bu_fw.bin
+```
+**Note:**
+**(1) Please make sure you have internet access before running the commands.**
+
+**(2) If the firmware is being downloaded for the first time, a reboot of the board is required to ensure the TP-Link UB500 adapter functions properly.**
+
+**(3) By default, Bluetooth is blocked by RFKILL. To unblock it, use the command 'rfkill unblock bluetooth'**
+
+- Step 2: Unblock bluetooth and verify whether the bluetooth status is UP RUNNING.
+
+Run the following command to ensure that rfkill unblock bluetooth:
+
+```shell
+
+root@rz-cmn:~# hciconfig -a
+hci0:   Type: Primary  Bus: USB
+        BD Address: E8:48:B8:C8:20:00  ACL MTU: 1021:6  SCO MTU: 255:12
+        DOWN
+        RX bytes:1045 acl:0 sco:0 events:92 errors:0
+        TX bytes:12279 acl:0 sco:0 commands:92 errors:0
+        Features: 0xff 0xff 0xff 0xfe 0xdb 0xfd 0x7b 0x87
+        Packet type: DM1 DM3 DM5 DH1 DH3 DH5 HV1 HV2 HV3
+        Link policy: RSWITCH HOLD SNIFF PARK
+        Link mode: PERIPHERAL ACCEPT
+root@rz-cmn:~# rfkill list
+0: hci0: Bluetooth
+        Soft blocked: yes
+        Hard blocked: no
+root@rz-cmn:~# rfkill unblock bluetooth
+root@rz-cmn:~# rfkill list
+0: hci0: Bluetooth
+        Soft blocked: no
+        Hard blocked: no
+root@rz-cmn:~# hciconfig hci0 up
+```
+
+- Step 3: Verify whether the TP-Link UB500 adapter is properly attached.
+
+Run the following command to ensure that the system has recognized the TP-Link UB500 adapter:
+
+```shell
+root@rz-cmn:~# hciconfig hci0 -a
+hci0:   Type: Primary  Bus: USB
+        BD Address: E8:48:B8:C8:20:00  ACL MTU: 1021:5  SCO MTU: 255:11
+        UP RUNNING PSCAN
+        RX bytes:2264 acl:0 sco:0 events:211 errors:0
+        TX bytes:32795 acl:0 sco:0 commands:211 errors:0
+        Features: 0xff 0xff 0xff 0xfe 0xdb 0xfd 0x7b 0x87
+        Packet type: DM1 DM3 DM5 DH1 DH3 DH5 HV1 HV2 HV3
+        Link policy: RSWITCH HOLD SNIFF PARK
+        Link mode: SLAVE ACCEPT
+        Name: 'rz-cmm'
+        Class: 0x000000
+        Service Classes: Unspecified
+        Device Class: Miscellaneous,
+        HCI Version: 5.1 (0xa)  Revision: 0x9dc6
+        LMP Version: 5.1 (0xa)  Subversion: 0xd922
+        Manufacturer: Realtek Semiconductor Corporation (93)
+```
+
+The TP-Link UB500 adapter is now ready to connect.
+
+- Step 4: Connect Bluetooth Device
+
+Use `bluetoothctl` to connect Bluetooth Device:
+
+```Shell
+root@rz-cmn:~# bluetoothctl
+[bluetooth]# power on
+[bluetooth]# pairable on
+[bluetooth]# agent on
+[bluetooth]# default-agent
+```
+
+Set the target board to be discoverable by other Bluetooth devices:
+
+```Shell
+[bluetooth]# discoverable on
+```
+
+Enable and disable scan function:
+
+```Shell
+[bluetooth]# scan on
+[bluetooth]# scan off
+```
+
+Pair and connect the device:
+
+```Shell
+[bluetooth]# pair FC:02:96:A5:80:97
+[bluetooth]# trust FC:02:96:A5:80:97
+[bluetooth]# connect FC:02:96:A5:80:97
+```
+
+`FC:02:96:A5:80:97` is the address of the Bluetooth device. Please change it to match your device's address.
+
+Exit `bluetoothctl`.
+
+```Shell
+[Mi Sports BT]# quit
+```
+
+**Send files over Bluetooth**
+
+To share files between the RZG2L-SBC and the target Bluetooth device, run the obexctl daemon and connect:
+
+```Shell
+root@rz-cmn:~# export $(dbus-launch)
+root@rz-cmn:~# /usr/libexec/bluetooth/obexd -r /home/root -a -d & obexctl
+[1] 595
+[NEW] Client /org/bluez/obex
+[obex]#
+[obex]# connect FC:02:96:A5:80:97
+Attempting to connect to FC:02:96:A5:80:97
+[NEW] Session /org/bluez/obex/client/session0 [default]
+[NEW] ObjectPush /org/bluez/obex/client/session0
+Connection successful
+```
+
+`FC:02:96:A5:80:97` is the address of the Bluetooth device. Please change it to match your device’s address.
+
+Then, to send files, use `send` command while connected to the OBEX Object Push profile.
+
+```Shell
+[FC:02:96:A5:80:97]# send /boot/uEnv.txt
+Attempting to send /boot/uEnv.txt to /org/bluez/obex/client/session0
+[NEW] Transfer /org/bluez/obex/client/session0/transfer0
+Transfer /org/bluez/obex/client/session0/transfer0
+        Status: queued
+        Name: uEnv.txt
+        Size: 2069
+        Filename: /boot/uEnv.txt
+        Session: /org/bluez/obex/client/session0
+[CHG] Transfer /org/bluez/obex/client/session0/transfer0 Status: complete
+[DEL] Transfer /org/bluez/obex/client/session0/transfer0
+[FC:02:96:A5:80:97]# quit
+```
+
+In this example, a text file names `uEnv.txt` which is located at `/boot` is sent to the target Bluetooth device.
+
+#### 4.1.2. On-board Audio Codec with Stereo Jack Analog Audio IO configurations
+
+Each RZ board features an onboard audio codec and may include a dedicated video codec chip, depending on the model. Audio playback and recording are supported via the 3.5mm stereo jack (6-pin).
+- Audio Data Interface: Connected to DAI (SSI1) using the I2S format.
+- Control Interface: Managed via I2C0.
+
+Step 1: Discover available audio interfaces
+
+Before playback or recording, list all ALSA devices and their properties:
+
+```
+root@rz-cmn:~# aplay -l # List available playback devices
+root@rz-cmn:~# arecord -l # List available recording devices
+root@rz-cmn:~# aplay -L # List all supported PCM devices and formats
+```
+
+This step ensures that the onboard codec is recognized and identifies the correct device index (e.g., 
+hw:0,0).
+
+Step 2: Prepare Audio files
+
+Prepare the required audio files and copy them into the target filesystem (e.g., /home/root/audio/).
+
+- The aplay tool supports only WAV (.wav) format.
+- For additional formats such as MP3 and AAC, use the pre-installed GStreamer framework, which provides compatibility with multiple codecs.
+
+Step 3: Playback 
+
+Examples:
+- WAV playback (ALSA/PCM):
+
+  ```shell
+  root@rz-cmn:~# aplay -D hw:0,0 /home/root/audios/test.wav
+  ```
+  - -D specifies the ALSA device to use.
+  - hw:0,0 means card 0, device 0, which corresponds to the onboard audio codec (as shown in the aplay -l output).
+  - If the board reports a different index, replace hw:0,0 with the correct value (e.g., hw:1,0).
+
+- WAV, MP3, AAC playback (Gstreamer):
+
+  ```shell
+  root@rz-cmn:~# gst-play-1.0 /home/root/audios/test.wav
+  root@rz-cmn:~# gst-play-1.0 /home/root/audios/test.mp3
+  root@rz-cmn:~# gst-play-1.0 /home/root/audios/test.aac
+  ```
+
+Step 4: Recording:
+
+To capture audio through the onboard codec:
+
+```
+root@rz-cmn:~# arecord -f S16_LE -r 48000 audio_capture.wav
+```
+
+Press Ctrl+C if you want to stop recording.
+
+In the above command:
+
+- -f S16_LE : audio format
+
+- -r 48000  : sample rate of the audio file (48KHz)
+
+To verify the recorded file, you can play it by the following command:
+
+```
+root@rz-cmn:~# aplay audio_capture.wav
+```
+
+To adjust the level of the audio record/playback, use the following command to open the ALSA mixer GUI:
+
+```
+root@rz-cmn:~# alsamixer
+```
+
+#### 4.1.3. Quickboot Images and Network Configurations
+
+Renesas provides custom Quickboot images optimized for faster boot times. These images include 
+necessary systemd optimizations and a streamlined kernel to minimize boot delays.
+
+By default, systemd services for networking, D-Bus, and other non-essential components are disabled, leaving only the core boot services active.
+
+**Enable Networking Stack**
+
+For both Quickboot CLI and Quickboot Wayland images, networking (including Wi-Fi, Bluetooth, and SSH services) is disabled by default and must be enabled manually. The required scripts are in 
+
+```
+/home/root/network-management/.
+```
+
+To see available options before enabling any services, run the help command:
+
+```shell
+root@rz-cmn:~# cd network-management
+root@rz-cmn:~/network-management# ./enable_networking_stack.sh help
+```
+
+This command displays the usage information along with the following options:
+
+- wifi: Enable Wi-Fi services.
+- bluetooth: Enable Bluetooth services.
+- sshd: Enable SSH/SCP services.
+- all: Enable all network-related services (wifi, bluetooth, sshd).
+
+Run the following command with the appropriate option:
+
+```shell
+root@rz-cmn:~/network-management# ./enable_networking_stack.sh <service>
+```
+
+For example, to enable Wi-Fi, run:
+
+```shell
+root@rz-cmn:~/network-management# ./enable_networking_stack.sh wifi
+```
+
+To enable all networking services:
+
+```shell
+root@rz-cmn:~/network-management# ./enable_networking_stack.sh al
+```
+
+**Disable Networking Stack**
+
+To restore the default Quickboot behavior and disable unused network services, use the provided script. 
+
+This removes systemd service symlinks and masks services related to networking, Wi-Fi, Bluetooth, and SSH.
+
+Run the following command with the appropriate option to disable unused services
+
+```shell
+root@rz-cmn:~/network-management# ./disable_networking_stack.sh <service>
+```
+
+For example, to disable Bluetooth, run:
+
+```shell
+root@rz-cmn:~/network-management# ./disable_networking_stack.sh bluetooth
+```
+
+To disable all networking services:
+
+```shell
+root@rz-cmn:~/network-management# ./disable_networking_stack.sh al
+```
+
+#### 4.1.4. Kernel Optimization
+
+By default, the release package does not optimize the kernel. This is purposefully done to allow kernel debugging and have more verbose logs.
+
+If an optimized kernel is required, it becomes necessary to rebuild a kernel through the SDK or yocto. The optimization setting is configured in the local.conf file within the Yocto build environment (typically located under build/conf/local.conf.)
+
+Set the variable OPTIMIZE_KERN in local.conf to enable kernel optimization. This configuration 
+disables unused features and converts certain built-in modules (USB, touchscreen, CANFD, etc.) into loadable modules. The result is a smaller kernel, faster boot time, and improved resource utilization.
+
+To optimize the kernel, follow these steps to modify the local.conf:
+
+1. Open the local.conf file in Yocto build configuration.
+2. Set the ‘OPTIMIZE_KERN’ from “0” to “1”.
+
+    ```
+    # Optimized Linux Kernel Support: Build with optimizations for the Linux kernel
+    # Default: 0 - Disable
+    # Set to: 1 - Enable
+    OPTIMIZE_KERN = "1"
+    ```
+    This will ensure that unnecessary kernel features are disabled, and certain modules are built as loadable, leading to a more efficient system.
+
+3. Rebuild and deploy the image to apply the changes.
+
+#### 4.1.5. Playing Video Files on RZ/G2L-SBC
+
+Use `gst-launch-1.0` to play video files. The playbin element in GStreamer makes it easy to play multimedia content. Prepare an mp4 file and run the following command:
+
+```
+root@rz-cmn:~# gst-launch-1.0 playbin uri=file:///<path/to/your/video/path>
+```
+
+For example, 
+
+```
+root@rz-cmn:~# gst-launch-1.0 playbin uri=file:///home/root/videos/renesas-bigideasforeveryspace.mp4
+```
+
+This will start an MP4 video and display it on the screen.
+
+#### 4.1.6. MIPI CSI-2 Cameras
+
+This section outlines camera enablement per board and how to stream video once enabled.
+
+---
+
+##### RZG2L-SBC — Arducam 5 MP (OV5640)
+
+- The MIPI CSI-2 interface and the **Arducam 5 MP OV5640** are supported.
+- No device tree change is required. Enable the camera overlay in `uEnv.txt`:
+
+```ini
+enable_overlay_csi_ov5640=1
+```
+
+- Initialize the CSI-2 pipeline:
+
+```bash
+cd /home/root/
+./v4l2-init.sh <resolution>
+```
+
+Valid `<resolution>` values:
+- `720x480`
+- `720x576`
+- `1024x768`
+- `1280x720` *(default if omitted/invalid)*
+- `1920x1080`
+- `2592x1944`
+
+Examples:
+
+```bash
+./v4l2-init.sh 1920x1080
+# Link CRU/CSI2 to ov5640 1-003c with format UYVY8_1X16 and resolution 1920x1080
+
+./v4l2-init.sh
+# No resolution specified. Using default resolution: 1280x720
+# Link CRU/CSI2 to ov5640 1-003c with format UYVY8_1X16 and resolution 1280x720
+```
+
+- Start streaming (match width/height to the initialized resolution):
+
+```bash
+gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,width=1280,height=720 ! videoconvert ! waylandsink
+```
+
+---
+
+##### RZG2L-EVK / RZV2L-EVK — Coral camera
+
+- A device tree with CSI/CRU + camera nodes is required.
+- Default DTBs:
+  - RZG2L-EVK: `r9a07g044l2-smarc.dtb`
+  - RZV2L-EVK: `r9a07g054l2-smarc.dtb`
+- For camera use, switch to:
+  - RZG2L-EVK: `r9a07g044l2-smarc-cru-csi-ov5645.dtb`
+  - RZV2L-EVK: `r9a07g054l2-smarc-cru-csi-ov5645.dtb`
+
+Update the DTB on **partition 1** (`dtb/renesas/`) or set `fdtfile` in `uEnv.txt` (under partition 1 FAT32), for example:
+
+```ini
+# Example for RZG2L-EVK
+fdtfile=r9a07g044l2-smarc-cru-csi-ov5645.dtb
+```
+
+Reboot, then initialize and stream as shown above (`v4l2-init.sh <resolution>` and `gst-launch-1.0 ...`).
+
+---
+
+##### RZV2H-EVK — Coral camera
+
+- Camera support is built in; no device tree change is required.
+- Initialize and stream as in the examples above.
+
+---
+
+**Notes**
+- Ensure the GStreamer pipeline’s `width` and `height` match the resolution configured by `v4l2-init.sh`.
+- If an invalid resolution is provided, `v4l2-init.sh` falls back to `1280x720`.
+
+
+#### 4.1.7. Package Management
 
 The distribution comes with Debian package manager `apt-get` and `dpkg` for binary package handling. 
 
-##### 4.1.1.1. Setting up Debian as a backend source
+**Setting up Debian as a backend source**
+
 The default configuration for the `sources.list` file, which defines the package repositories, is as follows:
 
 ```
@@ -467,7 +1178,7 @@ deb [arch=arm64] http://old-releases.ubuntu.com/ubuntu/ oracular-backports main 
 deb [arch=arm64] http://old-releases.ubuntu.com/ubuntu/ oracular-updates main multiverse universe
 ```
 
-##### 4.1.1.2. Configuring the Debian package repository
+**Configuring the Debian package repository**
 
 `sources.list` is a critical configuration file for packages installation and updates used by package managers on Debian-based Linux distributions. The `sources.list` file contains a list of URLs or repository addresses where the package manager can find software packages. These repositories may be maintained by the Linux distribution itself or by third-party individuals or organizations.
 
@@ -509,7 +1220,7 @@ Remember that sources doesn’t have to be a single origin. It's very common to 
 
 The source management is beyond the scope of this document.
 
-##### 4.1.1.3. Using `apt-get` to install packages
+**Using `apt-get` to install packages**
 
 To install a package using `apt-get`, use the following command:
 
@@ -517,7 +1228,7 @@ To install a package using `apt-get`, use the following command:
 root@rz-cmn:~# apt-get install <package-name>
 ```
 
-##### 4.1.1.4. Using `DPKG` to install packages
+**Using `DPKG` to install packages**
 
 The utility `dpkg` is the low-level package manager for Debian-based systems. It is the local systemwide package manager. It handles installation, removal, provisioning about package.deb file, indexing and other aspects of packages installed on the system. However, it does not perform any cloud operations. Dpkg also doesn’t handle dependency resolution. This is another task handled by a high-level manager like `apt-get`. In fact, `dpkg` is the backend for `apt-get`. While `apt-get` handles fetching and indexing, the local installations and management of the packages are performed by the `dpkg` manager.
 
@@ -540,7 +1251,7 @@ After installing a package using dpkg, if you need to resolve dependency issues,
 root@rz-cmn:~# apt-get install -f
 ```
 
-#### 4.1.2. Docker Installation Setup
+#### 4.1.8. Docker Installation Setup
 
 Step 1: Enable Docker support in Kernel build
 
@@ -610,13 +1321,282 @@ For more examples and ideas, visit:
  https://docs.docker.com/get-started/
 ```
 
-#### 4.1.3. Network Boot and TFTP
+### 4.2. RZ/G2L-SBC Yocto Features
+#### 4.2.1. 40-Pin IO Expansion Interface
+
+The RZ/G2L-SBC features a versatile 40-pin IO Expansion Interface that supports various communication protocols and functions. This interface can be configured for:
+
+- I2C: Channels 0 and 3
+- SPI: Channel 0
+- SCIF: Channel 0
+- CAN: Channels 0 and 1
+- GPIO: Pin-function (default setting)
+
+By default, I2C Channel 0 and SCIF Channel 0 are enabled. However, you can easily reconfigure the interface to use other channels and functions using FDT overlays.
+
+##### 4.2.1.1. Understanding FDT Overlays and uEnv.txt
+
+The RZ/G2L-SBC uses FDT (Flattened Device Tree) overlays to manage the configuration of its IO expansion interface. These overlays are enabled by setting specific environment variables in the `uEnv.txt` file.
+
+The `uEnv.txt` file is located in partition 1 of the SD card.
+
+The following table details the available configuration options that can be set in uEnv.txt:
+
+```
+## For RZ SBC U-Boot Env
+/------------------------------|--------------|------------------------------
+|       Config                 | Value if set |     To be loading
+|------------------------------|--------------|------------------------------
+| enable_overlay_i2c           | '1' or 'yes' |  rzg2l-sbc-ext-i2c.dtbo
+|------------------------------|--------------|------------------------------
+| enable_overlay_spi           | '1' or 'yes' |  rzg2l-sbc-ext-spi.dtbo
+|------------------------------|--------------|------------------------------
+| enable_overlay_can           | '1' or 'yes' |  rzg2l-sbc-can.dtbo
+|------------------------------|--------------|------------------------------
+| enable_overlay_dsi           | '1' or 'yes' |  rzg2l-sbc-dsi.dtbo
+|------------------------------|--------------|------------------------------
+| enable_overlay_csi_ov5640    | '1' or 'yes' |  rzg2l-sbc-ov5640.dtbo
+|----------------------------------------------------------------------------
+| fdtfile   : is a base dtb file, should be set rzg2l-sbc.dtb
+|----------------------------------------------------------------------------
+| uboot env : you could set U-Boot's environment variables here, such as 'console=' 'bootargs='
+\---------------------------------------------------------------------------
+
+default settings:
+    #enable_overlay_i2c=1
+    #enable_overlay_spi=1
+    #enable_overlay_can=1
+    #enable_overlay_dsi=1
+    #enable_overlay_csi_ov5640=1
+
+(Note: Lines starting with # are commented out and not active.)
+```
+
+**How to Edit uEnv.txt**
+
+The `uEnv.txt` file can be edited using two primary methods:
+
+- On Windows
+
+Mount the SD card on a Windows computer. The `uEnv.txt` file should be accessible for direct editing as it resides in the first partition, typically formatted as FAT32.
+
+- On Linux
+
+When working within a Linux environment (e.g., via SSH or serial console on the RZG2L-SBC), the SD card's first partition can be mounted and the file edited:
+
+
+You can refer to the `Readme.md` file in partition 1 for the FDT overlays information.
+You can mount the sdcard on Windows to edit the uEnv.txt or do it on linux as below
+
+Step 1: Mount the partition
+```shell
+root@rz-cmn:~# mount /dev/mmcblk2p1 /tmp
+root@rz-cmn:/tmp# ls uEnv.txt
+uEnv.txt
+root@rz-cmn:/tmp# vi uEnv.txt
+```
+
+After modifying `uEnv.txt`, save the file and umount the partition:
+
+```shell
+root@rz-cmn:/tmp# cd ~
+root@rz-cmn:~# umount /tmp
+root@rz-cmn:~# sync
+```
+
+After changing the value of overlays options, we need to run `sync` to ensure that the changes are affected. Then, execute `reboot` to apply the changes.
+
+For further details on FDT overlays and advanced configurations, refer to the `Readme.md` file located in partition 1 of the SD card.
+
+The below section shows how to configure for each GPIO function:
+
+##### 4.2.1.2. Configuring GPIO Pins
+
+To set the state of a GPIO pin, use the `gpioset` command with the following syntax:
+
+```shell
+gpioset -c <chip> <pin> = <value>
+```
+
+- chip: Specifies the GPIO chip (e.g., gpiochip0).
+- pin: Refers to the specific GPIO pin number on that chip.
+- value: Sets the pin state (0 for low, 1 for high).
+
+Examples:
+
+To set GPIO pin 0 on gpiochip0 to a low state:
+
+```
+root@rz-cmn:~# gpioset -c gpiochip0 0=0
+```
+
+To set GPIO pin 0 on gpiochip0 to a high state:
+
+```shell
+root@rz-cmn:~# gpioset -c gpiochip0 0=1
+```
+
+##### 4.2.1.3. I2C function (channel 3 - RIIC3)
+
+You should edit `uEnv.txt` as follows to enable I2C channel 3 on 40 IO expansion interface:
+
+```
+enable_overlay_i2c=1
+```
+
+To check the I2C channel 3 is enabled or not, run the following command and check the result:
+
+```
+root@rz-cmn:~# i2cdetect -l
+i2c-3   i2c             Renesas RIIC adapter                    I2C adapter
+i2c-1   i2c             Renesas RIIC adapter                    I2C adapter
+i2c-4   i2c             i2c-1-mux (chan_id 0)                   I2C adapter
+i2c-0   i2c             Renesas RIIC adapter                    I2C adapter
+root@rz-cmn:~#
+```
+
+You can also check devices existance on I2C bus by running the following command:
+
+```
+root@rz-cmn:~# i2cdetect -y -r 3
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:          -- -- -- -- -- -- -- -- -- -- -- -- --
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+50: 50 -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+70: -- -- -- -- -- -- -- --
+```
+
+##### 4.2.1.4. SPI function (channel 0 - RSPI0)
+
+You should edit `uEnv.txt` as follows to enable SPI channel 0 on 40 IO expansion interface:
+
+```
+enable_overlay_spi=1
+```
+
+Run the following command to config the SPI:
+
+```
+root@rz-cmn:~# spi-config -d /dev/spidev0.0 -q
+/dev/spidev0.0: mode=0, lsb=0, bits=8, speed=2000000, spiready=0
+```
+
+Connect Pin 19 (RSPI0 MOSI) to Pin 21 (RSPI0 MISO), then run the below command and check the result:
+
+```
+root@rz-cmn:~# echo -n -e "1234567890" | spi-pipe -d /dev/spidev0.0 -s 10000000 | hexdump
+0000000 3231 3433 3635 3837 3039
+000000a
+```
+
+##### 4.2.1.5. CAN function (channel 0,1 - CAN0, CAN1)
+
+You should edit `uEnv.txt` as follows to enable CAN channel 0,1 on 40 IO expansion interface:
+
+```
+enable_overlay_can=1
+```
+
+To check the CAN channels are enabled or not, run the following command and check the result:
+
+```
+root@rz-cmn:~# ip a | grep can
+3: can0: <NOARP,ECHO> mtu 16 qdisc noop state DOWN group default qlen 10
+    link/can
+4: can1: <NOARP,ECHO> mtu 16 qdisc noop state DOWN group default qlen 10
+    link/can
+root@rz-cmn:~#
+```
+
+Then set up for CAN devices. Now you can up/down or send data from CAN channels.
+
+The below shows the communication between two CAN channels.
+```
+root@rz-cmn:~# ip link set can0 down
+root@rz-cmn:~# ip link set can0 type can bitrate 500000
+root@rz-cmn:~# ip link set can0 up
+[   48.120419] IPv6: ADDRCONF(NETDEV_CHANGE): can0: link becomes ready
+root@rz-cmn:~# ip link set can1 down
+root@rz-cmn:~# ip link set can1 type can bitrate 500000
+root@rz-cmn:~# ip link set can1 up
+[   69.906039] IPv6: ADDRCONF(NETDEV_CHANGE): can1: link becomes ready
+root@rz-cmn:~# candump can0 & cansend can1 123#01020304050607
+[1] 271
+  can0  123   [7]  01 02 03 04 05 06 07
+root@rz-cmn:~# candump can1 & cansend can0 123#01020304050607
+[2] 273
+  can0  123   [7]  01 02 03 04 05 06 07
+  can1  123   [7]  01 02 03 04 05 06 07
+root@rz-cmn:~#
+```
+
+#### 4.2.2. On-board Wi-Fi Modules configurations
+
+RZG2L-SBC has an on-board Wireless modules on it. Currently, we only support for Wi-Fi feature in this release.
+
+To settings for Wi-Fi on RZG2L-SBC, run the following commands:
+
+```
+root@rz-cmn:~# connmanctl
+connmanctl> enable wifi
+Enabled wifi
+connmanctl> agent on
+Agent registered
+connmanctl> scan wifi
+Scan completed for wifi
+connmanctl> services
+    xDredme10zW          wifi_0025ca329da3_78447265646d6531307a57_managed_psk
+                         wifi_0025ca329da3_hidden_managed_psk
+    REL-GLOBAL           wifi_0025ca329da3_52454c2d474c4f42414c_managed_ieee8021x
+    R-GUEST              wifi_0025ca329da3_522d4755455354_managed_none
+    RVC-WLS              wifi_0025ca329da3_5256432d574c53_managed_ieee8021x
+connmanctl> connect wifi_0025ca329da3_78447265646d6531307a57_managed_psk
+Agent RequestInput wifi_0025ca329da3_78447265646d6531307a57_managed_psk
+  Passphrase = [ Type=psk, Requirement=mandatory ]
+Passphrase? nFjey48aT9pk
+connmanctl> exit
+```
+
+To confirm the Wi-Fi is connected, ping to the outside world:
+
+```
+root@rz-cmn:~# ping www.google.com
+PING www.google.com(hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004)) 56 data bytes
+64 bytes from hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004): icmp_seq=1 ttl=57 time=43.2 ms
+64 bytes from hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004): icmp_seq=2 ttl=57 time=81.1 ms
+64 bytes from hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004): icmp_seq=3 ttl=57 time=124 ms
+```
+
+**Please note that before using Wi-Fi feature on RZG2L-SBC, the ethernet connections need to be down.**
+
+```
+root@rz-cmn:~# ifconfig end0 down
+root@rz-cmn:~# ifconfig end1 down
+```
+
+#### 4.2.3. MIPI DSI with display panels
+
+RZG2L-SBC supports the MIPI DSI interface and the Waveshare 5 inch Touchscreen Monitor MIPI-DSI LCD is enabled and tested.
+
+You should edit `uEnv.txt` as follows to enable MIPI DSI interface with the panel supported:
+
+```
+enable_overlay_dsi=1
+```
+
+**Please note that selecting the MIPI DSI display will cause the HDMI display be disabled.**
+
+## 5. Network Boot and TFTP
 
 This section outlines the process for network booting using TFTP (Trivial File Transfer Protocol). It includes configuration steps and commands necessary for a successful setup.
 
 Network booting allows devices to boot from an image stored on a network server, rather than relying on local storage.
 
-##### 4.1.3.1. TFTP server setup
+### 5.1. TFTP server setup
 
 This subsection covers the setup of a TFTP server, which is necessary for the device to retrieve the boot images over the network.
 
@@ -665,7 +1645,7 @@ This subsection covers the setup of a TFTP server, which is necessary for the de
   $ sudo systemctl status tftpd-hpa
   ```
 
-##### 4.1.3.2. NFS server setup
+### 5.2. NFS server setup
 
 NFS (Network File System) is a protocol that allows clients to access files over a network as if they were local. It enables multiple clients to share files from a central server, simplifying file management across machines.
 
@@ -702,7 +1682,7 @@ In this setup, NFS will share the root filesystem (rootfs) with clients booting 
   $ sudo systemctl enable nfs-kernel-server
   ```
 
-##### 4.1.3.3. U-Boot DHCP IP Configuration
+### 5.3. U-Boot DHCP IP Configuration
 
 In this subsection, the U-Boot environment will be configured for network settings, including the specification of the Ethernet device and the configuration of the server and device IP addresses.
 
@@ -746,7 +1726,7 @@ In this subsection, the U-Boot environment will be configured for network settin
   => setenv ipaddr 192.168.5.30
   ```
 
-##### 4.1.3.4. TFTP Boot
+### 5.4. TFTP Boot
 
 In this subsection, the boot arguments and commands for U-Boot will be configured to load the kernel image and device tree from the TFTP server.
 
@@ -858,18 +1838,17 @@ renesas@builder-pc:/tftpboot/rzsbc/$ tree -L 2
   Starting kernel ...
   ```
 
-
-#### 4.1.4. Using SSH and SCP for Remote Access and File Transfers
+## 6. Using SSH and SCP for Remote Access and File Transfers
 
 This section explains how to use SSH (Secure Shell) for secure remote access to the target board and how to utilize SCP (Secure Copy Protocol) for file transfers. By default, OpenSSH is employed as it is a feature-rich and widely used SSH implementation that offers advanced capabilities for secure communication. While OpenSSH serves as the default option, Dropbear SSH can be considered for lightweight, resource-constrained environments making it particularly suitable for embedded systems.
 
-##### 4.1.4.1. Differences Between Dropbear and OpenSSH
+### 6.1. Differences Between Dropbear and OpenSSH
 
 - **Resource Usage**: Dropbear is optimized for lower resource usage, making it ideal for embedded systems.
 - **Feature Set**: OpenSSH has a more extensive feature set, including advanced options for authentication and configuration.
 - **Key Authentication**: OpenSSH requires the use of SSH keys for authentication, while Dropbear can operate with both keys and passwords.
 
-##### 4.1.4.2. Using OpenSSH
+#### 6.1.1. Using OpenSSH
 
 OpenSSH is a widely-used, full-featured SSH implementation that provides encrypted communication between hosts. It supports advanced authentication methods and secure remote administration, making it ideal for robust network security.
 
@@ -928,7 +1907,7 @@ The RZ boards supports both password and key-based authentication methods. To en
   $ systemctl restart ssh
   ```
 
-##### 4.1.4.3. SSH Access
+#### 6.1.2. SSH Access
 
 After configuring the authentication key, access to target board via SSH can be achieved using various tools available on both Windows and Linux platforms.
 
@@ -969,7 +1948,7 @@ After configuring the authentication key, access to target board via SSH can be 
         ```
     - Type `yes` to confirm the host's authenticity when prompted.
 
-##### 4.1.4.4. SCP (Secure Copy)
+#### 6.1.3. SCP (Secure Copy)
 
 To securely transfer files between local and remote systems, SCP can be used on both Windows and Linux.
 
@@ -1003,7 +1982,7 @@ To securely transfer files between local and remote systems, SCP can be used on 
       ```
    - Type `yes` to confirm the host's authenticity when prompted.
 
-##### 4.1.4.5. Switching from OpenSSH to Dropbear
+### 6.2. Switching from OpenSSH to Dropbear
 
 By default, the RZ boards image uses OpenSSH as the SSH server. If you want to switch to Dropbear, follow these steps:
 
@@ -1028,7 +2007,7 @@ By default, the RZ boards image uses OpenSSH as the SSH server. If you want to s
 
 This will automatically remove OpenSSH and enable Dropbear during the image build.
 
-#### 4.1.5. Remote debugging using GDBServer on RZ Boards
+## 7. Remote debugging using GDBServer on RZ Boards
 
 In this section, GDBServer will be utilized to facilitate remote debugging on the RZ boards. GDBServer enables the debugging process to run on the the target machine while being controlled from a different system (the host machine) via a network connection.
 
@@ -1036,7 +2015,7 @@ This setup is particularly beneficial for application development, as it allows 
 
 To ensure that all necessary tools and libraries for debugging are available, preparations must be made on both the host and target machines. With this preparation complete, the next step is to proceed with the remote debugging process.
 
-##### 4.1.5.1. Prepare GDB on the host machine
+### 7.1. Prepare GDB on the host machine
 
 GGDB has two components to work with. One is the host side `gdb` debugger. The other is the target side `gdbserver`. The GDB (GNU debugger) is executed on the host side. It is executed on your host system to connect to the target system. It is always available within the eSDK. The eSDK installation as described in Section `Install eSDK on your host machine` is a prerequisite for this operation .
 
@@ -1052,7 +2031,7 @@ $ echo ${GDB}
 aarch64-poky-linux-gdb
 ```
 
-##### 4.1.5.2. Install GDBServer on RZ Boards
+### 7.2. Install GDBServer on RZ Boards
 
 By default, GDBServer is not installed on the RZ board. It is necessary to install it using APT.
 
@@ -1066,7 +2045,8 @@ root@rz-cmn:~# apt-get install gdbserver
 
 This concludes the preparation of the basic host environment. The next section will discuss the remote debugging process.
 
-##### 4.1.5.3. Remote Debugging Example on CLI
+### 7.3. Remote Debugging Example
+#### 7.3.1. Remote Debugging Example on CLI
 
 CLI (Command Line Interface) is a text-based user interface used to interact with computer programs and operating systems. Unlike graphical user interfaces (GUIs), where users interact with visual elements (like buttons and icons), a CLI requires users to input commands in text form.
 
@@ -1212,11 +2192,11 @@ Child exited with status 0
 root@rz-cmn:~#
 ```
 
-##### 4.1.5.4. Remote Debugging Example on Visual Studio Code
+#### 7.3.2. Remote Debugging Example on Visual Studio Code
 
 In the previous subsection, remote debugging using the command line was discussed, specifically with GDB and GDBServer. While this method is effective, it can be complex and challenging, particularly for developers who may not be familiar with command-line operations.
 
-This section describes how to set up and use Visual Studio Code (VSCode) for remote debugging with the GDB. Using VSCode simplifies the debugging process by providing a user-friendly graphical interface that streamlines the workflow, making it easier to troubleshoot and test C/C++ applications running on RZ-G2L/SBC.
+This section describes how to set up and use Visual Studio Code (VSCode) for remote debugging with the GDB. Using VSCode simplifies the debugging process by providing a user-friendly graphical interface that streamlines the workflow, making it easier to troubleshoot and test C/C++ applications running on RZ board.
 
 Here's how to get started:
 
@@ -1327,7 +2307,7 @@ Step 5: Start the debugging:
 -	Click the Start Debugging button (green play icon) to begin the debugging session.
 -	You can press F5 to continue execution, F10 to step over the current line, and F11 to step into functions, etc.
 
-##### 4.1.5.5. Remote Debugging Example on Eclipse IDE
+#### 7.3.3. Remote Debugging Example on Eclipse IDE
 
 In the previous section, the use of VSCode for remote debugging with GDB and GDBServer was discussed. While VSCode offers a modern and user-friendly environment, many developers prefer Eclipse IDE for its comprehensive toolset and robust support for C/C++ development. This section explains how to set up and use Eclipse IDE for remote debugging with GDB.
 
@@ -1348,13 +2328,13 @@ Step 3: Configure the Cross Toolchain
   - Prefix: `aarch64-poky-linux`
   - Path: `/home/renesas/esdk/5.1.4/tmp/sysroots/x86_64/usr/bin/aarch64-poky-linux`
 - In the Includes section, specify the include paths:
-  - Include paths: `/home/renesas/esdk/5.1.4/tmp/sysroots/rzg2l-sbc/usr/include`
+  - Include paths: `/home/renesas/esdk/5.1.4/tmp/sysroots/rz-cmn/usr/include`
 
 - In the Cross GCC Linker section, go to Libraries and specify the library search path:
   - Library search path: `/home/renesas/esdk/5.1.4/tmp/sysroots/x86_64/usr/lib`
 
 - In the Miscellaneous section, specify the linker flags:
-  - Linker flags: `--sysroot=/home/renesas/esdk/5.1.4/poky_sdk/tmp/sysroots/rzg2l-sbc`
+  - Linker flags: `--sysroot=/home/renesas/esdk/5.1.4/poky_sdk/tmp/sysroots/rz-cmn`
 
 Step 4: Configure Eclipse to connect to the GDB Server:
 - In Eclipse, go to the `Run` menu and select `Debug Configurations`.
@@ -1375,11 +2355,11 @@ Step 5: Start the Debugging Session:
 
 **Note**: The path of the compiler may need to be adjusted to reflect the specific system configuration.
 
-#### 4.1.6. Postmortem Analysis Example
+### 7.4. Postmortem Analysis Example
 
 This section provides an overview of postmortem analysis, a critical process for diagnosing application crashes by examining core dump files. It details how developers can analyze these core dumps to pinpoint the exact lines of code that led to an error, allowing for effective troubleshooting and resolution of issues.
 
-##### 4.1.6.1. Postmortem Analysis Example on CLI
+#### 7.4.1. Postmortem Analysis Example on CLI
 
 This subsection describes how to perform postmortem analysis using the command-line interface (CLI). It emphasizes the steps for loading core dump files with CLI tools, enabling developers to navigate directly to the lines of code where errors occurred. The section highlights the efficiency of command-line tools for diagnosing issues quickly.
 
@@ -1477,7 +2457,7 @@ For example:
  ```
 The segmentation fault occurred because the program attempted to dereference a NULL pointer at line 8 in segfault_example.c, where it tried to assign 42 to *ptr, resulting in an invalid memory access.
 
-##### 4.1.6.2. Postmortem analysis on Visual Studio Code
+#### 7.4.2. Postmortem analysis on Visual Studio Code
 
 In this subsection, the process of analyzing core dump files using Visual Studio Code (VSCode) is explored. It explains how to load core dumps and utilize VSCode's debugging features to automatically jump to the lines of code that caused the application to crash.
 If you've followed subsection `Remote debugging on Visual Studio Code`, you're almost ready to analyze the core dump file. Just one small addition remains: in the `launch.json`, include a line specifying the path to the core dump file for analysis. This simple tweak allows you to fully leverage VSCode's capabilities for inspecting the crash details.
@@ -1519,7 +2499,7 @@ Here's a complete example of a `launch.json` in this example
 
 After running the debugging session with the core dump file, the IDE (Visual Studio Code) will automatically point to the exact line in the source code where the crash occurred.
  
-##### 4.1.6.3. Postmortem analysis on Eclipse
+#### 7.4.3. Postmortem analysis on Eclipse
 
 This subsection describes postmortem analysis using Eclipse IDE. Similar with Visual Studio Code, Eclipse allows loading core dump to inspect the application's state at the time of a crash. 
 
@@ -1536,578 +2516,124 @@ Step 2: Start the Debugging Session:
 - Utilize the Expressions view to evaluate any expressions or check the state of specific variables.
 - Navigate through the call stack to see the sequence of function calls leading to the crash. This can provide insight into how the program reached the faulting line.
 
-### 4.2. Accessing and Configuring Features on RZ/G2L-SBC
+## 8. Boot Switch Configuration
 
-This section provides practical instructions for configuring and using key hardware features on the RZ/G2L Single Board Computer (SBC). It includes guidance on enabling interfaces such as SPI, I2C, and HDMI, as well as using Wi-Fi, Bluetooth, the 40-pin IO expansion header, and the U-Boot environment.
+### 8.1 Factory Firmware Flashing Using Serial Downloader (SCIF) Mode
 
-#### 4.2.1. 40 IO expansion interface settings
+In most cases, the RZ boards come preloaded with the latest firmware. However, there are cases where you might require the use of a serial downloader. This is more common in a factory environment where the boards are being programmed for the first time or in cases where the board is bricked.
 
-The RZ/G2L-SBC features a versatile 40-pin IO Expansion Interface that supports various communication protocols and functions. This interface can be configured for:
+This is considered hardware flashing because it requires the board to be put into the serial download mode (called SCIF mode), by altering the bootstrapping pins.
 
-- I2C: Channels 0 and 3
-- SPI: Channel 0
-- SCIF: Channel 0
-- CAN: Channels 0 and 1
-- GPIO: Pin-function (default setting)
+#### 8.1.1. RZ/G2L‑SBC
 
-By default, I2C Channel 0 and SCIF Channel 0 are enabled. However, you can easily reconfigure the interface to use other channels and functions using FDT overlays.
+The SBC routes bootstrapping pins through bottom connectors **J12** & **J13**. No onboard switches are available, so an **adapter board** (not included) is required to change boot mode.
 
-##### 4.2.1.1. Understanding FDT Overlays and uEnv.txt
+After configuring boot mode via J12/J13, run either **Bootloader Flasher** or the **Universal Script** to flash firmware.
 
-The RZ/G2L-SBC uses FDT (Flattened Device Tree) overlays to manage the configuration of its IO expansion interface. These overlays are enabled by setting specific environment variables in the `uEnv.txt` file.
+#### 8.1.2. RZ/G2L‑EVK and RZ/V2L‑EVK
 
-The `uEnv.txt` file is located in partition 1 of the SD card.
+These EVKs include onboard DIP switches for boot mode selection and SCIF Download Mode.
 
-The following table details the available configuration options that can be set in uEnv.txt:
+**Table — SCIF Download Mode (RZ/G2L‑EVK & RZ/V2L‑EVK, SW11)**
 
-```
-## For RZ SBC U-Boot Env
-/------------------------------|--------------|------------------------------
-|       Config                 | Value if set |     To be loading
-|------------------------------|--------------|------------------------------
-| enable_overlay_i2c           | '1' or 'yes' |  rzg2l-sbc-ext-i2c.dtbo
-|------------------------------|--------------|------------------------------
-| enable_overlay_spi           | '1' or 'yes' |  rzg2l-sbc-ext-spi.dtbo
-|------------------------------|--------------|------------------------------
-| enable_overlay_can           | '1' or 'yes' |  rzg2l-sbc-can.dtbo
-|------------------------------|--------------|------------------------------
-| enable_overlay_dsi           | '1' or 'yes' |  rzg2l-sbc-dsi.dtbo
-|------------------------------|--------------|------------------------------
-| enable_overlay_csi_ov5640    | '1' or 'yes' |  rzg2l-sbc-ov5640.dtbo
-|----------------------------------------------------------------------------
-| fdtfile   : is a base dtb file, should be set rzg2l-sbc.dtb
-|----------------------------------------------------------------------------
-| uboot env : you could set U-Boot's environment variables here, such as 'console=' 'bootargs='
-\---------------------------------------------------------------------------
+| Switch | SCIF Download Mode |
+|--------|---------------------|
+| SW11‑1 | OFF                 |
+| SW11‑2 | ON                  |
+| SW11‑3 | OFF                 |
+| SW11‑4 | ON                  |
 
-default settings:
-    #enable_overlay_i2c=1
-    #enable_overlay_spi=1
-    #enable_overlay_can=1
-    #enable_overlay_dsi=1
-    #enable_overlay_csi_ov5640=1
+**Table — Select eMMC as Boot Device (SW1)**
 
-(Note: Lines starting with # are commented out and not active.)
-```
+| Switch | Select eMMC |
+|--------|-------------|
+| SW1‑1  | ON          |
+| SW1‑2  | OFF         |
 
-##### 4.2.1.2. How to Edit uEnv.txt
+After setting SCIF Download Mode, proceed with the flashing.
 
-The `uEnv.txt` file can be edited using two primary methods:
+#### 8.1.3. RZ/V2H‑EVK
 
-- On Windows
+Use DIP switch **DSW1** to configure boot mode.
 
-Mount the SD card on a Windows computer. The `uEnv.txt` file should be accessible for direct editing as it resides in the first partition, typically formatted as FAT32.
+**Table — SCIF Download Mode (RZ/V2H‑EVK, DSW1)**
 
-- On Linux
+| Switch | Status | Function |
+|--------|--------|----------|
+| DSW1‑1 | ON     | Select the cold boot CPU — OFF: CM33, ON: CA55 (default) |
+| DSW1‑2 | OFF    | Input CA55 frequency at cold boot — [OFF:OFF] 1.6 GHz; [OFF:ON] 1.7 GHz (default); [ON:OFF] 1.1 GHz; [ON:ON] 1.5 GHz |
+| DSW1‑3 | ON     | — |
+| DSW1-4/5 | OFF / ON  | **Boot source:** SCIF  
+| DSW1‑5 | ON     | — |
+| DSW1‑6 | OFF    | SSCG — OFF: SSCG ON (default); ON: SSCG OFF |
+| DSW1‑7 | OFF    | Fixed to OFF |
 
-When working within a Linux environment (e.g., via SSH or serial console on the RZG2L-SBC), the SD card's first partition can be mounted and the file edited:
+To enable **SCIF Download Mode**, set **DSW1‑4** and **DSW1‑5** according to the SCIF configuration above. Leave other switches at defaults unless CPU selection, boot frequency, SSCG, or debug settings must be changed. Then Run either **Bootloader Flasher** (Section 3.4.1) or the **Universal Script** (Section 3.3) to flash firmware.
 
+---
 
-You can refer to the `Readme.md` file in partition 1 for the FDT overlays information.
-You can mount the sdcard on Windows to edit the uEnv.txt or do it on linux as below
+### 8.2. Boot Mode Reference (Non‑SCIF)
 
-Step 1: Mount the partition
-```shell
-root@rz-cmn:~# mount /dev/mmcblk2p1 /tmp
-root@rz-cmn:/tmp# ls uEnv.txt
-uEnv.txt
-root@rz-cmn:/tmp# vi uEnv.txt
-```
+Summary of switch/strap settings for **normal boot** and **boot‑device** selection. Use these after factory flashing or when switching boot devices during bring‑up.
 
-After modifying `uEnv.txt`, save the file and umount the partition:
+#### 8.2.1. RZ/G2L‑EVK & RZ/V2L‑EVK
 
-```shell
-root@rz-cmn:/tmp# cd ~
-root@rz-cmn:~# umount /tmp
-root@rz-cmn:~# sync
-```
+**Table — SW11: Boot Device Selection (Normal Boot)**
 
-After changing the value of overlays options, we need to run `sync` to ensure that the changes are affected. Then, execute `reboot` to apply the changes.
+| Boot device | SW11‑1 | SW11‑2 | SW11‑3 | SW11‑4 | Description |
+|-------------|--------|--------|--------|--------|-------------|
+| eMMC        | ON     | OFF    | OFF    | ON     | Boot from on‑board eMMC (BootROM loads BL2/BL2+BP from eMMC, then FIP). |
+| QSPI        | OFF    | OFF    | OFF    | ON     | Boot from QSPI NOR flash. |
+| SD / eSD    | ON     | ON     | OFF    | ON     | Boot from SD/eSD card (slot media). |
 
-For further details on FDT overlays and advanced configurations, refer to the `Readme.md` file located in partition 1 of the SD card.
+**Table — SW1: SOM Module Switch Mode**
 
-The below section shows how to configure for each GPIO function:
+| Switch | ON                  | OFF                                        |
+|--------|---------------------|--------------------------------------------|
+| SW1‑1  | Normal Operation    | JTAG debug mode                            |
+| SW1‑2  | Select microSD slot | Select eMMC (on RTK9744L23C01000BE)        |
 
-##### 4.2.1.3. Configuring GPIO Pins
+#### 8.2.2. RZ/V2H‑EVK
 
-To set the state of a GPIO pin, use the `gpioset` command with the following syntax:
+**Table — DSW1: Boot Device Selection (Normal Boot)**
 
-```shell
-gpioset -c <chip> <pin> = <value>
-```
+| Boot device | DSW1‑1 | DSW1‑2 | DSW1‑3 | DSW1‑4 | DSW1‑5 | DSW1‑6 | DSW1‑7 | DSW1‑8 |
+|-------------|--------|--------|--------|--------|--------|--------|--------|--------|
+| eMMC        | ON     | OFF    | ON     | ON     | ON     | OFF    | OFF    | OFF    |
+| xSPI        | ON     | OFF    | ON     | OFF    | OFF    | OFF    | OFF    | OFF    |
+| SD / eSD    | ON     | OFF    | ON     | ON     | OFF    | OFF    | OFF    | OFF    |
 
-- chip: Specifies the GPIO chip (e.g., gpiochip0).
-- pin: Refers to the specific GPIO pin number on that chip.
-- value: Sets the pin state (0 for low, 1 for high).
+**DSW2 — Audio Clock / Utility DIP**
 
-Examples:
-
-To set GPIO pin 0 on gpiochip0 to a low state:
-
-```
-root@rz-cmn:~# gpioset -c gpiochip0 0=0
-```
-
-To set GPIO pin 0 on gpiochip0 to a high state:
-
-```shell
-root@rz-cmn:~# gpioset -c gpiochip0 0=1
-```
-
-##### 4.2.1.4. I2C function (channel 3 - RIIC3)
-
-You should edit `uEnv.txt` as follows to enable I2C channel 3 on 40 IO expansion interface:
-
-```
-enable_overlay_i2c=1
-```
-
-To check the I2C channel 3 is enabled or not, run the following command and check the result:
-
-```
-root@rz-cmn:~# i2cdetect -l
-i2c-3   i2c             Renesas RIIC adapter                    I2C adapter
-i2c-1   i2c             Renesas RIIC adapter                    I2C adapter
-i2c-4   i2c             i2c-1-mux (chan_id 0)                   I2C adapter
-i2c-0   i2c             Renesas RIIC adapter                    I2C adapter
-root@rz-cmn:~#
-```
-
-You can also check devices existance on I2C bus by running the following command:
-
-```
-root@rz-cmn:~# i2cdetect -y -r 3
-     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
-00:          -- -- -- -- -- -- -- -- -- -- -- -- --
-10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-50: 50 -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-70: -- -- -- -- -- -- -- --
-```
-
-##### 4.2.1.5. SPI function (channel 0 - RSPI0)
-
-You should edit `uEnv.txt` as follows to enable SPI channel 0 on 40 IO expansion interface:
-
-```
-enable_overlay_spi=1
-```
-
-Run the following command to config the SPI:
-
-```
-root@rz-cmn:~# spi-config -d /dev/spidev0.0 -q
-/dev/spidev0.0: mode=0, lsb=0, bits=8, speed=2000000, spiready=0
-```
-
-Connect Pin 19 (RSPI0 MOSI) to Pin 21 (RSPI0 MISO), then run the below command and check the result:
-
-```
-root@rz-cmn:~# echo -n -e "1234567890" | spi-pipe -d /dev/spidev0.0 -s 10000000 | hexdump
-0000000 3231 3433 3635 3837 3039
-000000a
-```
-
-##### 4.2.1.6. CAN function (channel 0,1 - CAN0, CAN1)
-
-You should edit `uEnv.txt` as follows to enable CAN channel 0,1 on 40 IO expansion interface:
-
-```
-enable_overlay_can=1
-```
-
-To check the CAN channels are enabled or not, run the following command and check the result:
-
-```
-root@rz-cmn:~# ip a | grep can
-3: can0: <NOARP,ECHO> mtu 16 qdisc noop state DOWN group default qlen 10
-    link/can
-4: can1: <NOARP,ECHO> mtu 16 qdisc noop state DOWN group default qlen 10
-    link/can
-root@rz-cmn:~#
-```
-
-Then set up for CAN devices. Now you can up/down or send data from CAN channels.
-
-The below shows the communication between two CAN channels.
-```
-root@rz-cmn:~# ip link set can0 down
-root@rz-cmn:~# ip link set can0 type can bitrate 500000
-root@rz-cmn:~# ip link set can0 up
-[   48.120419] IPv6: ADDRCONF(NETDEV_CHANGE): can0: link becomes ready
-root@rz-cmn:~# ip link set can1 down
-root@rz-cmn:~# ip link set can1 type can bitrate 500000
-root@rz-cmn:~# ip link set can1 up
-[   69.906039] IPv6: ADDRCONF(NETDEV_CHANGE): can1: link becomes ready
-root@rz-cmn:~# candump can0 & cansend can1 123#01020304050607
-[1] 271
-  can0  123   [7]  01 02 03 04 05 06 07
-root@rz-cmn:~# candump can1 & cansend can0 123#01020304050607
-[2] 273
-  can0  123   [7]  01 02 03 04 05 06 07
-  can1  123   [7]  01 02 03 04 05 06 07
-root@rz-cmn:~#
-```
+| Switch | Signal         | OFF (default)                             | ON                               |
+|--------|----------------|-------------------------------------------|-----------------------------------|
+| 1      | Audio_CLKB_OE  | Disables 5P35023B Audio_CLKB output       | Enables Audio_CLKB output         |
+| 2      | Audio_CLKB     | Audio_CLKB not supplied                   | Audio_CLKB is driven              |
+| 3      | Audio_CLKC_OE  | Disables 5P35023B Audio_CLKC output       | Enables Audio_CLKC output         |
+| 4      | Audio_CLKC     | Audio_CLKC not supplied                   | Audio_CLKC is driven              |
+| 5      | NEN_VPROG      | **Must remain OFF**                       | **Prohibited — do not set ON**    |
+| 6      | —              | —                                         | —                                 |
 
-#### 4.2.2. On-board Wi-Fi Modules configurations
+**JSW1 — Camera Interface Voltage (Secure EVB)**
 
-RZG2L-SBC has an on-board Wireless modules on it. Currently, we only support for Wi-Fi feature in this release.
+| Switch | Function                                  |
+|--------|-------------------------------------------|
+| 1–2    | MIPI CSI‑2 camera interface voltage: 1.8 V |
+| 2–3    | MIPI CSI‑2 camera interface voltage: 3.3 V *(default)* |
 
-To settings for Wi-Fi on RZG2L-SBC, run the following commands:
+> Set according to the camera module interface voltage.
 
-```
-root@rz-cmn:~# connmanctl
-connmanctl> enable wifi
-Enabled wifi
-connmanctl> agent on
-Agent registered
-connmanctl> scan wifi
-Scan completed for wifi
-connmanctl> services
-    xDredme10zW          wifi_0025ca329da3_78447265646d6531307a57_managed_psk
-                         wifi_0025ca329da3_hidden_managed_psk
-    REL-GLOBAL           wifi_0025ca329da3_52454c2d474c4f42414c_managed_ieee8021x
-    R-GUEST              wifi_0025ca329da3_522d4755455354_managed_none
-    RVC-WLS              wifi_0025ca329da3_5256432d574c53_managed_ieee8021x
-connmanctl> connect wifi_0025ca329da3_78447265646d6531307a57_managed_psk
-Agent RequestInput wifi_0025ca329da3_78447265646d6531307a57_managed_psk
-  Passphrase = [ Type=psk, Requirement=mandatory ]
-Passphrase? nFjey48aT9pk
-connmanctl> exit
-```
 
-To confirm the Wi-Fi is connected, ping to the outside world:
+## 9. BSP Interface
 
-```
-root@rz-cmn:~# ping www.google.com
-PING www.google.com(hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004)) 56 data bytes
-64 bytes from hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004): icmp_seq=1 ttl=57 time=43.2 ms
-64 bytes from hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004): icmp_seq=2 ttl=57 time=81.1 ms
-64 bytes from hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004): icmp_seq=3 ttl=57 time=124 ms
-```
-
-**Please note that before using Wi-Fi feature on RZG2L-SBC, the ethernet connections need to be down.**
-
-```
-root@rz-cmn:~# ifconfig end0 down
-root@rz-cmn:~# ifconfig end1 down
-```
-
-#### 4.2.3. On-board Audio Codec with Stereo Jack Analog Audio IO configurations
-
-The RZ/G2L-SBC features an onboard audio codec, Renesas DA7219, enabling audio playback and recording through a 3.5mm stereo jack (connector J8, 6-pin).
-- Audio Data Interface: Connected to DAI (SSI1) using the I2S format.
-- Control Interface: Managed via I2C0.
-- Headset Jack: Marked J8 on the board.
-
-Audio playback and recording are supported through ALSA tools with PCM WAV files. For other formats such as MP3, the pre-installed GStreamer framework provides compatibility.
-
-Prepare the required audio files and place them in the target directory before executing the following commands. Example commands are shown below:
-
-```
-root@rz-cmn:~# aplay /home/root/audios/04_16KH_2ch_bgm_maoudamashii_healing01.wav
-root@rz-cmn:~# gst-play-1.0 /home/root/audios/COMMON6_MPEG2_L3_24KHZ_160_2.mp3
-```
-
-`aplay` command supports `wav` format audio files
-
-`gst-play-1.0` command supports `wav`, `mp3` and `aac` formats
-
-To perform a recording, run the following command to record audio to an `audio_capture.wav` file:
-
-```
-root@rz-cmn:~# arecord -f S16_LE -r 48000 audio_capture.wav
-```
-
-Press Ctrl+C if you want to stop recording.
-
-In the above command:
-
--f S16_LE : audio format
-
--r 48000  : sample rate of the audio file (48KHz)
-
-To verify the recorded file, you can play it by the following command:
-
-```
-root@rz-cmn:~# aplay audio_capture.wav
-```
-
-To adjust the level of the audio record/playback, use the following command to open the ALSA mixer GUI:
-
-```
-root@rz-cmn:~# alsamixer
-```
-
-#### 4.2.4. MIPI DSI with display panels
-
-RZG2L-SBC supports the MIPI DSI interface and the Waveshare 5 inch Touchscreen Monitor MIPI-DSI LCD is enabled and tested.
-
-You should edit `uEnv.txt` as follows to enable MIPI DSI interface with the panel supported:
-
-```
-enable_overlay_dsi=1
-```
-
-**Please note that selecting the MIPI DSI display will cause the HDMI display be disabled.**
-
-#### 4.2.5. Playing Video Files on RZ/G2L-SBC
-
-Use `gst-launch-1.0` to play video files. The playbin element in GStreamer makes it easy to play multimedia content. Prepare an mp4 file and run the following command:
-
-```
-root@rz-cmn:~# gst-launch-1.0 playbin uri=file:///<path/to/your/video/path>
-```
-
-We have prepared some test videos in the /home/root/videos folder. You can use these for testing. For example:
-
-```
-root@rz-cmn:~# gst-launch-1.0 playbin uri=file:///home/root/videos/renesas-bigideasforeveryspace.mp4
-```
-
-#### 4.2.6. MIPI CSI2 with Arducam 5MP MIPI Camera
-
-RZG2L-SBC supports the MIPI CSI-2 camera interface and the Arducam 5MP MIPI Camera (OV5640 image sensor) is enabled and tested.
-
-You should edit `uEnv.txt` as follows to enable MIPI CSI-2 interface with the camera supported:
-
-```
-enable_overlay_csi_ov5640=1
-```
-To use the camera, we need to enable the CSI-2 module. Run the following commands:
-
-```
-root@rz-cmn:~# cd /home/root/
-root@rz-cmn:~# ./v4l2-init.sh <resolution>
-```
-
-The <resolution> argument specifies the resolution for the camera. Valid resolutions are:
-
-- 720x480
-- 720x576
-- 1024x768
-- 1280x720
-- 1920x1080
-- 2592x1944
-
-If no resolution is specified or an invalid resolution is provided, the default resolution 1280x720 will be used. For example:
-
-When use a valid resolution:
-
-```
-root@rz-cmn:~# ./v4l2-init.sh 1920x1080
-Link CRU/CSI2 to ov5640 1-003c with format UYVY8_1X16 and resolution 1920x1080
-```
-
-When no resolution is specified:
-
-```
-root@rz-cmn:~# ./v4l2-init.sh
-No resolution specified. Using default resolution: 1280x720
-Link CRU/CSI2 to ov5640 1-003c with format UYVY8_1X16 and resolution 1280x720
-```
-
-When an invalid resolution is provided:
-
-```
-root@rz-cmn:~# ./v4l2-init.sh 3000x2000
-Invalid resolution: 3000x2000
-Input resolution is not available. Using default resolution: 1280x720
-Link CRU/CSI2 to ov5640 1-003c with format UYVY8_1X16 and resolution 1280x720
-```
-
-The `v4l2-init.sh` script helps enable the CSI-2 module and select the camera's supported display resolution.
-
-After running the script, initiate a video capture session using the matching width and height
-
-```
-root@rz-cmn:~# gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,width=1280,height=720 ! videoconvert ! waylandsink
-```
-
-Ensure that the width and height values in the GStreamer pipeline match the resolution specified in `v4l2-init.sh`. This command starts a continuous stream of the camera feed to the active video display.
-
-#### 4.2.7. Generic USB Bluetooth framework
-
-The RZG2L-SBC supports the generic USB Bluetooth framework, which is back-ported from the Linux kernel mainline. TP-Link UB500 Bluetooth 5.0 Nano USB Adapter (Realtek chipset) has been tested and proven to work on the board.
-
-The following steps will guide how to enable the TP-Link UB500 adapter:
-
-- Step 1: Download the appropriate firmware for the TP-Link UB500 adapter and store it on the RZG2L-SBC. This will ensure it is loaded each time the board boots (one-time setup).
-
-```shell
-root@rz-cmn:~# mkdir -p /lib/firmware/rtl_bt
-root@rz-cmn:~# curl -s https://raw.githubusercontent.com/Realtek-OpenSource/android_hardware_realtek/rtk1395/bt/rtkbt/Firmware/BT/rtl8761b_fw -o /lib/firmware/rtl_bt/rtl8761bu_fw.bin
-```
-**Note:**
-**(1) Please make sure you have internet access before running the commands.**
-
-**(2) If the firmware is being downloaded for the first time, a reboot of the board is required to ensure the TP-Link UB500 adapter functions properly.**
-
-**(3) By default, Bluetooth is blocked by RFKILL. To unblock it, use the command 'rfkill unblock bluetooth'**
-
-- Step 2: Unblock bluetooth and verify whether the bluetooth status is UP RUNNING.
-
-Run the following command to ensure that rfkill unblock bluetooth:
-
-```shell
-
-root@rz-cmn:~# hciconfig -a
-hci0:   Type: Primary  Bus: USB
-        BD Address: E8:48:B8:C8:20:00  ACL MTU: 1021:6  SCO MTU: 255:12
-        DOWN
-        RX bytes:1045 acl:0 sco:0 events:92 errors:0
-        TX bytes:12279 acl:0 sco:0 commands:92 errors:0
-        Features: 0xff 0xff 0xff 0xfe 0xdb 0xfd 0x7b 0x87
-        Packet type: DM1 DM3 DM5 DH1 DH3 DH5 HV1 HV2 HV3
-        Link policy: RSWITCH HOLD SNIFF PARK
-        Link mode: PERIPHERAL ACCEPT
-root@rz-cmn:~# rfkill list
-0: hci0: Bluetooth
-        Soft blocked: yes
-        Hard blocked: no
-root@rz-cmn:~# rfkill unblock bluetooth
-root@rz-cmn:~# rfkill list
-0: hci0: Bluetooth
-        Soft blocked: no
-        Hard blocked: no
-root@rz-cmn:~# hciconfig hci0 up
-root@rz-cmn:~# hciconfig -a
-hci0:   Type: Primary  Bus: USB
-        BD Address: E8:48:B8:C8:20:00  ACL MTU: 1021:6  SCO MTU: 255:12
-        UP RUNNING
-        RX bytes:1773 acl:0 sco:0 events:142 errors:0
-        TX bytes:13029 acl:0 sco:0 commands:142 errors:0
-        Features: 0xff 0xff 0xff 0xfe 0xdb 0xfd 0x7b 0x87
-        Packet type: DM1 DM3 DM5 DH1 DH3 DH5 HV1 HV2 HV3
-        Link policy: RSWITCH HOLD SNIFF PARK
-        Link mode: PERIPHERAL ACCEPT
-        Name: 'rzg2l-sbc'
-        Class: 0x000000
-        Service Classes: Unspecified
-        Device Class: Miscellaneous,
-        HCI Version: 5.1 (0xa)  Revision: 0x97b
-        LMP Version: 5.1 (0xa)  Subversion: 0xec43
-        Manufacturer: Realtek Semiconductor Corporation (93)
-
-The bluetooth status is UP RUNNING.
-
-- Step 3: Verify whether the TP-Link UB500 adapter is properly attached.
-
-Run the following command to ensure that the system has recognized the TP-Link UB500 adapter:
-
-```shell
-root@rz-cmn:~# hciconfig hci0 -a
-hci0:   Type: Primary  Bus: USB
-        BD Address: E8:48:B8:C8:20:00  ACL MTU: 1021:5  SCO MTU: 255:11
-        UP RUNNING PSCAN
-        RX bytes:2264 acl:0 sco:0 events:211 errors:0
-        TX bytes:32795 acl:0 sco:0 commands:211 errors:0
-        Features: 0xff 0xff 0xff 0xfe 0xdb 0xfd 0x7b 0x87
-        Packet type: DM1 DM3 DM5 DH1 DH3 DH5 HV1 HV2 HV3
-        Link policy: RSWITCH HOLD SNIFF PARK
-        Link mode: SLAVE ACCEPT
-        Name: 'rzg2l-sbc'
-        Class: 0x000000
-        Service Classes: Unspecified
-        Device Class: Miscellaneous,
-        HCI Version: 5.1 (0xa)  Revision: 0x9dc6
-        LMP Version: 5.1 (0xa)  Subversion: 0xd922
-        Manufacturer: Realtek Semiconductor Corporation (93)
-```
-
-The TP-Link UB500 adapter is now ready to connect.
-
-- Step 4: Connect Bluetooth Device
-
-Use `bluetoothctl` to connect Bluetooth Device:
-
-```Shell
-root@rz-cmn:~# bluetoothctl
-[bluetooth]# power on
-[bluetooth]# pairable on
-[bluetooth]# agent on
-[bluetooth]# default-agent
-```
-
-Set the RZG2L-SBC to be discoverable by other Bluetooth devices:
-
-```Shell
-[bluetooth]# discoverable on
-```
-
-Enable and disable scan function:
-
-```Shell
-[bluetooth]# scan on
-[bluetooth]# scan off
-```
-
-Pair and connect the device:
-
-```Shell
-[bluetooth]# pair FC:02:96:A5:80:97
-[bluetooth]# trust FC:02:96:A5:80:97
-[bluetooth]# connect FC:02:96:A5:80:97
-```
-
-`FC:02:96:A5:80:97` is the address of the Bluetooth device. Please change it to match your device’s address.
-
-Exit `bluetoothctl`.
-
-```Shell
-[Mi Sports BT]# quit
-```
-
-##### 4.2.7.1 Send files over Bluetooth
-
-To share files between the RZG2L-SBC and the target Bluetooth device, run the obexctl daemon and connect:
-
-```Shell
-root@rz-cmn:~# export $(dbus-launch)
-root@rz-cmn:~# /usr/libexec/bluetooth/obexd -r /home/root -a -d & obexctl
-[1] 595
-[NEW] Client /org/bluez/obex
-[obex]#
-[obex]# connect FC:02:96:A5:80:97
-Attempting to connect to FC:02:96:A5:80:97
-[NEW] Session /org/bluez/obex/client/session0 [default]
-[NEW] ObjectPush /org/bluez/obex/client/session0
-Connection successful
-```
-
-`FC:02:96:A5:80:97` is the address of the Bluetooth device. Please change it to match your device’s address.
-
-Then, to send files, use `send` command while connected to the OBEX Object Push profile.
-
-```Shell
-[FC:02:96:A5:80:97]# send /boot/uEnv.txt
-Attempting to send /boot/uEnv.txt to /org/bluez/obex/client/session0
-[NEW] Transfer /org/bluez/obex/client/session0/transfer0
-Transfer /org/bluez/obex/client/session0/transfer0
-        Status: queued
-        Name: uEnv.txt
-        Size: 2069
-        Filename: /boot/uEnv.txt
-        Session: /org/bluez/obex/client/session0
-[CHG] Transfer /org/bluez/obex/client/session0/transfer0 Status: complete
-[DEL] Transfer /org/bluez/obex/client/session0/transfer0
-[FC:02:96:A5:80:97]# quit
-```
-
-In this example, a text file names `uEnv.txt` which is located at `/boot` is sent to the target Bluetooth device.
-
-### 4.3. BSP Interface for RZ/G2L and RZ/V2L Evaluation Kits (EVK)
-
+### 9.1. BSP Interface for RZ/G2L and RZ/V2L Evaluation Kits (EVK)
 Renesas provides a dedicated BSP Manual Set for the **RZ/G2L** and **RZ/V2L Evaluation Kits (EVKs)**, offering technical guidance on SoC configuration, supported drivers, and Linux system integration.
 
 It is a key reference for developers working with the Verified Linux Package (VLP) on these platforms.
 
 **Download the BSP Manual Set:** [RZ/G2L, RZ/Five, RZ/V2L BSP Manual Set (v4.00)](https://www.renesas.com/en/document/mas/rzg2lfivev2l-group-bsp-manual-set-rtk0ef0045z9006azj-v400zip?queryID=61e0a4d75b9dbf72d4403d438ecf6afd)
 
-### 4.4. BSP Interface for RZ/V2H Evaluation Kit (EVK)
+### 9.2. BSP Interface for RZ/V2H Evaluation Kit (EVK)
 
 A dedicated **BSP Manual Set** is also available for the **RZ/V2H Evaluation Kit (EVK)**, covering SoC-specific configuration, supported drivers, and integration steps.
 
