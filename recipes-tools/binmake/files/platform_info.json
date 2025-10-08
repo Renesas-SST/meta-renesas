@@ -22,7 +22,7 @@
 
         "bl2_desc": [],
         "bl2_dtb_desc": [],
-        "u_boot_desc": ["1", "1", "0", "2", "0x48080000", "0x58000000"],
+        "u_boot_desc": ["1", "1", "1", "2", "0x48080000", "0x58000000"],
         "u_boot_dtb_desc": ["0x48000000"],
         "kernel_desc": [],
         "kernel_dtb_desc": []
@@ -80,7 +80,7 @@
 
         "bl2_desc": [],
         "bl2_dtb_desc": [],
-        "u_boot_desc": ["1", "1", "0", "2", "0x48080000", "0x58000000"],
+        "u_boot_desc": ["1", "1", "1", "2", "0x48080000", "0x58000000"],
         "u_boot_dtb_desc": ["0x48000000"],
         "kernel_desc": [],
         "kernel_dtb_desc": []
