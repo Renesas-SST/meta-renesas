@@ -24,6 +24,7 @@ SRC_URI:append:rz-cmn = " \
 	file://common/panfrost.cfg \
 	file://common/usb-serial.cfg \
 	file://common/usb-wifi.cfg \
+	file://common/usb-can.cfg \
 	${@bb.utils.contains('DOCKER_SUPPORT', '1', 'file://common/docker.cfg', '', d)} \
 	${@bb.utils.contains('DISTRO', 'ubuntu-tiny', 'file://common/docker.cfg', '', d)} \
 	${@oe.utils.conditional("OPTIMIZE_KERN", "1", "file://common/optimize.cfg", "", d)} \
