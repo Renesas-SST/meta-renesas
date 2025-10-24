@@ -9,15 +9,32 @@ Refer to the following description for different loading options.
 
 ## For RZ CMN U-Boot Env
 
-Overlays are currently supported only on the RZ/G2L-SBC. Enabling them on other boards may have no effect.
+Overlays are supported for all RZ CMN boards. Each board has its own individual overlay settings. Enabling overlays intended for other boards may have no effect.
 
-| Config                    | Value if set | To be loading       |
-|---------------------------|--------------|---------------------|
-| `enable_overlay_i2c`      | '1' or 'yes' | rzg2l-sbc-ext-i2c.dtbo   |
-| `enable_overlay_spi`      | '1' or 'yes' | rzg2l-sbc-ext-spi.dtbo   |
-| `enable_overlay_can`      | '1' or 'yes' | rzg2l-sbc-can.dtbo       |
-| `enable_overlay_dsi`      | '1' or 'yes' | rzg2l-sbc-dsi.dtbo       |
-| `enable_overlay_csi_ov5640` | '1' or 'yes' | rzg2l-sbc-ov5640.dtbo    |
+The device tree overlay loading follows the pattern `${model_string}-${revision_major}.${revision_minor}`. These U-Boot environment variables are automatically set by U-Boot during runtime. Details:
+
+- `${model_string}`: Board model string (e.g., `rzg2l-sbc`)
+- `${revision_major}`: Board major revision
+- `${revision_minor}`: Board minor revision
+
+Sample `rzg2l-sbc` device tree overlay list:
+
+- `rzg2l-sbc-1.0-ext-i2c.dtbo`
+- `rzg2l-sbc-1.0-ext-spi.dtbo`
+- `rzg2l-sbc-1.0-can.dtbo`
+- `rzg2l-sbc-1.0-dsi.dtbo`
+- `rzg2l-sbc-1.0-ov5640.dtbo`
+
+| Config                       | Description                                 | Value if set | To be loading                                                           | Board supported        |
+| ---------------------------- | ------------------------------------------- | ------------ | ----------------------------------------------------------------------- | ---------------------- |
+| `enable_overlay_i2c`         | Enable external I2C bus on expansion header | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-ext-i2c.dtbo        | RZ/G2L-SBC             |
+| `enable_overlay_spi`         | Enable external SPI bus on expansion header | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-ext-spi.dtbo        | RZ/G2L-SBC, RZ/V2H-RDK |
+| `enable_overlay_can`         | Enable CAN controller and pin mux           | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-can.dtbo            | RZ/G2L-SBC, RZ/V2H-RDK |
+| `enable_overlay_dsi`         | Enable MIPI-DSI display interface           | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-dsi.dtbo            | RZ/G2L-SBC             |
+| `enable_overlay_audio_codec` | Enable on-board analog audio codec          | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-audio_codec.dtbo    | RZ/V2H-RDK             |
+| `enable_overlay_audio_hdmi`  | Enable HDMI audio output                    | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-audio_hdmi.dtbo     | RZ/V2H-RDK             |
+| `enable_overlay_csi_ov5640`  | Enable MIPI-CSI camera module OV5640        | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-ov5640.dtbo         | RZ/G2L-SBC             |
+| `enable_overlay_csi_ov5645`  | Enable MIPI-CSI camera module OV5645        | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-cru-csi-ov5645.dtbo | RZ/G2L-EVK, RZ/V2L-EVK |
 
 ---
 
@@ -27,7 +44,10 @@ default settings:
     #enable_overlay_spi=1
     #enable_overlay_can=1
     #enable_overlay_dsi=1
+    #enable_overlay_audio_codec=1
+    #enable_overlay_audio_hdmi=1
     #enable_overlay_csi_ov5640=1
+    #enable_overlay_csi_ov5645=1
 ```
 
 ## How to add a new board
