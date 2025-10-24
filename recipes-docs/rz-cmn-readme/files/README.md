@@ -8,6 +8,7 @@ This guide provides a quick startup for all supported board in the current relea
 * **RZV2L-EVK** (RZ/V2L Evaluation Kit)
 * **RZV2H-EVK** (RZ/V2H Evaluation Kit)
 * **RZV2H-RDK** (RZ/V2H Robot Kit)
+* **IMDT-V2H‑SBC** (IMDT V2H Single Board Computer)
 
 ## 1. Overview
 
@@ -882,14 +883,15 @@ Example of a sample board configuration in JSON:
 
 This table below lists the available options (and sensible defaults) for `ipl_flash_method` and `rootfs_flash_method` per board.
 
-| Board         | SoC | `ipl_flash_method` (options) | Default | `rootfs_flash_method` (options)  | Default |
-|---------------|-----|------------------------------|---------|----------------------------------|---------|
-| **rzg2l-sbc** | g2l | `xspi`                       | `xspi`  | `udp`                            | `udp`   |
-| **rzg2l-evk** | g2l | `xspi`, `emmc`               | `xspi`  | `udp`, `otg`                     | `otg`   |
-| **rs-g2l100** | g2l | `xspi`                       | `xspi`  | `udp`, `otg`                     | `otg`   |
-| **rzv2l-evk** | v2l | `xspi`, `emmc`               | `xspi`  | `udp`, `otg`                     | `otg`   |
-| **rzv2h-evk** | v2h | `xspi`                       | `xspi`  | `udp`, `otg`                     | `otg`   |
-| **rzv2h-rdk** | v2h | `xspi`                       | `xspi`  | `udp`                            | `udp`   |
+| Board                 | SoC | `ipl_flash_method` (options) | Default | `rootfs_flash_method` (options)  | Default |
+|-----------------------|-----|------------------------------|---------|----------------------------------|---------|
+| **rzg2l-sbc**         | g2l | `xspi`                       | `xspi`  | `udp`                            | `udp`   |
+| **rzg2l-evk**         | g2l | `xspi`, `emmc`               | `xspi`  | `udp`, `otg`                     | `otg`   |
+| **rs-g2l100**         | g2l | `xspi`                       | `xspi`  | `udp`, `otg`                     | `otg`   |
+| **rzv2l-evk**         | v2l | `xspi`, `emmc`               | `xspi`  | `udp`, `otg`                     | `otg`   |
+| **rzv2h-evk**         | v2h | `xspi`                       | `xspi`  | `udp`, `otg`                     | `otg`   |
+| **rzv2h-rdk**         | v2h | `xspi`                       | `xspi`  | `udp`                            | `udp`   |
+| **imdt-v2h-sbc**      | v2h | `xspi`                       | `xspi`  | `udp`, `otg`                     | `otg`   |
 
 **Notes:**
 - *IPL flash method*: `emmc` for `rzv2h-evk` is **not supported yet**.
