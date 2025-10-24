@@ -6,6 +6,7 @@ This guide provides a quick startup for all supported board in the current relea
 * **RZG2L-EVK** (RZ/G2L Evaluation Kit)
 * **RZV2L-EVK** (RZ/V2L Evaluation Kit)
 * **RZV2H-EVK** (RZ/V2H Evaluation Kit)
+* **RZV2H-SBC** (RZ/V2H Single Board Computer)
 
 ## 1. Overview
 
@@ -616,6 +617,7 @@ This table below lists the available options (and sensible defaults) for `ipl_fl
 | **rzg2l-evk** | g2l | `xspi`, `emmc`        | `xspi`  | `udp`              | `udp`   |
 | **rzv2l-evk** | v2l | `xspi`, `emmc`        | `xspi`  | `udp`              | `udp`   |
 | **rzv2h-evk** | v2h | `xspi`                | `xspi`  | `udp`              | `udp`   |
+| **rzv2h-sbc** | v2h | `xspi`                | `xspi`  | `udp`              | `udp`   |
 
 **Notes:**
 - *IPL flash method*: `emmc` for `rzv2h-evk` is **not supported yet**.
