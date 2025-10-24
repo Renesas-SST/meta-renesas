@@ -43,6 +43,7 @@ DEVICETREE_NAME:rz-cmn = " \
 	rzv2h-evk-ver1 \
 	rzv2h-rdk-ver1 \
 	rs-g2l100 \
+	imdt-v2h-sbc \
 "
 
 # Supported device tree and device tree overlays

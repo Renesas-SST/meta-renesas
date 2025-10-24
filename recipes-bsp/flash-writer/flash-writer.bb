@@ -35,7 +35,7 @@ do_compile() {
 		PMIC_BOARD=""
 		PMIC_BUILD_DIR="${B}/${target}/build_pmic"
 
-		if [ "${target}" = "rzv2h-evk" ] || [ "${target}" = "rzv2h-rdk" ]; then
+		if [ "${target}" = "rzv2h-evk" ] || [ "${target}" = "rzv2h-rdk" ] || [ "${target}" = "imdt-v2h-sbc" ]; then
 			BOARD="RZV2H_DEV"
 		elif [ "${target}" = "rzg2l-sbc" ]; then
 			BOARD="RZG2L_SBC"
