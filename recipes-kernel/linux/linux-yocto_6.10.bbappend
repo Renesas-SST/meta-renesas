@@ -60,7 +60,6 @@ SRC_URI:append:rz-cmn = "\
 	file://rzg2l-sbc/0010-rz-sbc-rename-rzpi-to-rzg2l-sbc-across-all-files-10.patch \
 	file://rzg2l-sbc/0011-rzg2l-sbc-Prevent-disable-eth0-before-eth1.patch \
 	file://rzv2h-evk/0001-rzv2h-evk-Support-RZV2H-EVK.patch \
-	file://rzv2h-rdk/0001-rz-cmn-Add-device-tree-for-RZV2H-RDK.patch \
 	file://common/0001-arm64-dts-renesas-enable-hardware-video-codec.patch \
 	file://common/0002-arm64-dts-renesas-enable-OV5645-MIPI-CSI-Camera.patch \
 	file://common/0003-linux-yocto-update-kernel-to-support-multiple-featur.patch \
@@ -68,6 +67,8 @@ SRC_URI:append:rz-cmn = "\
 	file://common/0005-drm-renesas-rz-du-Add-missing-DSI-D-PHY-init.patch \
 	file://common/0006-media-rzg2l-cru-fix-retry-path-by-stopping-subdev-wi.patch \
 	file://common/0007-dts-renesas-add-I3C_SEL-macro-to-switch-between-I2C2.patch \
+	file://rzv2h-rdk/0001-rz-cmn-Add-support-for-RZV2H-RDK-overlays.patch \
+	file://rzv2h-rdk/0001-rz-cmn-Add-device-tree-for-RZV2H-RDK.patch \
 "
 
 KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg nvme.cfg peripherals.cfg da7219.cfg drm_panel.cfg ov5640.cfg panfrost.cfg kernel-common.cfg ${@oe.utils.conditional('OPTIMIZE_KERN', '1', ' optimize.cfg', '', d)}"
@@ -78,23 +79,27 @@ KMACHINE:rz-cmn ?= "renesas_defconfig"
 
 # List of device tree names for rz-cmn
 DEVICETREE_NAME:rz-cmn = "rzg2l-sbc \
-	r9a07g044l2-smarc \
-	r9a07g044l2-smarc-cru-csi-ov5645 \
-	r9a07g054l2-smarc \
-	r9a07g054l2-smarc-cru-csi-ov5645 \
-	r9a09g057h4-evk-ver1 \
-	r9a09g057h4-rdk-ver1 \
+	rzg2l-evk \
+	rzv2l-evk \
+	rzv2h-evk-ver1 \
+	rzv2h-rdk-ver1 \
 "
 
 # Supported device tree and device tree overlays
 KERNEL_DEVICETREE:rz-cmn = "${@' '.join(['renesas/%s.dtb' % devicetree_name for devicetree_name in d.getVar('DEVICETREE_NAME').split()])}"
 
 KERNEL_DEVICETREE:append:rz-cmn = " \
-	renesas/overlays/rzg2l-sbc-can.dtbo \
-	renesas/overlays/rzg2l-sbc-ext-i2c.dtbo \
-	renesas/overlays/rzg2l-sbc-ext-spi.dtbo \
-	renesas/overlays/rzg2l-sbc-dsi.dtbo \
-	renesas/overlays/rzg2l-sbc-ov5640.dtbo \
+	renesas/overlays/rzg2l-sbc-1.0-can.dtbo \
+	renesas/overlays/rzg2l-sbc-1.0-ext-i2c.dtbo \
+	renesas/overlays/rzg2l-sbc-1.0-ext-spi.dtbo \
+	renesas/overlays/rzg2l-sbc-1.0-dsi.dtbo \
+	renesas/overlays/rzg2l-sbc-1.0-ov5640.dtbo \
+	renesas/overlays/rzg2l-evk-1.0-cru-csi-ov5645.dtbo \
+	renesas/overlays/rzv2l-evk-1.0-cru-csi-ov5645.dtbo \
+	renesas/overlays/rzv2h-rdk-1.0-audio-codec.dtbo \
+	renesas/overlays/rzv2h-rdk-1.0-audio-hdmi.dtbo \
+	renesas/overlays/rzv2h-rdk-1.0-can.dtbo \
+	renesas/overlays/rzv2h-rdk-1.0-ext-spi.dtbo
 "
 
 # Override the dtc flags to support dtbo build in kernel-devicetree.bbclass

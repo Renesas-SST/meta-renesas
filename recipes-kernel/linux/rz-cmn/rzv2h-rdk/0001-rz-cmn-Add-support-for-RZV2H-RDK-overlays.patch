@@ -1,0 +1,734 @@
+From 7aacbda666dc2391a0226b29c679f37b41488ce2 Mon Sep 17 00:00:00 2001
+From: thanhnguyenwx <thanh.nguyen.wx@bp.renesas.com>
+Date: Fri, 24 Oct 2025 17:31:55 +0700
+Subject: [PATCH] rz-cmn: Add support for RZV2H-RDK overlays
+
+Signed-off-by: Thanh nguyen <thanh.nguyen.wx@bp.renesas.com>
+---
+ .../bindings/soc/renesas/renesas-overlay.rst  |  65 +++++++++
+ arch/arm64/boot/dts/renesas/Makefile          |  21 +--
+ arch/arm64/boot/dts/renesas/overlays/Makefile |  21 ++-
+ .../rzg2l-evk-1.0-cru-csi-ov5645.dts}         |   2 +-
+ ...zg2l-sbc-can.dts => rzg2l-sbc-1.0-can.dts} |   0
+ ...zg2l-sbc-dsi.dts => rzg2l-sbc-1.0-dsi.dts} |   0
+ ...-ext-i2c.dts => rzg2l-sbc-1.0-ext-i2c.dts} |   0
+ ...-ext-spi.dts => rzg2l-sbc-1.0-ext-spi.dts} |   0
+ ...bc-ov5640.dts => rzg2l-sbc-1.0-ov5640.dts} |   0
+ .../overlays/rzv2h-rdk-1.0-audio-codec.dts    |  47 +++++++
+ .../overlays/rzv2h-rdk-1.0-audio-hdmi.dts     |  48 +++++++
+ .../renesas/overlays/rzv2h-rdk-1.0-can.dts    |  35 +++++
+ .../overlays/rzv2h-rdk-1.0-ext-spi.dts        |  31 +++++
+ .../overlays/rzv2l-evk-1.0-cru-csi-ov5645.dts |   1 +
+ .../rzv2l-evk-1.0-cru-csi-ov5645.dtsi         |  80 ++++++++++++
+ .../r9a07g054l2-smarc-cru-csi-ov5645.dtso     |   1 -
+ .../{r9a07g044l2-smarc.dts => rzg2l-evk.dts}  |   0
+ ...g057h4-evk-ver1.dts => rzv2h-evk-ver1.dts} |   0
+ ...g057h4-rdk-ver1.dts => rzv2h-rdk-ver1.dts} | 123 ++++++------------
+ .../{r9a07g054l2-smarc.dts => rzv2l-evk.dts}  |   0
+ 20 files changed, 375 insertions(+), 100 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/soc/renesas/renesas-overlay.rst
+ rename arch/arm64/boot/dts/renesas/{r9a07g044l2-smarc-cru-csi-ov5645.dtso => overlays/rzg2l-evk-1.0-cru-csi-ov5645.dts} (91%)
+ rename arch/arm64/boot/dts/renesas/overlays/{rzg2l-sbc-can.dts => rzg2l-sbc-1.0-can.dts} (100%)
+ rename arch/arm64/boot/dts/renesas/overlays/{rzg2l-sbc-dsi.dts => rzg2l-sbc-1.0-dsi.dts} (100%)
+ rename arch/arm64/boot/dts/renesas/overlays/{rzg2l-sbc-ext-i2c.dts => rzg2l-sbc-1.0-ext-i2c.dts} (100%)
+ rename arch/arm64/boot/dts/renesas/overlays/{rzg2l-sbc-ext-spi.dts => rzg2l-sbc-1.0-ext-spi.dts} (100%)
+ rename arch/arm64/boot/dts/renesas/overlays/{rzg2l-sbc-ov5640.dts => rzg2l-sbc-1.0-ov5640.dts} (100%)
+ create mode 100644 arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-audio-codec.dts
+ create mode 100644 arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-audio-hdmi.dts
+ create mode 100644 arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-can.dts
+ create mode 100644 arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-ext-spi.dts
+ create mode 120000 arch/arm64/boot/dts/renesas/overlays/rzv2l-evk-1.0-cru-csi-ov5645.dts
+ create mode 100644 arch/arm64/boot/dts/renesas/overlays/rzv2l-evk-1.0-cru-csi-ov5645.dtsi
+ delete mode 120000 arch/arm64/boot/dts/renesas/r9a07g054l2-smarc-cru-csi-ov5645.dtso
+ rename arch/arm64/boot/dts/renesas/{r9a07g044l2-smarc.dts => rzg2l-evk.dts} (100%)
+ rename arch/arm64/boot/dts/renesas/{r9a09g057h4-evk-ver1.dts => rzv2h-evk-ver1.dts} (100%)
+ rename arch/arm64/boot/dts/renesas/{r9a09g057h4-rdk-ver1.dts => rzv2h-rdk-ver1.dts} (88%)
+ rename arch/arm64/boot/dts/renesas/{r9a07g054l2-smarc.dts => rzv2l-evk.dts} (100%)
+
+diff --git a/Documentation/devicetree/bindings/soc/renesas/renesas-overlay.rst b/Documentation/devicetree/bindings/soc/renesas/renesas-overlay.rst
+new file mode 100644
+index 000000000000..578c276efcd5
+--- /dev/null
++++ b/Documentation/devicetree/bindings/soc/renesas/renesas-overlay.rst
+@@ -0,0 +1,65 @@
++Renesas Device Tree Overlay Naming
++==================================
++
++Overview
++--------
++This document defines the naming convention for Renesas board device tree
++overlays (.dtbo). The goal is to make overlay intent obvious and consistent
++across boards and features.
++
++Naming Convention
++-----------------
++- Pattern:
++
++  - `${model_string}-${revision_major}.${revision_minor}-${feature}.dtbo`
++
++- Allowed/used feature suffixes (current set):
++
++  - `ext-i2c`
++  - `ext-spi`
++  - `can`
++  - `dsi`
++  - `ov5640`
++  - `cru-csi-ov5645`
++
++Definitions
++-----------
++- `model_string`: Short, lowercase board identifier, hyphen-delimited.
++  Examples: `rzg2l-evk`, `rzg2l-sbc`, `rzv2l-evk`, `rzv2h-rdk`.
++- `revision_major`/`revision_minor`: Hardware revision of the board, e.g. `1.0`.
++- `feature`: Hyphen-delimited description of the interface or peripheral enabled
++  by the overlay. Prefer common tokens and keep lowercase.
++
++Source File Naming
++------------------
++- The overlay source (`.dts`/`.dtso`) uses the same base name as the compiled
++  overlay (`.dtbo`). For example:
++
++  - `rzg2l-sbc-1.0-ext-spi.dts` -> `rzg2l-sbc-1.0-ext-spi.dtbo`
++
++Examples (Current Overlays)
++---------------------------
++- `rzg2l-evk-1.0-cru-csi-ov5645.dts`  -> `rzg2l-evk-1.0-cru-csi-ov5645.dtbo`
++- `rzg2l-sbc-1.0-can.dts`             -> `rzg2l-sbc-1.0-can.dtbo`
++- `rzg2l-sbc-1.0-dsi.dts`             -> `rzg2l-sbc-1.0-dsi.dtbo`
++- `rzg2l-sbc-1.0-ext-i2c.dts`         -> `rzg2l-sbc-1.0-ext-i2c.dtbo`
++- `rzg2l-sbc-1.0-ext-spi.dts`         -> `rzg2l-sbc-1.0-ext-spi.dtbo`
++- `rzg2l-sbc-1.0-ov5640.dts`          -> `rzg2l-sbc-1.0-ov5640.dtbo`
++- `rzv2h-rdk-1.0-can.dts`             -> `rzv2h-rdk-1.0-can.dtbo`
++- `rzv2h-rdk-1.0-ext-spi.dts`         -> `rzv2h-rdk-1.0-ext-spi.dtbo`
++- `rzv2l-evk-1.0-cru-csi-ov5645.dts`  -> `rzv2l-evk-1.0-cru-csi-ov5645.dtbo`
++
++Guidelines
++----------
++- Use lowercase and hyphens. Avoid spaces and camelCase.
++- Keep feature tokens short and reusable across boards.
++- When variants are needed, append a qualifier at the end,
++  e.g. `ext-i2c`, `ext-spi`.
++- Ensure the `Makefile  <../../../../../arch/arm64/boot/dts/renesas/overlays/Makefile>`_ includes the matching `.dtbo` name.
++
++Optional: Schema/Compatible Naming
++----------------------------------
++- For dt-schema bindings, prefer the overlay root compatible string to follow
++  the same base name: `renesas,${model_string}-${revision_major}.${revision_minor}-${feature}`.
++- Name the binding file after the first compatible, e.g.:
++  `renesas,rzg2l-sbc-1.0-ext-spi.yaml`.
+diff --git a/arch/arm64/boot/dts/renesas/Makefile b/arch/arm64/boot/dts/renesas/Makefile
+index fe58b6c79c17..258f4d9856fd 100644
+--- a/arch/arm64/boot/dts/renesas/Makefile
++++ b/arch/arm64/boot/dts/renesas/Makefile
+@@ -123,25 +123,26 @@ dtb-$(CONFIG_ARCH_R9A07G044) += r9a07g044c2-smarc-cru-csi-ov5645.dtbo
+ r9a07g044c2-smarc-cru-csi-ov5645-dtbs := r9a07g044c2-smarc.dtb r9a07g044c2-smarc-cru-csi-ov5645.dtbo
+ dtb-$(CONFIG_ARCH_R9A07G044) += r9a07g044c2-smarc-cru-csi-ov5645.dtb
+ 
+-dtb-$(CONFIG_ARCH_R9A07G044) += r9a07g044l2-smarc.dtb
+-dtb-$(CONFIG_ARCH_R9A07G044) += r9a07g044l2-smarc-cru-csi-ov5645.dtbo
+-r9a07g044l2-smarc-cru-csi-ov5645-dtbs := r9a07g044l2-smarc.dtb r9a07g044l2-smarc-cru-csi-ov5645.dtbo
+-dtb-$(CONFIG_ARCH_R9A07G044) += r9a07g044l2-smarc-cru-csi-ov5645.dtb
++DTC_FLAGS_rzg2l-evk += -@
++dtb-$(CONFIG_ARCH_R9A07G044) += rzg2l-evk.dtb
+ 
+ DTC_FLAGS_rzg2l-sbc += -@
+ dtb-$(CONFIG_ARCH_R9A07G044) += rzg2l-sbc.dtb
+-subdir-$(CONFIG_ARCH_R9A07G044) += overlays
+ 
+-dtb-$(CONFIG_ARCH_R9A07G054) += r9a07g054l2-smarc.dtb
+-dtb-$(CONFIG_ARCH_R9A07G054) += r9a07g054l2-smarc-cru-csi-ov5645.dtbo
+-r9a07g054l2-smarc-cru-csi-ov5645-dtbs := r9a07g054l2-smarc.dtb r9a07g054l2-smarc-cru-csi-ov5645.dtbo
+-dtb-$(CONFIG_ARCH_R9A07G054) += r9a07g054l2-smarc-cru-csi-ov5645.dtb
++DTC_FLAGS_rzv2l-evk += -@
++dtb-$(CONFIG_ARCH_R9A07G054) += rzv2l-evk.dtb
+ 
+ dtb-$(CONFIG_ARCH_R9A08G045) += r9a08g045s33-smarc.dtb
+ 
+ dtb-$(CONFIG_ARCH_R9A09G011) += r9a09g011-v2mevk2.dtb
+ 
+-dtb-$(CONFIG_ARCH_R9A09G057) += r9a09g057h4-evk-ver1.dtb r9a09g057h4-rdk-ver1.dtb
++DTC_FLAGS_rzv2h-evk-ver1 += -@
++dtb-$(CONFIG_ARCH_R9A09G057) += rzv2h-evk-ver1.dtb
++
++DTC_FLAGS_rzv2h-rdk-ver1 += -@
++dtb-$(CONFIG_ARCH_R9A09G057) += rzv2h-rdk-ver1.dtb
++
++subdir-y += overlays
+ 
+ dtb-$(CONFIG_ARCH_RCAR_GEN3) += draak-ebisu-panel-aa104xd12.dtbo
+ dtb-$(CONFIG_ARCH_RCAR_GEN3) += salvator-panel-aa104xd12.dtbo
+diff --git a/arch/arm64/boot/dts/renesas/overlays/Makefile b/arch/arm64/boot/dts/renesas/overlays/Makefile
+index 8acede6e2d26..686cd004000e 100644
+--- a/arch/arm64/boot/dts/renesas/overlays/Makefile
++++ b/arch/arm64/boot/dts/renesas/overlays/Makefile
+@@ -3,8 +3,19 @@
+ # required for overlay support
+ DTC_FLAGS += -@
+ 
+-dtb-y += rzg2l-sbc-ext-i2c.dtbo
+-dtb-y += rzg2l-sbc-ext-spi.dtbo
+-dtb-y += rzg2l-sbc-can.dtbo
+-dtb-y += rzg2l-sbc-ov5640.dtbo
+-dtb-y += rzg2l-sbc-dsi.dtbo
++# RZ/G2L SBC overlays
++dtb-y += rzg2l-sbc-1.0-ext-i2c.dtbo
++dtb-y += rzg2l-sbc-1.0-ext-spi.dtbo
++dtb-y += rzg2l-sbc-1.0-can.dtbo
++dtb-y += rzg2l-sbc-1.0-ov5640.dtbo
++dtb-y += rzg2l-sbc-1.0-dsi.dtbo
++
++# CRU CSI OV5645 overlays
++dtb-y += rzg2l-evk-1.0-cru-csi-ov5645.dtbo
++dtb-y += rzv2l-evk-1.0-cru-csi-ov5645.dtbo
++
++# RZ/V2H RDK overlays
++dtb-y += rzv2h-rdk-1.0-can.dtbo
++dtb-y += rzv2h-rdk-1.0-ext-spi.dtbo
++dtb-y += rzv2h-rdk-1.0-audio-codec.dtbo
++dtb-y += rzv2h-rdk-1.0-audio-hdmi.dtbo
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l2-smarc-cru-csi-ov5645.dtso b/arch/arm64/boot/dts/renesas/overlays/rzg2l-evk-1.0-cru-csi-ov5645.dts
+similarity index 91%
+rename from arch/arm64/boot/dts/renesas/r9a07g044l2-smarc-cru-csi-ov5645.dtso
+rename to arch/arm64/boot/dts/renesas/overlays/rzg2l-evk-1.0-cru-csi-ov5645.dts
+index 736c1e688cc8..295d8ef39e39 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g044l2-smarc-cru-csi-ov5645.dtso
++++ b/arch/arm64/boot/dts/renesas/overlays/rzg2l-evk-1.0-cru-csi-ov5645.dts
+@@ -13,7 +13,7 @@
+ #include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
+ 
+ #define OV5645_PARENT_I2C i2c0
+-#include "rz-smarc-cru-csi-ov5645.dtsi"
++#include "rzv2l-evk-1.0-cru-csi-ov5645.dtsi"
+ 
+ &ov5645 {
+ 	enable-gpios = <&pinctrl RZG2L_GPIO(2, 0) GPIO_ACTIVE_HIGH>;
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-can.dts b/arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-1.0-can.dts
+similarity index 100%
+rename from arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-can.dts
+rename to arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-1.0-can.dts
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-dsi.dts b/arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-1.0-dsi.dts
+similarity index 100%
+rename from arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-dsi.dts
+rename to arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-1.0-dsi.dts
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-ext-i2c.dts b/arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-1.0-ext-i2c.dts
+similarity index 100%
+rename from arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-ext-i2c.dts
+rename to arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-1.0-ext-i2c.dts
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-ext-spi.dts b/arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-1.0-ext-spi.dts
+similarity index 100%
+rename from arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-ext-spi.dts
+rename to arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-1.0-ext-spi.dts
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-ov5640.dts b/arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-1.0-ov5640.dts
+similarity index 100%
+rename from arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-ov5640.dts
+rename to arch/arm64/boot/dts/renesas/overlays/rzg2l-sbc-1.0-ov5640.dts
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-audio-codec.dts b/arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-audio-codec.dts
+new file mode 100644
+index 000000000000..4cdab9a6c1f3
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-audio-codec.dts
+@@ -0,0 +1,47 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2025 Renesas Electronics Corporation
++ */
++
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/pinctrl/rzv2h-pinctrl.h>
++
++&pinctrl {
++    sound_pins: sound {
++        pinmux = <RZV2H_PORT_PINMUX(9, 5, 7)>, /* SSI0_SCK */
++            <RZV2H_PORT_PINMUX(9, 6, 7)>,     /* SSI0_WS */
++            <RZV2H_PORT_PINMUX(9, 7, 7)>;     /* SSI0_SDATA */
++    };
++};
++
++&rcar_sound {
++    pinctrl-0 = <&sound_pins>;
++
++    ports {
++        #address-cells = <1>;
++        #size-cells = <0>;
++
++        rsnd_port0: port@0 {
++            rsnd_endpoint0: endpoint {
++                remote-endpoint = <&da7219_endpoint>;
++
++                mclk-fs = <256>;
++            };
++        };
++    };
++};
++
++&rsci_i2c7 {
++    da7219: da7219@1a {
++        #address-cells = <1>;
++        #size-cells = <0>;
++
++        port {
++            da7219_endpoint: endpoint {
++                remote-endpoint = <&rsnd_endpoint0>;
++            };
++        };
++    };
++};
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-audio-hdmi.dts b/arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-audio-hdmi.dts
+new file mode 100644
+index 000000000000..d9fe4d7f96ff
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-audio-hdmi.dts
+@@ -0,0 +1,48 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2025 Renesas Electronics Corporation
++ */
++
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/pinctrl/rzv2h-pinctrl.h>
++
++&pinctrl {
++    sound_pins_hdmi: hdmi-sound {
++        pinmux = <RZV2H_PORT_PINMUX(4, 0, 7)>, /* SSI0_SCK */
++             <RZV2H_PORT_PINMUX(4, 1, 7)>,     /* SSI0_WS */
++             <RZV2H_PORT_PINMUX(4, 2, 7)>;     /* SSI0_SDATA */
++    };
++};
++
++&rcar_sound {
++    pinctrl-0 = <&sound_pins_hdmi>;
++
++    ports {
++        #address-cells = <1>;
++        #size-cells = <0>;
++
++        rsnd_port0: port@0 {
++            rsnd_endpoint0: endpoint {
++                remote-endpoint = <&dsi_hdmi0_snd_in>;
++            };
++        };
++    };
++};
++
++&i2c3 {
++    adv7535: hdmi@3d {
++        ports {
++            #address-cells = <1>;
++            #size-cells = <0>;
++
++            port@2 {
++                reg = <2>;
++                dsi_hdmi0_snd_in: endpoint {
++                    remote-endpoint = <&rsnd_endpoint0>;
++                };
++            };
++        };
++    };
++};
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-can.dts b/arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-can.dts
+new file mode 100644
+index 000000000000..5905c9c5b8f1
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-can.dts
+@@ -0,0 +1,35 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2025 Renesas Electronics Corporation
++ */
++
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/pinctrl/rzv2h-pinctrl.h>
++
++&pinctrl {
++    can0_pins: can0 {
++        pinmux = <RZV2H_PORT_PINMUX(8, 0, 5)>, 	/* CTX0 */
++                <RZV2H_PORT_PINMUX(8, 1, 5)>; 	/* CRX0 */
++    };
++
++    can3_pins: can3 {
++        pinmux = <RZV2H_PORT_PINMUX(8, 6, 5)>, 	/* CTX3 */
++                <RZV2H_PORT_PINMUX(8, 7, 5)>; 	/* CRX3 */
++    };
++};
++
++&canfd {
++    pinctrl-0 = <&can0_pins &can3_pins>;
++    pinctrl-names = "default";
++    status = "okay";
++
++    channel0 {
++        status = "okay";
++    };
++
++    channel3 {
++        status = "okay";
++    };
++};
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-ext-spi.dts b/arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-ext-spi.dts
+new file mode 100644
+index 000000000000..95342065a365
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/overlays/rzv2h-rdk-1.0-ext-spi.dts
+@@ -0,0 +1,31 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2025 Renesas Electronics Corporation
++ */
++
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/pinctrl/rzv2h-pinctrl.h>
++
++&pinctrl {
++    master_sci0_pins: master_sci0 {
++        pinmux = <RZV2H_PORT_PINMUX(5, 1, 1)>, 	/* RXD0_MISO0_SCL0 */
++             <RZV2H_PORT_PINMUX(5, 0, 1)>, 		/* TXD0_MOSI0_SDA0 */
++             <RZV2H_PORT_PINMUX(5, 2, 2)>; 		/* SCK0 */
++    };
++
++    slave_sci0_pins: slave_sci0 {
++        pinmux = <RZV2H_PORT_PINMUX(5, 1, 1)>, 	/* RXD0_MISO0_SCL0 */
++             <RZV2H_PORT_PINMUX(5, 0, 1)>, 		/* TXD0_MOSI0_SDA0 */
++             <RZV2H_PORT_PINMUX(5, 2, 2)>, 		/* SCK0 */
++             <RZV2H_PORT_PINMUX(5, 3, 2)>; 		/* SS0_CTS0N_RTS0N */
++    };
++};
++
++&rsci_spi0 {
++    pinctrl-0 = <&master_sci0_pins>;
++    pinctrl-1 = <&slave_sci0_pins>;
++    pinctrl-names = "master", "slave";
++    status = "okay";
++};
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzv2l-evk-1.0-cru-csi-ov5645.dts b/arch/arm64/boot/dts/renesas/overlays/rzv2l-evk-1.0-cru-csi-ov5645.dts
+new file mode 120000
+index 000000000000..59ffff0cfa32
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/overlays/rzv2l-evk-1.0-cru-csi-ov5645.dts
+@@ -0,0 +1 @@
++rzg2l-evk-1.0-cru-csi-ov5645.dts
+\ No newline at end of file
+diff --git a/arch/arm64/boot/dts/renesas/overlays/rzv2l-evk-1.0-cru-csi-ov5645.dtsi b/arch/arm64/boot/dts/renesas/overlays/rzv2l-evk-1.0-cru-csi-ov5645.dtsi
+new file mode 100644
+index 000000000000..4b392c7f6608
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/overlays/rzv2l-evk-1.0-cru-csi-ov5645.dtsi
+@@ -0,0 +1,80 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Common Device Tree for the RZ/{G2L, V2L} SMARC EVK (and alike EVKs) with
++ * OV5645 camera connected to CSI and CRU enabled.
++ *
++ * Copyright (C) 2025 Renesas Electronics Corp.
++ */
++
++&{/} {
++	ov5645_vdddo_1v8: 1p8v {
++		compatible = "regulator-fixed";
++		regulator-name = "camera_vdddo";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-always-on;
++	};
++
++	ov5645_vdda_2v8: 2p8v {
++		compatible = "regulator-fixed";
++		regulator-name = "camera_vdda";
++		regulator-min-microvolt = <2800000>;
++		regulator-max-microvolt = <2800000>;
++		regulator-always-on;
++	};
++
++	ov5645_vddd_1v5: 1p5v {
++		compatible = "regulator-fixed";
++		regulator-name = "camera_vddd";
++		regulator-min-microvolt = <1500000>;
++		regulator-max-microvolt = <1500000>;
++		regulator-always-on;
++	};
++
++	ov5645_fixed_clk: osc25250-clk {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <24000000>;
++	};
++};
++
++&cru {
++	status = "okay";
++};
++
++&csi2 {
++	status = "okay";
++
++	ports {
++		port@0 {
++			csi2_in: endpoint {
++				clock-lanes = <0>;
++				data-lanes = <1 2>;
++				remote-endpoint = <&ov5645_ep>;
++			};
++		};
++	};
++};
++
++&OV5645_PARENT_I2C {
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	ov5645: camera@3c {
++		compatible = "ovti,ov5645";
++		reg = <0x3c>;
++		clocks = <&ov5645_fixed_clk>;
++		clock-frequency = <24000000>;
++		vdddo-supply = <&ov5645_vdddo_1v8>;
++		vdda-supply = <&ov5645_vdda_2v8>;
++		vddd-supply = <&ov5645_vddd_1v5>;
++
++		port {
++			ov5645_ep: endpoint {
++				clock-lanes = <0>;
++				data-lanes = <1 2>;
++				remote-endpoint = <&csi2_in>;
++			};
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g054l2-smarc-cru-csi-ov5645.dtso b/arch/arm64/boot/dts/renesas/r9a07g054l2-smarc-cru-csi-ov5645.dtso
+deleted file mode 120000
+index 0f175341d3ed..000000000000
+--- a/arch/arm64/boot/dts/renesas/r9a07g054l2-smarc-cru-csi-ov5645.dtso
++++ /dev/null
+@@ -1 +0,0 @@
+-r9a07g044l2-smarc-cru-csi-ov5645.dtso
+\ No newline at end of file
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l2-smarc.dts b/arch/arm64/boot/dts/renesas/rzg2l-evk.dts
+similarity index 100%
+rename from arch/arm64/boot/dts/renesas/r9a07g044l2-smarc.dts
+rename to arch/arm64/boot/dts/renesas/rzg2l-evk.dts
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g057h4-evk-ver1.dts b/arch/arm64/boot/dts/renesas/rzv2h-evk-ver1.dts
+similarity index 100%
+rename from arch/arm64/boot/dts/renesas/r9a09g057h4-evk-ver1.dts
+rename to arch/arm64/boot/dts/renesas/rzv2h-evk-ver1.dts
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g057h4-rdk-ver1.dts b/arch/arm64/boot/dts/renesas/rzv2h-rdk-ver1.dts
+similarity index 88%
+rename from arch/arm64/boot/dts/renesas/r9a09g057h4-rdk-ver1.dts
+rename to arch/arm64/boot/dts/renesas/rzv2h-rdk-ver1.dts
+index 2b8ba7d28b2f..30b1daf8d93b 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g057h4-rdk-ver1.dts
++++ b/arch/arm64/boot/dts/renesas/rzv2h-rdk-ver1.dts
+@@ -16,17 +16,14 @@
+  *
+  * Configure the following macros in the device tree to select the desired functionality:
+  *
+- * RSCI0_UART_I2C_SEL:
+- *   0 - GPIO (default)          1 - RSCI_SPI0
+  * RSCI2_UART_I2C_SEL:
+- *   0 - RI2C4 (default)         1 - RSCI_I2C2
++ *   0 - RI2C4 (default)         1 - RSCI_I2C4
+  * RSCI6_UART_I2C_SEL:
+  *   0 - RI2C6 (default)         1 - RSCI_I2C6
+  * PCIE_MODE_SEL:
+  *   0 - Root Complex (default)  1 - Endpoint
+  */
+ 
+-#define RSCI0_UART_I2C_SEL      0
+ #define RSCI2_UART_I2C_SEL      0
+ #define RSCI6_UART_I2C_SEL      1
+ #define PCIE_MODE_SEL           0
+@@ -243,45 +240,6 @@ sound_card: sound {
+ };
+ 
+ &pinctrl {
+-#if (RSCI0_UART_I2C_SEL)
+-    master_sci0_pins: master_sci0 {
+-        pinmux = <RZV2H_PORT_PINMUX(5, 1, 1)>, 	/* RXD0_MISO0_SCL0 */
+-             <RZV2H_PORT_PINMUX(5, 0, 1)>, 		/* TXD0_MOSI0_SDA0 */
+-             <RZV2H_PORT_PINMUX(5, 2, 2)>; 		/* SCK0 */
+-    };
+-
+-    slave_sci0_pins: slave_sci0 {
+-        pinmux = <RZV2H_PORT_PINMUX(5, 1, 1)>, 	/* RXD0_MISO0_SCL0 */
+-             <RZV2H_PORT_PINMUX(5, 0, 1)>, 		/* TXD0_MOSI0_SDA0 */
+-             <RZV2H_PORT_PINMUX(5, 2, 2)>, 		/* SCK0 */
+-             <RZV2H_PORT_PINMUX(5, 3, 2)>; 		/* SS0_CTS0N_RTS0N */
+-    };
+-#endif
+-
+-    can0_pins: can0 {
+-        pinmux = <RZV2H_PORT_PINMUX(8, 0, 5)>, 	/* CTX0 */
+-             <RZV2H_PORT_PINMUX(8, 1, 5)>; 		/* CRX0 */
+-    };
+-
+-    can0-stb-hog {
+-        gpio-hog;
+-        gpios = <RZV2H_GPIO(A, 2) GPIO_ACTIVE_HIGH>;
+-        output-low;
+-        line-name = "can0_stb";
+-    };
+-
+-    can3_pins: can3 {
+-        pinmux = <RZV2H_PORT_PINMUX(8, 6, 5)>, 	/* CTX3 */
+-             <RZV2H_PORT_PINMUX(8, 7, 5)>; 		/* CRX3 */
+-    };
+-
+-    can3-stb-hog {
+-        gpio-hog;
+-        gpios = <RZV2H_GPIO(A, 3) GPIO_ACTIVE_HIGH>;
+-        output-low;
+-        line-name = "can3_stb";
+-    };
+-
+     scif_pins: scif {
+         pins =  "SCIF_RXD", "SCIF_TXD";
+         renesas,output-impedance = <1>;
+@@ -369,11 +327,6 @@ i3c_pins: i3c {
+              <RZV2H_PORT_PINMUX(2, 1, 1)>; 		/* I3C_SCL */
+     };
+ 
+-    sound_pins_hdmi: hdmi-sound {
+-        pinmux = <RZV2H_PORT_PINMUX(4, 0, 7)>, /* SSI0_SCK */
+-             <RZV2H_PORT_PINMUX(4, 1, 7)>,     /* SSI0_WS */
+-             <RZV2H_PORT_PINMUX(4, 2, 7)>;     /* SSI0_SDATA */
+-    };
+ };
+ 
+ &qextal_clk {
+@@ -393,32 +346,6 @@ &sci5 {
+     status = "okay";
+ };
+ 
+-&canfd {
+-    pinctrl-0 = <&can0_pins &can3_pins>;
+-    pinctrl-names = "default";
+-    status = "okay";
+-
+-    channel0 {
+-        status = "okay";
+-    };
+-
+-    channel3 {
+-        status = "okay";
+-    };
+-};
+-
+-#if (RSCI0_UART_I2C_SEL)
+-&rsci_spi0 {
+-    pinctrl-0 = <&master_sci0_pins>;
+-    pinctrl-1 = <&slave_sci0_pins>;
+-    pinctrl-names = "master", "slave";
+-    status = "okay";
+-
+-    /* Using cs-gpios property when is master mode */
+-    cs-gpios = <&pinctrl RZV2H_GPIO(5, 3) GPIO_ACTIVE_HIGH>;
+-};
+-#endif
+-
+ &sdhi0 {
+     pinctrl-0 = <&sdhi0_pins>;
+     pinctrl-1 = <&sdhi0_pins>;
+@@ -467,6 +394,8 @@ &rsci_i2c4 {
+     pinctrl-0 = <&rsci_i2c4_pins>;
+ #endif
+     pinctrl-names = "default";
++	#address-cells = <1>;
++	#size-cells = <0>;
+ 
+     status = "okay";
+ 
+@@ -499,6 +428,8 @@ &rsci_i2c6 {
+     pinctrl-0 = <&rsci_i2c6_pins>;
+ #endif
+     pinctrl-names = "default";
++	#address-cells = <1>;
++	#size-cells = <0>;
+ 
+     status = "okay";	
+     ov5645_csi21: ov5645_csi21@3c {
+@@ -524,7 +455,42 @@ ov5645_to_csi21: endpoint {
+ &rsci_i2c7 {
+     pinctrl-0 = <&rsci_i2c7_pins>;
+     pinctrl-names = "default";
++	#address-cells = <1>;
++	#size-cells = <0>;
++
+     status = "okay";
++
++    da7219: da7219@1a {
++        compatible = "dlg,da7219";
++
++        #sound-dai-cells = <0>;
++        #address-cells = <1>;
++        #size-cells = <0>;
++        reg = <0x1a>;
++
++        dlg,micbias-lvl = <2600>;
++        dlg,mic-amp-in-sel = "diff";
++
++        status = "okay";
++
++        interrupt-parent = <&pinctrl>;
++        interrupts = <RZV2H_GPIO(5, 1) IRQ_TYPE_LEVEL_LOW>;
++
++        da7219_aad {
++            dlg,adc-1bit-rpt = <1>;
++            dlg,btn-avg = <4>;
++            dlg,btn-cfg = <50>;
++            dlg,mic-det-thr = <500>;
++            dlg,jack-ins-deb = <20>;
++            dlg,jack-det-rate = "32_64";
++            dlg,jack-rem-deb = <1>;
++
++            dlg,a-d-btn-thr = <0xa>;
++            dlg,d-b-btn-thr = <0x16>;
++            dlg,b-c-btn-thr = <0x21>;
++            dlg,c-mic-btn-thr = <0x3E>;
++        };
++    };
+ };
+ 
+ &spi0 {
+@@ -679,13 +645,6 @@ adv7535_out: endpoint@1 {
+                     remote-endpoint = <&hdmi_con_out>;
+                 };
+             };
+-
+-            port@2 {
+-                reg = <2>;
+-                dsi_hdmi0_snd_in: endpoint {
+-                    remote-endpoint = <&rsnd_endpoint0>;
+-                };
+-            };
+         };
+     };
+ };
+@@ -797,7 +756,6 @@ &pcie0_ep {
+ #endif
+ 
+ &rcar_sound {
+-    pinctrl-0 = <&sound_pins_hdmi>;
+     pinctrl-names = "default";
+ 
+     status = "okay";
+@@ -816,7 +774,6 @@ ports {
+         rsnd_port0: port@0 {
+             reg = <0>;
+             rsnd_endpoint0: endpoint {
+-                remote-endpoint = <&dsi_hdmi0_snd_in>;
+ 
+                 dai-format = "i2s";
+                 bitclock-master = <&rsnd_endpoint0>;
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g054l2-smarc.dts b/arch/arm64/boot/dts/renesas/rzv2l-evk.dts
+similarity index 100%
+rename from arch/arm64/boot/dts/renesas/r9a07g054l2-smarc.dts
+rename to arch/arm64/boot/dts/renesas/rzv2l-evk.dts
+-- 
+2.25.1
+
