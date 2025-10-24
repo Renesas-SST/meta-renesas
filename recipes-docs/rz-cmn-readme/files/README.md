@@ -1,4 +1,4 @@
-# Renesas RZ Boards Quick Startup Guide
+# Renesas RZ Common System
 
 This guide provides a quick startup for all supported board in the current release. This README describes the current development status, how to build images, and how to set up the environment for the following boards:
 
@@ -126,12 +126,252 @@ $ MACHINE<target_machine> IMAGE=<target_image> ./rz_builder.sh build
 
 ### 2.5. Collect the Output
 
-Upon successful Yocto build, the output folder will be located at:
-`~/renesas/rz-cmn-srp/yocto_<target_board>/build/tmp/deploy/images/<target_board>`
+After building Yocto with the ‘all-supported-images’ option, which builds all images at once, the output folder should be located at: `~/renesas/rz-cmn-srp/yocto_<target_board>/build/tmp/deploy/images/<target_board>`
 
 For example: `~/renesas/rz-cmn-srp/yocto_cmn_board/build/tmp/deploy/images/rz-cmn`
 
-The output directory generally contains:
+The output directory generally should look as follows:
+
+```sh
+renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/images/rz-cmn$ tree
+.
+├── host
+│   ├── build
+│   │   ├── <image-name>-<timestamp>.rootfs.manifest
+│   │   ├── <image-name>-<timestamp>.testdata.json
+│   │   ├── <image-name>.manifest -> <image-name>-<timestamp>.rootfs.manifest
+│   │   └── <image-name>.testdata.json -> <image-name>-<timestamp>.testdata.json
+│   ├── env
+│   │   ├── core-image-bsp.env
+│   │   ├── core-image-minimal.env
+│   │   ├── core-image-weston.env
+│   │   ├── Readme.md
+│   │   ├── renesas-core-image-cli.env
+│   │   ├── renesas-core-image-weston.env
+│   │   ├── renesas-quickboot-cli.env
+│   │   └── renesas-quickboot-wayland.env
+│   ├── Readme.md
+│   ├── src
+│   │   └── rz-cmn-srp
+│   │       ├── config.json
+│   │       ├── files_to_add
+│   │       │   └── meta-rz-features
+│   │       │       ├── 0001-rzg2l-sbc-Bring-compat_alloc_user_space-back.patch
+│   │       │       └── 0004-rzg2l-sbc-Get-interrupt-number.patch
+│   │       ├── git_patch.json
+│   │       ├── jq-linux-amd64
+│   │       ├── patches
+│   │       │   ├── meta-rz-features
+│   │       │   │   └── 0001-support-codec-for-linux-6.10-and-yocto-styhead.patch
+│   │       │   ├── meta-summit-radio
+│   │       │   │   ├── 0001-rz-sbc-meta-summit-radio-Support-build-in-yocto-styh.patch
+│   │       │   │   └── 0002-rz-sbc-summit-radio-support-eSDK-build.patch
+│   │       │   └── poky
+│   │       │       └── 0001-uboot-config-Fix-devtool-modify.patch
+│   │       ├── README.md
+│   │       ├── rz_builder.sh
+│   │       ├── site.conf
+│   │       └── ubuntu
+│   │           ├── config
+│   │           │   ├── common
+│   │           │   │   └── resolved.conf
+│   │           │   ├── ubuntu_core
+│   │           │   │   ├── audio-init-core.sh
+│   │           │   │   ├── network_interfaces.conf
+│   │           │   │   ├── NetworkManager.conf
+│   │           │   │   └── resolved.conf
+│   │           │   └── ubuntu_lxde
+│   │           │       ├── audio-init-lxde.sh
+│   │           │       ├── connman-gtk.desktop
+│   │           │       ├── force-display-xorg.sh
+│   │           │       ├── force-xorg-display.service
+│   │           │       ├── interfaces
+│   │           │       ├── lightdm.conf
+│   │           │       ├── NetworkManager.conf
+│   │           │       ├── panel
+│   │           │       ├── rsyslog
+│   │           │       ├── ttyS0.conf
+│   │           │       └── v4l2-init.sh
+│   │           ├── config.ini
+│   │           ├── docs
+│   │           │   ├── ubuntu_core
+│   │           │   │   └── README.md
+│   │           │   └── ubuntu_lxde
+│   │           │       ├── Pictures
+│   │           │       │   ├── audacity.png
+│   │           │       │   ├── audio_settings.png
+│   │           │       │   ├── bluetooth_0.png
+│   │           │       │   ├── bluetooth_1.png
+│   │           │       │   ├── bluetooth_2.png
+│   │           │       │   ├── bluetooth_3.png
+│   │           │       │   ├── bluetooth_4.png
+│   │           │       │   ├── csi_0.png
+│   │           │       │   ├── csi_1.png
+│   │           │       │   ├── csi_2.png
+│   │           │       │   ├── eth_1.png
+│   │           │       │   ├── eth_2.png
+│   │           │       │   ├── eth_3.png
+│   │           │       │   ├── eth_4.png
+│   │           │       │   ├── eth_5.png
+│   │           │       │   ├── eth.png
+│   │           │       │   ├── save_audio_0.png
+│   │           │       │   ├── save_audio_1.png
+│   │           │       │   ├── save_audio_2.png
+│   │           │       │   ├── vlc_open_0.png
+│   │           │       │   ├── vlc_open_1.png
+│   │           │       │   ├── vlc_open_2.png
+│   │           │       │   ├── vlc.png
+│   │           │       │   ├── vlc_video_1.png
+│   │           │       │   ├── vlc_video.png
+│   │           │       │   ├── web_1.png
+│   │           │       │   ├── web_2.png
+│   │           │       │   ├── web_lxterm_htop.png
+│   │           │       │   ├── web.png
+│   │           │       │   └── wifi_0.png
+│   │           │       └── README.md
+│   │           ├── include
+│   │           │   ├── common
+│   │           │   │   ├── allow_empty_password.sh
+│   │           │   │   ├── create_wic.sh
+│   │           │   │   ├── install_gstreamer.sh
+│   │           │   │   ├── install_weston.sh
+│   │           │   │   ├── mount.sh
+│   │           │   │   ├── prepare_env_rootfs.sh
+│   │           │   │   ├── prepare_env.sh
+│   │           │   │   ├── prepare_ubuntu_base.sh
+│   │           │   │   ├── setup_dns.sh
+│   │           │   │   └── yocto_working.sh
+│   │           │   ├── ubuntu_core
+│   │           │   │   ├── prepare_conf.sh
+│   │           │   │   ├── prepare_env.sh
+│   │           │   │   ├── prepare_rootfs.sh
+│   │           │   │   └── setup_dns.sh
+│   │           │   └── ubuntu_lxde
+│   │           │       ├── create_swap.sh
+│   │           │       ├── prepare_conf.sh
+│   │           │       └── prepare_rootfs_qt.sh
+│   │           ├── README.md
+│   │           ├── script
+│   │           │   ├── common
+│   │           │   │   ├── dpkg-install-lock-fix.sh
+│   │           │   │   └── setup_dns_and_time.sh
+│   │           │   ├── ubuntu_core
+│   │           │   │   ├── apt_install_base.sh
+│   │           │   │   ├── link_to_leagcy_iptables.sh
+│   │           │   │   └── set_root_password.sh
+│   │           │   └── ubuntu_lxde
+│   │           │       ├── apt_audio_video.sh
+│   │           │       ├── apt_blueman.sh
+│   │           │       ├── apt_install_base.sh
+│   │           │       ├── apt_lxde_desktop.sh
+│   │           │       ├── apt_wifi_ble.sh
+│   │           │       ├── create_user.sh
+│   │           │       ├── enable_service.sh
+│   │           │       ├── set_root_password.sh
+│   │           │       ├── set_swap_enable.sh
+│   │           │       └── setup-set-permissions.sh
+│   │           └── setup_ubuntu_environment.sh
+│   └── tools
+│       ├── bin
+│       │   ├── linux
+│       │   │   ├── bpgen
+│       │   │   ├── fiptool
+│       │   │   └── Readme.md
+│       │   ├── Readme.md
+│       │   └── windows
+│       │       ├── bpgen.exe
+│       │       ├── fiptool.exe
+│       │       └── Readme.md
+│       ├── bootloader_flasher
+│       │   ├── bootloader_flash.py
+│       │   └── README.md
+│       ├── config
+│       │   ├── boards_flash_config.toml
+│       │   └── README.md
+│       ├── firmware_compile
+│       │   ├── firmware_compile.py
+│       │   └── Readme.md
+│       ├── flash_images.json
+│       ├── README.md
+│       ├── requirements.txt
+│       ├── sd_creator
+│       │   ├── README.md
+│       │   ├── sd_flash.py
+│       │   └── tools
+│       │       ├── AdbWinApi.dll
+│       │       ├── AdbWinUsbApi.dll
+│       │       ├── fastboot.exe
+│       │       └── NOTICE.txt
+│       ├── uload_bootloader
+│       │   ├── README.md
+│       │   └── uload_bootloader_flash.py
+│       └── universal_flash.py
+├── license
+│   └── Disclaimer051.pdf
+├── <code>-rz-cmn-srp-um-quick-start-guide.pdf
+├── <code>-rz-cmn-srp-um.pdf
+├── README.md
+├── RZ_System_Release_Package_Evaluation_license.pdf
+└── target
+    ├── env
+    │   ├── Readme.md
+    │   └── uEnv.txt
+    ├── images
+    │   ├── atf
+    │   │   ├── bl2-rz-cmn.bin
+    │   │   ├── bl31-rz-cmn.bin
+    │   │   ├── fdts
+    │   │   │   ├── <board-name>.dtb
+    │   │   │   └── Readme.md
+    │   │   └── Readme.md
+    │   ├── core-image-bsp.wic
+    │   ├── core-image-minimal.wic
+    │   ├── core-image-weston.wic
+    │   ├── Flash_Writer_SCIF_<board-name>.mot
+    │   ├── Flash_Writer_SCIF_<board-name>_PMIC.mot
+    │   ├── linux
+    │   │   ├── dtbs
+    │   │   │   ├── overlays
+    │   │   │   │   ├── Readme.md
+    │   │   │   │   ├── rzg2l-sbc-can.dtbo
+    │   │   │   │   ├── rzg2l-sbc-dsi.dtbo
+    │   │   │   │   ├── rzg2l-sbc-ext-i2c.dtbo
+    │   │   │   │   ├── rzg2l-sbc-ext-spi.dtbo
+    │   │   │   │   └── rzg2l-sbc-ov5640.dtbo
+    │   │   │   ├── <board-name>--<kernel-version>-rz-cmn-<timestamp>.dtbo
+    │   │   │   ├── <board-name>.dtb -> <board-name>--<kernel-version>-rz-cmn-<timestamp>.dtbo
+    │   │   │   └── Readme.md
+    │   │   ├── Image -> Image--<kernel-version>-rz-cmn-<timestamp>.bin
+    │   │   ├── Image--<kernel-version>-rz-cmn-<timestamp>.bin
+    │   │   └── Readme.md
+    │   ├── Readme.md
+    │   ├── renesas-core-image-cli.wic
+    │   ├── renesas-core-image-weston.wic
+    │   ├── renesas-quickboot-cli.wic
+    │   ├── renesas-quickboot-wayland.wic
+    │   ├── ubuntu-core-image.wic.gz
+    │   ├── ubuntu-lxde-image.wic.gz
+    │   ├── rootfs
+    │   │   ├── core-image-bsp.tar.bz2
+    │   │   ├── core-image-minimal.tar.bz2
+    │   │   ├── core-image-weston.tar.bz2
+    │   │   ├── Readme.md
+    │   │   ├── renesas-core-image-cli.tar.bz2
+    │   │   ├── renesas-core-image-weston.tar.bz2
+    │   │   ├── renesas-quickboot-cli.tar.bz2
+    │   │   ├── renesas-quickboot-wayland.tar.bz2
+    │   │   ├── ubuntu-lxde-image.tar.bz2
+    │   │   └── ubuntu-core-image.tar.bz2
+    │   ├── <board>-<version>-platform-settings.bin
+    │   ├── <board>-<version>-platform-settings.srec
+    │   └── u-boot
+    │       ├── dtbs
+    │       │   ├── Readme.md
+    │       │   └── <board-name>.dtb
+    │       ├── Readme.md
+    │       └── u-boot-nodtb-rz-cmn.bin
+    └── Readme.md
+```
 
 - host/: This directory holds all the tools, scripts, and artifacts needed on the host machine for building 
 and preparing the system images.
@@ -460,12 +700,13 @@ that necessary files and tools are available.
 1. **Install Python, Binutils, and build tools**
    ```bash
    sudo apt update
-   sudo apt install -y python3 python3-pip binutils build-essential libssl-dev
+   sudo apt install -y python3 python3-pip binutils build-essential libssl-dev android-tools-fastboot
    ```
    - `python3`, `python3-pip`: run host scripts  
    - `binutils`: provides `objcopy`  
    - `build-essential` *(optional)*: `gcc`, `g++`, `make` for rebuilding firmware  
    - `libssl-dev`: OpenSSL headers
+   - `android-tools-fastboot`: Install to get fastboot binary
 
 2. **Install Python dependencies**  
   It is recommended to use a virtual environment with any supported Python version (3.10, 3.11, or 3.12).
@@ -531,7 +772,32 @@ that necessary files and tools are available.
      - Tools (e.g., `fiptool.exe`) depend on OpenSSL runtime DLLs.
        - Add `C:\mingw64\bin` to **Path**, or copy `C:\mingw64\bin\libcrypto-3-x64.dll` into `<path\to\the\package>\host\tools\bin\windows\`.
 
-   > **Note**: `firmware_compile.py` uses `objcopy` (Binutils). Ensure `C:\MinGW\bin` is on **Path**, or SREC/ELF conversions will fail.
+    > **Note**: `firmware_compile.py` uses `objcopy` (Binutils). Ensure `C:\MinGW\bin` is on **Path**, or SREC/ELF conversions will fail.
+
+    - **OTG flashing setup (Windows)** — Fastboot over USB OTG requires Windows to bind the board's **Fastboot / USB-download** interface to **WinUSB**.  
+      > **Note:** Windows binds drivers to the **device/interface present at install time** (VID/PID[/MI]). This Fastboot interface exists **only while** the board is connected over OTG **and** go to OTG download mode.
+
+      **Applicability**
+      - **Required** for: **RZ/G2L-EVK**, **RZ/V2L-EVK**, **RZ/V2H-EVK** (when using OTG flashing).
+      - **Not applicable** to: **RZ/G2L-SBC** (no OTG port)
+
+      **Step 1: Enter Fastboot (USB OTG mode from U-Boot)**
+      1. Connect the board's **USB-to-serial** to the PC and open a terminal (115200 8-N-1).  
+      2. Power on and interrupt autoboot to reach the `U-Boot>` prompt.  
+      3. **Then**, connect the board's **USB OTG** port to the PC.  
+      4. **Next**, at the `U-Boot>` prompt run:
+        ```sh
+        setenv serial# Renesas_RZ_CMN
+        saveenv
+        fastboot usb 27
+        ```
+        > `27` is the index used on RZ Common System
+
+      **Step 2: Bind the Fastboot interface to WinUSB (Zadig)**
+      1. **Now**, download and run **Zadig** (no install): https://zadig.akeo.ie/  
+      2. **Options → List All Devices**.  
+      3. In the dropdown, select the **Fastboot / USB-download** interface (may appear as *USB Download Gadget*).  
+      4. **Finally**, choose **WinUSB** → **Install Driver** (or **Replace Driver**).
 
 ### 3.3. Universal Flashing Script
 
@@ -613,16 +879,14 @@ This table below lists the available options (and sensible defaults) for `ipl_fl
 | Board        | SoC | `ipl_flash_method` (options) | Default | `rootfs_flash_method` (options) | Default |
 |--------------|-----|------------------------------|---------|----------------------------------|---------|
 | **rzg2l-sbc** | g2l | `xspi`                | `xspi`  | `udp`              | `udp`   |
-| **rzg2l-evk** | g2l | `xspi`, `emmc`        | `xspi`  | `udp`              | `udp`   |
-| **rzv2l-evk** | v2l | `xspi`, `emmc`        | `xspi`  | `udp`              | `udp`   |
-| **rzv2h-evk** | v2h | `xspi`                | `xspi`  | `udp`              | `udp`   |
+| **rzg2l-evk** | g2l | `xspi`, `emmc`        | `xspi`  | `udp`, `otg`       | `otg`   |
+| **rzv2l-evk** | v2l | `xspi`, `emmc`        | `xspi`  | `udp`, `otg`       | `otg`   |
+| **rzv2h-evk** | v2h | `xspi`                | `xspi`  | `udp`, `otg`       | `otg`   |
 
 **Notes:**
 - *IPL flash method*: `emmc` for `rzv2h-evk` is **not supported yet**.
 - *IPL flash method*: `eSD` for all boards is **not supported yet**.
-- *Rootfs flash method*: `OTG` for all boards is **not supported yet**.
-- *Stability*: Rootfs flashing via `udp` on `rzg2l-evk` and `rzv2l-evk` is not stable and not recommended. Use balenaEtcher or the dd command to write the image instead.
-
+- *The RZ/G2L-SBC* board does not provide a USB OTG port; accordingly, OTG is not supported.
 ---
 
 Field Reference
@@ -1147,7 +1411,7 @@ Update the DTB on **partition 1** (`dtb/renesas/`) or set `fdtfile` in `uEnv.txt
 fdtfile=r9a07g044l2-smarc-cru-csi-ov5645.dtb
 ```
 
-Reboot, then initialize and stream as shown above (`v4l2-init.sh <resolution>` and `gst-launch-1.0 ...`).
+Reboot, then initialize and stream using the same steps as for RZ/G2L-SBC (adjust the resolution as needed).
 
 ---
 
@@ -1390,7 +1654,7 @@ You can mount the sdcard on Windows to edit the uEnv.txt or do it on linux as be
 
 Step 1: Mount the partition
 ```shell
-root@rz-cmn:~# mount /dev/mmcblk2p1 /tmp
+root@rz-cmn:~# mount /dev/mmcblk0p1 /tmp
 root@rz-cmn:/tmp# ls uEnv.txt
 uEnv.txt
 root@rz-cmn:/tmp# vi uEnv.txt
@@ -2081,8 +2345,8 @@ int main() {
 The target's IP address is required for use on the host later. In this example, `169.254.43.30` is the IP address that will be used.
 
 ```shell
-root@rz-cmn:~# ifconfig eth1
-eth1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500  metric 1
+root@rz-cmn:~# ifconfig end1
+end1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500  metric 1
         inet 169.254.43.30  netmask 255.255.0.0  broadcast 169.254.255.255
         inet6 fe80::1ea0:d3ff:fe20:119b  prefixlen 64  scopeid 0x20<link>
         ether 1c:a0:d3:20:11:9b  txqueuelen 1000  (Ethernet)
@@ -2097,16 +2361,16 @@ Next, launch GDB on the host:
 
 ```shell
 $ aarch64-poky-linux-gdb
-GNU gdb (GDB) 9.1
-Copyright (C) 2020 Free Software Foundation, Inc.
+GNU gdb (GDB) <gdb-version>
+Copyright (C) 2024 Free Software Foundation, Inc.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
 Type "show copying" and "show warranty" for details.
-This GDB was configured as "--host=x86_64-pokysdk-linux --target=aarch64-poky-linux".
+This GDB was configured as "--host=x86_64-linux --target=aarch64-poky-linux".
 Type "show configuration" for configuration details.
 For bug reporting instructions, please see:
-<http://www.gnu.org/software/gdb/bugs/>.
+<https://www.gnu.org/software/gdb/bugs/>.
 Find the GDB manual and other documentation resources online at:
     <http://www.gnu.org/software/gdb/documentation/>.
 
@@ -2127,10 +2391,10 @@ Reading symbols from target:/home/root/hello-gdbserver...
 Reading /lib64/ld-linux-aarch64.so.1 from remote target...
 Reading /lib64/ld-linux-aarch64.so.1 from remote target...
 Reading symbols from target:/lib64/ld-linux-aarch64.so.1...
-Reading /lib64/ld-2.31.so from remote target...
-Reading /lib64/.debug/ld-2.31.so from remote target...
-Reading /lib64/.debug/ld-2.31.so from remote target...
-Reading symbols from target:/lib64/.debug/ld-2.31.so...
+Reading /lib64/ld-<glibc-version>.so from remote target...
+Reading /lib64/.debug/ld-<glibc-version>.so from remote target...
+Reading /lib64/.debug/ld-<glibc-version>.so from remote target...
+Reading symbols from target:/lib64/.debug/ld-<glibc-version>.so...
 0x0000fffff7fcd0c0 in _start () from target:/lib64/ld-linux-aarch64.so.1
 ```
 
@@ -2147,9 +2411,9 @@ Now, you can use `continue` to jump to the main function:
 (gdb) continue
 Continuing.
 Reading /lib64/libc.so.6 from remote target...
-Reading /lib64/libc-2.31.so from remote target...
-Reading /lib64/.debug/libc-2.31.so from remote target...
-Reading /lib64/.debug/libc-2.31.so from remote target...
+Reading /lib64/ld-<glibc-version>.so from remote target...
+Reading /lib64/.debug/ld-<glibc-version>.so from remote target...
+Reading /lib64/.debug/ld-<glibc-version>.so from remote target...
 
 Breakpoint 1, main () at hello-gdbserver.c:7
 warning: Source file is more recent than executable.
@@ -2627,6 +2891,7 @@ Summary of switch/strap settings for **normal boot** and **boot‑device** selec
 ## 9. BSP Interface
 
 ### 9.1. BSP Interface for RZ/G2L and RZ/V2L Evaluation Kits (EVK)
+
 Renesas provides a dedicated BSP Manual Set for the **RZ/G2L** and **RZ/V2L Evaluation Kits (EVKs)**, offering technical guidance on SoC configuration, supported drivers, and Linux system integration.
 
 It is a key reference for developers working with the Verified Linux Package (VLP) on these platforms.
