@@ -38,12 +38,10 @@ KBUILD_DEFCONFIG:rz-cmn ?= "renesas_defconfig"
 # List of device tree names for rz-cmn
 DEVICETREE_NAME:rz-cmn = " \
 	rzg2l-sbc \
-	r9a07g044l2-smarc \
-	r9a07g044l2-smarc-cru-csi-ov5645 \
-	r9a07g054l2-smarc \
-	r9a07g054l2-smarc-cru-csi-ov5645 \
-	r9a09g057h4-evk-ver1 \
-	r9a09g057h4-rdk-ver1 \
+	rzg2l-evk \
+	rzv2l-evk \
+	rzv2h-evk-ver1 \
+	rzv2h-rdk-ver1 \
 "
 
 # Supported device tree and device tree overlays
