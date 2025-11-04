@@ -410,15 +410,19 @@ system settings.
   - env/: Contains environment configuration files that are used during boot-up on the target 
   device.
   Key file:
-  o uEnv.txt: A file that holds boot configuration parameters.
+    - uEnv.txt: A file that holds boot configuration parameters.
   - images/: Holds the final system images and associated files required for the target device.
       - atf: The RZ Common Arm Trusted-firmware (TF-A) directory contains BL2, BL31 binaries and TF-A configuration DTBs (FDTS).
       - u-boot/: The RZ Common U-Boot directory contains the U-Boot binaries and device tree blobs (DTBs) used across all supported boards.
       - linux/: The directory contains linux kernel and device trees for the target images.
       - System images: Files with the ‘.wic’ extension corresponding to different build variant (BSP, minimal, Weston, Renesas images).
       - rootfs folder: Compressed archives (For example, core-image-bsp.tar.bz2) contain the root file system for each image.
-      - Flash writer binary files for all supported boards.
-      - Board identification binary files for all supported boards.
+      - `flash-writer/`: Flash Writer binaries (per board), e.g.:
+        - `Flash_Writer_SCIF_<board-name>.mot`
+        - `Flash_Writer_SCIF_<board-name>_PMIC.mot` (includes PMIC init)
+      - `board-id/`: Board identification binaries (per board/version), e.g.:
+        - `<board>-<version>-platform-settings.bin`
+        - `<board>-<version>-platform-settings.srec`
 - README.md (root level): This is the comprehensive guide that provides an overview of the 
   entire release package, including instructions on how to use, build, and deploy the system.
 
