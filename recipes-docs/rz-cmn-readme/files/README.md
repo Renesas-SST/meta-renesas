@@ -1682,6 +1682,80 @@ PING www.google.com(hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004)) 56 dat
 64 bytes from hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004): icmp_seq=3 ttl=57 time=124 ms
 ```
 
+#### 4.1.10. U-Boot: Select Kernel Image via `image_flavor`
+
+U-Boot supports selecting which kernel image to boot using the `image_flavor` environment variable. Based on this value, U-Boot sets `kernel_image` and loads it from the boot (FAT) partition using:
+
+```
+fatload mmc ${mmcdev}:${mmcpart} ${image_addr} ${kernel_image}
+```
+
+Available options and defaults:
+
+| Options          | Image load         |
+| ---------------- | ------------------ |
+| normal (default) | `Image`            |
+| preempt_rt       | `Image-preempt_rt` |
+| nonpreempt       | `Image-nonpreempt` |
+
+If `image_flavor` is unset the default is `normal`.
+
+Set for one boot (temporary):
+
+1) Enter the U-Boot interactive command prompt for configuration by pressing any key when prompted with `Hit any key to stop autoboot`:
+
+  ```shell
+  U-Boot 2021.10 (May 24 2024 - 07:26:08 +0000)
+
+  CPU:   Renesas Electronics CPU rev 1.0
+  Model: <Board-Model>
+  DRAM:  896 MiB
+  MMC:   sd@11c00000: 0
+  Loading Environment from SPIFlash... SF: Detected is25wp256 with page size 256 Bytes, erase size 4 KiB, total 32 MiB
+
+  In:    serial@1004b800
+  Out:   serial@1004b800
+  Err:   serial@1004b800
+  Net:   eth0: ethernet@11c20000, eth1: ethernet@11c30000
+  Hit any key to stop autoboot:  0
+  =>
+  =>
+  ```
+
+2) Choose the image flavor, then continue boot:
+
+```
+=> setenv image_flavor preempt_rt   # or: normal
+=> boot                             # continue without saving
+```
+
+Persist across reboots:
+
+```
+=> setenv image_flavor preempt_rt   # or: normal
+=> saveenv
+=> boot
+```
+
+Set via `uEnv.txt` (alternative persistent method):
+
+Edit the `uEnv.txt` file on the boot (FAT32, partition 1) and add one line:
+
+```
+image_flavor=preempt_rt   # or: normal
+```
+
+Then reboot the board. Verify the linux kernel string match with the expected.
+
+```
+root@rz-cmn:~# uname -v
+#1 SMP PREEMPT_RT Thu Nov  6 09:54:14 UTC 2025
+```
+
+Notes:
+
+- The selected file must exist on the boot partition; otherwise boot will fail at `fatload`.
+
 ### 4.2. RZ/G2L-SBC Yocto Features
 #### 4.2.1. 40-Pin IO Expansion Interface
 

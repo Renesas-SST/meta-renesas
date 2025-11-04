@@ -35,6 +35,8 @@ IMAGE_BOOT_FILES:rz-cmn = " \
     target/images/linux/dtbs/*.dtb;dtb/renesas/ \
     target/images/linux/dtbs/overlays/*;dtb/renesas/overlays/ \
     target/images/linux/Image;Image \
+    target/images/linux/Image-preempt_rt;Image-preempt_rt \
+    target/images/linux/Image-nonpreempt;Image-nonpreempt \
     target/env/uEnv.txt;uEnv.txt \
     Readme.md;Readme.md \
     target/images/*.bin;uload-bootloader/ \
