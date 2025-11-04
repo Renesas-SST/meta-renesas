@@ -42,6 +42,8 @@ IMAGE_BOOT_FILES:rz-cmn = " \
     target/images/linux/dtbs/*.dtb;dtb/renesas/ \
     target/images/linux/dtbs/overlays/*;dtb/renesas/overlays/ \
     target/images/linux/Image;Image \
+    target/images/linux/Image-preempt_rt;Image-preempt_rt \
+    target/images/linux/Image-nonpreempt;Image-nonpreempt \
     target/env/uEnv.txt;uEnv.txt \
     Readme.md;Readme.md \
     target/images/*.bin;uload-bootloader/ \
@@ -161,6 +163,12 @@ IMAGE_CMD:wic:prepend() {
     # Check if the build artifact for the wic image exists; if not, copy it to the build directory
     if [ ! -f "${DEPLOY_DIR_IMAGE}/Image" ]; then
         cp "${DEPLOY_DIR_IMAGE}/target/images/linux/Image" "${DEPLOY_DIR_IMAGE}/"
+    fi
+    if [ ! -f "${DEPLOY_DIR_IMAGE}/Image-preempt_rt" ]; then
+        cp "${DEPLOY_DIR_IMAGE}/target/images/linux/Image-preempt_rt" "${DEPLOY_DIR_IMAGE}/"
+    fi
+    if [ ! -f "${DEPLOY_DIR_IMAGE}/Image-nonpreempt" ]; then
+        cp "${DEPLOY_DIR_IMAGE}/target/images/linux/Image-nonpreempt" "${DEPLOY_DIR_IMAGE}/"
     fi
 
     if [ ! -f "${DEPLOY_DIR_IMAGE}/rzg2l-sbc.dtb" ]; then

@@ -1994,6 +1994,79 @@ root@rz-cmn:~# pip3 list
 ```
 This will confirm that the package is installed and available for use.
 
+#### 4.1.10. U-Boot: Select Kernel Image via `image_flavor`
+
+Linux for the Renesas RZ Common System typically provides **three kernel image variants**, each optimized for a different use case:
+
+- **Normal (Soft Realtime Kernel)**  
+  A standard preemptible kernel suitable for general-purpose workloads. This is the default and provides a balanced trade-off between latency and throughput.
+
+- **PREEMPT_RT (Hard Realtime Kernel)**  
+  Includes the full PREEMPT_RT patchset, enabling deterministic scheduling with significantly lower maximum latency. Intended for tightly time-critical applications.
+
+- **Non-Preemptive Kernel**  
+  A build configuration where kernel preemption is disabled. Suitable for systems requiring strict execution ordering or for debugging preemption-related behavior.
+
+U-Boot allows selecting which kernel image to boot via the `image_flavor` environment variable. Based on this value, U-Boot determines the `kernel_image` filename and loads it from the boot (FAT) partition using:
+
+```
+fatload mmc ${mmcdev}:${mmcpart} ${image_addr} ${kernel_image}
+```
+Available options and defaults:
+
+| Options          | Image load         | Description                                 |
+| ---------------- | ------------------ | ------------------------------------------- |
+| normal (default) | `Image`            | Regular kernel Image (Soft realtime kernel) |
+| preempt_rt       | `Image-preempt_rt` | Hard realtime kernel                        |
+| nonpreempt       | `Image-nonpreempt` | Nonpreemptive kernel Image                  |
+
+If `image_flavor` is unset the default is `normal`.
+
+Set for one boot (temporary):
+
+1) Enter the U-Boot interactive command prompt for configuration by pressing any key when prompted with `Hit any key to stop autoboot`:
+
+  ```shell
+  U-Boot 2021.10 (May 24 2024 - 07:26:08 +0000)
+
+  CPU:   Renesas Electronics CPU rev 1.0
+  Model: <Board-Model>
+  DRAM:  896 MiB
+  MMC:   sd@11c00000: 0
+  Loading Environment from SPIFlash... SF: Detected is25wp256 with page size 256 Bytes, erase size 4 KiB, total 32 MiB
+
+  In:    serial@1004b800
+  Out:   serial@1004b800
+  Err:   serial@1004b800
+  Net:   eth0: ethernet@11c20000, eth1: ethernet@11c30000
+  Hit any key to stop autoboot:  0
+  =>
+  =>
+  ```
+
+2) Choose the image flavor, then continue boot:
+
+```
+=> editenv image_flavor
+edit: preempt_rt        # or: normal
+=> boot                 # continue without saving
+```
+
+Persist across reboots:
+
+```
+=> setenv image_flavor preempt_rt   # or: normal
+=> saveenv
+=> boot
+```
+
+Then reboot the board. Verify the linux kernel string match with the expected.
+
+```
+root@rz-cmn:~# uname -v
+#1 SMP PREEMPT_RT Thu Nov  6 09:54:14 UTC 2025
+```
+
 ### 4.2. RZ/G2L-SBC Yocto Features
 #### 4.2.1. 40-Pin IO Expansion Interface
 
