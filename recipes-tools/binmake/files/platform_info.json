@@ -57,6 +57,35 @@
         "kernel_dtb_desc": []
     },
 
+    "rs-g2l100": {
+        "model_id": 18,
+        "revision_minor": 0,
+        "revision_major": 1,
+        "model_string": "rs-g2l100",
+        "mfg_name": "Renesas",
+
+        "bl2_loc": 0,
+        "bl2_dtb_loc": 0,
+        "u_boot_loc": 3,
+        "u_boot_dtb_loc": 3,
+        "kernel_loc": 1,
+        "kernel_dtb_loc": 1,
+
+        "bl2_id": 10,
+        "bl2_dtb_id": 11,
+        "u_boot_id": 20,
+        "u_boot_dtb_id": 21,
+        "kernel_id": 30,
+        "kernel_dtb_id": 31,
+
+        "bl2_desc": [],
+        "bl2_dtb_desc": [],
+        "u_boot_desc": ["1", "1", "1", "2", "0x48080000", "0x58000000"],
+        "u_boot_dtb_desc": ["0x48000000"],
+        "kernel_desc": [],
+        "kernel_dtb_desc": []
+    },
+
     "rzv2l-evk": {
         "model_id": 32,
         "revision_minor": 0,

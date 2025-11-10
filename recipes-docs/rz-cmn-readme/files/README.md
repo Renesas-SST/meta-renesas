@@ -4,6 +4,7 @@ This guide provides a quick startup for all supported board in the current relea
 
 * **RZG2L-SBC** (RZ/G2L Single Board Computer)
 * **RZG2L-EVK** (RZ/G2L Evaluation Kit)
+* **RS-G2L100** (Geniatech RS-G2L100)
 * **RZV2L-EVK** (RZ/V2L Evaluation Kit)
 * **RZV2H-EVK** (RZ/V2H Evaluation Kit)
 * **RZV2H-RDK** (RZ/V2H Robot Kit)
@@ -881,13 +882,14 @@ Example of a sample board configuration in JSON:
 
 This table below lists the available options (and sensible defaults) for `ipl_flash_method` and `rootfs_flash_method` per board.
 
-| Board        | SoC | `ipl_flash_method` (options) | Default | `rootfs_flash_method` (options) | Default |
-|--------------|-----|------------------------------|---------|----------------------------------|---------|
-| **rzg2l-sbc** | g2l | `xspi`                | `xspi`  | `udp`              | `udp`   |
-| **rzg2l-evk** | g2l | `xspi`, `emmc`        | `xspi`  | `udp`, `otg`       | `otg`   |
-| **rzv2l-evk** | v2l | `xspi`, `emmc`        | `xspi`  | `udp`, `otg`       | `otg`   |
-| **rzv2h-evk** | v2h | `xspi`                | `xspi`  | `udp`, `otg`       | `otg`   |
-| **rzv2h-rdk** | v2h | `xspi`                | `xspi`  | `udp`              | `udp`   |
+| Board         | SoC | `ipl_flash_method` (options) | Default | `rootfs_flash_method` (options)  | Default |
+|---------------|-----|------------------------------|---------|----------------------------------|---------|
+| **rzg2l-sbc** | g2l | `xspi`                       | `xspi`  | `udp`                            | `udp`   |
+| **rzg2l-evk** | g2l | `xspi`, `emmc`               | `xspi`  | `udp`, `otg`                     | `otg`   |
+| **rs-g2l100** | g2l | `xspi`                       | `xspi`  | `udp`, `otg`                     | `otg`   |
+| **rzv2l-evk** | v2l | `xspi`, `emmc`               | `xspi`  | `udp`, `otg`                     | `otg`   |
+| **rzv2h-evk** | v2h | `xspi`                       | `xspi`  | `udp`, `otg`                     | `otg`   |
+| **rzv2h-rdk** | v2h | `xspi`                       | `xspi`  | `udp`                            | `udp`   |
 
 **Notes:**
 - *IPL flash method*: `emmc` for `rzv2h-evk` is **not supported yet**.
@@ -2929,6 +2931,17 @@ Use DIP switch **DSW1** to configure boot mode.
 
 To enable **SCIF Download Mode**, set **DSW1‑4** and **DSW1‑5** according to the SCIF configuration above. Leave other switches at defaults unless CPU selection, boot frequency, SSCG, or debug settings must be changed. Then Run either **Bootloader Flasher** (Section 3.4.1) or the **Universal Script** (Section 3.3) to flash firmware.
 
+#### 8.1.4. RS-G2L100
+
+Use the DIP switch SW1 to configure the SCIF download mode.
+
+| Switch | SCIF Download Mode |
+|--------|------------------|
+| SW1-1  | OFF              |
+| SW1-2  | ON               |
+| SW1-3  | OFF              |
+| SW1-4  | OFF              |
+
 ---
 
 ### 8.2. Boot Mode Reference (Non‑SCIF)
@@ -2991,6 +3004,18 @@ Summary of switch/strap settings for **normal boot** and **boot‑device** selec
 | eMMC        | ON     | OFF    | ON     | ON     | ON     | OFF    |
 | xSPI        | ON     | OFF    | ON     | OFF    | OFF    | OFF    |
 | SD / eSD    | ON     | OFF    | ON     | ON     | OFF    | OFF    |
+
+#### 8.2.4. RS-G2L100
+
+**Table — SW1: Boot Device Selection (Normal Boot)**
+
+Use the DIP switch SW1 to configure the boot mode.
+
+| Boot Mode / Device            | SW1-1 | SW1-2 | SW1-3 | SW1-4 | Description |
+|-------------------------------|-------|-------|-------|-------|-------------|
+| eMMC                          | OFF   | ON    | ON    | OFF   | Boot from on-board eMMC (BootROM loads BL2/BL2+BP from eMMC, then FIP) |
+| QSPI                          | OFF   | OFF   | ON    | OFF   | Boot from QSPI NOR flash |
+
 
 ## 9. BSP Interface
 
