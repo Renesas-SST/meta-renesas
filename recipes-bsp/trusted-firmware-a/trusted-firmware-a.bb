@@ -12,10 +12,10 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 S = "${WORKDIR}/git"
 DEPENDS:append = " dtc-native xxd-native"
 
+# Trusted Firmware-A source code repository
 SRC_URI:rz-cmn = " \
     git://github.com/Renesas-SST/rz-atf.git;name=machine;branch=${BRANCH};protocol=https \
 "
-
 BRANCH:rz-cmn = "styhead/rz-cmn"
 SRCREV_machine:rz-cmn = "${AUTOREV}"
 PV = "v2.9+git"

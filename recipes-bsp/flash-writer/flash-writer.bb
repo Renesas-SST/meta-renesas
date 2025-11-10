@@ -9,10 +9,10 @@ ENABLE_SPD_OPTEE	?= '0'
 # Enable hardware crypt IP(SCE) driver in OP-TEE OS
 ENABLE_RZ_SCE		?= '0'
 
+# flash-writer source code repository
 FLASH_WRITER_URL = "git://github.com/Renesas-SST/flash-writer.git"
 BRANCH = "styhead/rz-cmn"
 SRC_URI = "${FLASH_WRITER_URL};protocol=https;branch=${BRANCH}"
-
 SRCREV = "${AUTOREV}"
 
 inherit deploy
@@ -39,6 +39,8 @@ do_compile() {
 			BOARD="RZV2H_DEV"
 		elif [ "${target}" = "rzg2l-sbc" ]; then
 			BOARD="RZG2L_SBC"
+		elif [ "${target}" = "rs-g2l100" ]; then
+			BOARD="RZG2L_15MMSQ_DEV"
 		elif [ "${target}" = "rzg2l-evk" ]; then
 			BOARD="RZG2L_SMARC"
 			PMIC_BOARD="RZG2L_SMARC_PMIC"
