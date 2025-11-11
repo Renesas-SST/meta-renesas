@@ -6,10 +6,11 @@ This guide provides a quick startup for all supported board in the current relea
 * **RZG2L-EVK** (RZ/G2L Evaluation Kit)
 * **RZV2L-EVK** (RZ/V2L Evaluation Kit)
 * **RZV2H-EVK** (RZ/V2H Evaluation Kit)
+* **RZV2H-RDK** (RZ/V2H Robot Kit)
 
 ## 1. Overview
 
-This release targets the Renesas RZ/G2L, RZ/V2L, and RZ/V2H-EVK development products. It provides a comprehensive Linux BSP (Board Support Package) with various features and tools for developing embedded applications on the supported Renesas boards.
+This release targets the Renesas RZ/G2L, RZ/V2L, and RZ/V2H development products. It provides a comprehensive Linux BSP (Board Support Package) with various features and tools for developing embedded applications on the supported Renesas boards.
 
 **Key Features (Common to most boards unless specified):**
 
@@ -783,7 +784,7 @@ that necessary files and tools are available.
 
       **Applicability**
       - **Required** for: **RZ/G2L-EVK**, **RZ/V2L-EVK**, **RZ/V2H-EVK** (when using OTG flashing).
-      - **Not applicable** to: **RZ/G2L-SBC** (no OTG port)
+      - **Not applicable** to: **RZ/G2L-SBC** and **RZ/V2H-RDK** (no OTG port)
 
       **Step 1: Enter Fastboot (USB OTG mode from U-Boot)**
       1. Connect the board's **USB-to-serial** to the PC and open a terminal (115200 8-N-1).  
@@ -886,6 +887,7 @@ This table below lists the available options (and sensible defaults) for `ipl_fl
 | **rzg2l-evk** | g2l | `xspi`, `emmc`        | `xspi`  | `udp`, `otg`       | `otg`   |
 | **rzv2l-evk** | v2l | `xspi`, `emmc`        | `xspi`  | `udp`, `otg`       | `otg`   |
 | **rzv2h-evk** | v2h | `xspi`                | `xspi`  | `udp`, `otg`       | `otg`   |
+| **rzv2h-rdk** | v2h | `xspi`                | `xspi`  | `udp`              | `udp`   |
 
 **Notes:**
 - *IPL flash method*: `emmc` for `rzv2h-evk` is **not supported yet**.
@@ -1419,7 +1421,7 @@ Reboot, then initialize and stream using the same steps as for RZ/G2L-SBC (adjus
 
 ---
 
-##### RZV2H-EVK — Coral camera
+##### RZV2H-EVK and RZV2H-RDK — Coral camera
 
 - Camera support is built in; no device tree change is required.
 - Initialize and stream as in the examples above.
@@ -2907,7 +2909,7 @@ These EVKs include onboard DIP switches for boot mode selection and SCIF Downloa
 
 After setting SCIF Download Mode, proceed with the flashing.
 
-#### 8.1.3. RZ/V2H‑EVK
+#### 8.1.3. RZ/V2H‑EVK and RZ/V2H-RDK
 
 Use DIP switch **DSW1** to configure boot mode.
 
@@ -2919,9 +2921,11 @@ Use DIP switch **DSW1** to configure boot mode.
 | DSW1‑2 | OFF    | Input CA55 frequency at cold boot — [OFF:OFF] 1.6 GHz; [OFF:ON] 1.7 GHz (default); [ON:OFF] 1.1 GHz; [ON:ON] 1.5 GHz |
 | DSW1‑3 | ON     | — |
 | DSW1-4/5 | OFF / ON  | **Boot source:** SCIF  
-| DSW1‑5 | ON     | — |
-| DSW1‑6 | OFF    | SSCG — OFF: SSCG ON (default); ON: SSCG OFF |
-| DSW1‑7 | OFF    | Fixed to OFF |
+| DSW1‑6 | ON     | — |
+| DSW1‑7 | OFF    | SSCG — OFF: SSCG ON (default); ON: SSCG OFF |
+| DSW1‑8 | OFF    | Fixed to OFF  |
+
+**Note**: DSW1 on **RZ/V2H-RDK** has only 6 switches, with functions equivalent to the first 6 switches of **RZ/V2H-EVK**.
 
 To enable **SCIF Download Mode**, set **DSW1‑4** and **DSW1‑5** according to the SCIF configuration above. Leave other switches at defaults unless CPU selection, boot frequency, SSCG, or debug settings must be changed. Then Run either **Bootloader Flasher** (Section 3.4.1) or the **Universal Script** (Section 3.3) to flash firmware.
 
@@ -2978,6 +2982,15 @@ Summary of switch/strap settings for **normal boot** and **boot‑device** selec
 
 > Set according to the camera module interface voltage.
 
+#### 8.2.3. RZ/V2H‑RDK
+
+**Table — DSW1: Boot Device Selection (Normal Boot)**
+
+| Boot device | DSW1‑1 | DSW1‑2 | DSW1‑3 | DSW1‑4 | DSW1‑5 | DSW1‑6 |
+|-------------|--------|--------|--------|--------|--------|--------|
+| eMMC        | ON     | OFF    | ON     | ON     | ON     | OFF    |
+| xSPI        | ON     | OFF    | ON     | OFF    | OFF    | OFF    |
+| SD / eSD    | ON     | OFF    | ON     | ON     | OFF    | OFF    |
 
 ## 9. BSP Interface
 
