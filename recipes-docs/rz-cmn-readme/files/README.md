@@ -1684,19 +1684,29 @@ PING www.google.com(hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004)) 56 dat
 
 #### 4.1.10. U-Boot: Select Kernel Image via `image_flavor`
 
-U-Boot supports selecting which kernel image to boot using the `image_flavor` environment variable. Based on this value, U-Boot sets `kernel_image` and loads it from the boot (FAT) partition using:
+Linux for the Renesas RZ Common System typically provides **three kernel image variants**, each optimized for a different use case:
+
+- **Normal (Soft Realtime Kernel)**  
+  A standard preemptible kernel suitable for general-purpose workloads. This is the default and provides a balanced trade-off between latency and throughput.
+
+- **PREEMPT_RT (Hard Realtime Kernel)**  
+  Includes the full PREEMPT_RT patchset, enabling deterministic scheduling with significantly lower maximum latency. Intended for tightly time-critical applications.
+
+- **Non-Preemptive Kernel**  
+  A build configuration where kernel preemption is disabled. Suitable for systems requiring strict execution ordering or for debugging preemption-related behavior.
+
+U-Boot allows selecting which kernel image to boot via the `image_flavor` environment variable. Based on this value, U-Boot determines the `kernel_image` filename and loads it from the boot (FAT) partition using:
 
 ```
 fatload mmc ${mmcdev}:${mmcpart} ${image_addr} ${kernel_image}
 ```
-
 Available options and defaults:
 
-| Options          | Image load         |
-| ---------------- | ------------------ |
-| normal (default) | `Image`            |
-| preempt_rt       | `Image-preempt_rt` |
-| nonpreempt       | `Image-nonpreempt` |
+| Options          | Image load         | Description                                 |
+| ---------------- | ------------------ | ------------------------------------------- |
+| normal (default) | `Image`            | Regular kernel Image (Soft realtime kernel) |
+| preempt_rt       | `Image-preempt_rt` | Hard realtime kernel                        |
+| nonpreempt       | `Image-nonpreempt` | Nonpreemptive kernel Image                  |
 
 If `image_flavor` is unset the default is `normal`.
 
@@ -1725,8 +1735,9 @@ Set for one boot (temporary):
 2) Choose the image flavor, then continue boot:
 
 ```
-=> setenv image_flavor preempt_rt   # or: normal
-=> boot                             # continue without saving
+=> editenv image_flavor
+edit: preempt_rt        # or: normal
+=> boot                 # continue without saving
 ```
 
 Persist across reboots:
@@ -1737,24 +1748,12 @@ Persist across reboots:
 => boot
 ```
 
-Set via `uEnv.txt` (alternative persistent method):
-
-Edit the `uEnv.txt` file on the boot (FAT32, partition 1) and add one line:
-
-```
-image_flavor=preempt_rt   # or: normal
-```
-
 Then reboot the board. Verify the linux kernel string match with the expected.
 
 ```
 root@rz-cmn:~# uname -v
 #1 SMP PREEMPT_RT Thu Nov  6 09:54:14 UTC 2025
 ```
-
-Notes:
-
-- The selected file must exist on the boot partition; otherwise boot will fail at `fatload`.
 
 ### 4.2. RZ/G2L-SBC Yocto Features
 #### 4.2.1. 40-Pin IO Expansion Interface

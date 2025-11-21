@@ -157,6 +157,12 @@ IMAGE_CMD:wic:prepend() {
     if [ ! -f "${DEPLOY_DIR_IMAGE}/Image" ]; then
         cp "${DEPLOY_DIR_IMAGE}/target/images/linux/Image" "${DEPLOY_DIR_IMAGE}/"
     fi
+    if [ ! -f "${DEPLOY_DIR_IMAGE}/Image-preempt_rt" ]; then
+        cp "${DEPLOY_DIR_IMAGE}/target/images/linux/Image-preempt_rt" "${DEPLOY_DIR_IMAGE}/"
+    fi
+    if [ ! -f "${DEPLOY_DIR_IMAGE}/Image-nonpreempt" ]; then
+        cp "${DEPLOY_DIR_IMAGE}/target/images/linux/Image-nonpreempt" "${DEPLOY_DIR_IMAGE}/"
+    fi
 
     if [ ! -f "${DEPLOY_DIR_IMAGE}/rzg2l-sbc.dtb" ]; then
         cp "${DEPLOY_DIR_IMAGE}/target/images/linux/dtbs/rzg2l-sbc.dtb" "${DEPLOY_DIR_IMAGE}/"
