@@ -65,6 +65,7 @@ SRC_URI:append:rz-cmn = "\
 	file://common/0005-drm-renesas-rz-du-Add-missing-DSI-D-PHY-init.patch \
 	file://common/0006-media-rzg2l-cru-fix-retry-path-by-stopping-subdev-wi.patch \
 	file://common/0007-dts-renesas-add-I3C_SEL-macro-to-switch-between-I2C2.patch \
+	file://common/0008-arm64-dts-renesas-Add-mmc0-1-aliases-for-all-RZ-V-G-.patch \
 "
 
 KERNEL_FEATURES:append = " sii.cfg laird.cfg touch.cfg peripherals.cfg da7219.cfg drm_panel.cfg ov5640.cfg panfrost.cfg kernel-common.cfg ${@oe.utils.conditional('OPTIMIZE_KERN', '1', ' optimize.cfg', '', d)}"
