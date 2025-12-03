@@ -40,7 +40,7 @@ do_compile() {
 		elif [ "${target}" = "rzg2l-sbc" ]; then
 			BOARD="RZG2L_SBC"
 		elif [ "${target}" = "rzg2l-evk" ]; then
-			BOARD="RZG2L_SMARC_PMIC"
+			BOARD="RZG2L_SMARC"
 			PMIC_BOARD="RZG2L_SMARC_PMIC"
 		elif [ "${target}" = "rzv2l-evk" ]; then
 			BOARD="RZV2L_SMARC"
