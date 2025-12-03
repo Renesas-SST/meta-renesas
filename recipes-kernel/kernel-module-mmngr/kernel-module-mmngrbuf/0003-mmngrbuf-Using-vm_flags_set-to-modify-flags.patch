@@ -1,0 +1,28 @@
+From 3bb7d86981496e287241046b651a1bfbf0ccb6ad Mon Sep 17 00:00:00 2001
+From: Khanh Do Duy <khanh.do.yg@bp.renesas.com>
+Date: Wed, 3 Dec 2025 17:38:18 +0700
+Subject: [PATCH] mmngrbuf: Using vm_flags_set to modify flags
+Upstream-Status: Pending
+
+Please refer: https://github.com/torvalds/linux/blob/3f9f0252130e7dd60d41be0802bf58f6471c691d/include/linux/mm_types.h#L835
+Signed-off-by: Khanh Do Duy <khanh.do.yg@bp.renesas.com>
+---
+ .../mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+index 023ff79..58f9c0b 100644
+--- a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
++++ b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+@@ -236,7 +236,7 @@ static int dmabuf_mmap(struct dma_buf *buf, struct vm_area_struct *vma)
+ 	pgprot_t prot = vm_get_page_prot(vma->vm_flags);
+ 	struct MM_BUF_PRIVATE *priv = buf->priv;
+ 
+-	vma->vm_flags |= (VM_IO | VM_DONTEXPAND | VM_DONTDUMP);
++	vm_flags_set(vma, VM_IO | VM_DONTEXPAND | VM_DONTDUMP);
+ 	vma->vm_private_data = priv;
+ 	vma->vm_page_prot = pgprot_writecombine(prot);
+ 
+-- 
+2.25.1
+
