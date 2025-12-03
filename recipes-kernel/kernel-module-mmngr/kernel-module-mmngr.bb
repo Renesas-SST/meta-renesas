@@ -17,6 +17,7 @@ SRC_URI:append = " \
     file://0004-Do-not-parse-and-init-lossy-mem-area-for-RZ-G2L-Seri.patch \
     file://0005-mmngr_drv-mmngr-Update-PA-VA-mapping-table-for-HiHop.patch \
     file://0006-mmngr-change-address-setting-for-H3N-Swap-mode.patch \
+    file://0007-mmngr-Update-following-kernel-6.1.patch \
     file://0001-Reduce-MM_OMXBUF_SIZE-for-omx.patch \
     file://0002-Fix-ioctl-MM_IOC_VTOP-hang-up.patch \
     file://0003-mmngr_drv-mmngr-module-drv-Update-physical-convert-f.patch \
