@@ -377,3 +377,9 @@ BB_PRESSURE_MAX_MEMORY = "100000"
 #
 # To maintain audio functionality on RZ/V2H, we use the known-good version.
 PREFERRED_VERSION_alsa-utils = "1.2.11"
+
+# Pin libgpiod to 1.6.5:
+# imdt-pico-modem depends on the libgpiod 1.x API and is not compatible
+# with libgpiod 2.x. Forcing 1.6.5 avoids rootfs dependency resolution
+# issues caused by mixed libgpiod versions.
+PREFERRED_VERSION_libgpiod = "1.6.5"
