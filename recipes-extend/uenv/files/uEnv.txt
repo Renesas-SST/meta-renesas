@@ -4,7 +4,6 @@
             #enable_overlay_can=1
             #enable_overlay_dsi=1
             #enable_overlay_audio_codec=1
-            #enable_overlay_audio_hdmi=1
             #enable_overlay_csi_ov5640=1
             #enable_overlay_csi_ov5645=1
 
