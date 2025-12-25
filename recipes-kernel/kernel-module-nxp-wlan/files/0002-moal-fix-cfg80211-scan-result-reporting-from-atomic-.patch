@@ -1,0 +1,304 @@
+From 6cbe982b0847d8450fa49dd5c6db88b6629c7ca7 Mon Sep 17 00:00:00 2001
+From: Tien Nguyen <tien.nguyen.uh@renesas.com>
+Date: Thu, 25 Dec 2025 07:34:36 +0000
+Subject: [PATCH 2/2] moal: fix cfg80211 scan result reporting from atomic
+ context
+
+Fix lockdep warning triggered during scan completion when moal reports BSSes to
+cfg80211 from event/IRQ context and/or while holding scan_req_lock. Defer BSS
+reporting to a work item and ensure scan_done/reporting happen outside the
+spinlock.
+
+Observed warning:
+  WARNING: CPU: ... at /kernel/softirq.c:362 __local_bh_enable_ip
+  Call trace:
+    cfg80211_inform_single_bss_data
+    woal_inform_bss_from_scan_result [moal]
+    moal_recv_event [moal]
+
+Upstream-Status: Pending
+
+Signed-off-by: Tien Nguyen <tien.nguyen.uh@renesas.com>
+---
+ mlinux/moal_main.c | 64 ++++++++++++++++++++++++---------
+ mlinux/moal_main.h |  8 +++++
+ mlinux/moal_shim.c | 88 +++++++++++++++++++++++++++++-----------------
+ 3 files changed, 112 insertions(+), 48 deletions(-)
+
+diff --git a/mlinux/moal_main.c b/mlinux/moal_main.c
+index 1a09739..e3b0a73 100644
+--- a/mlinux/moal_main.c
++++ b/mlinux/moal_main.c
+@@ -6491,6 +6491,7 @@ moal_private *woal_add_interface(moal_handle *handle, t_u8 bss_index,
+ 	priv->bss_index = bss_index;
+ 	priv->bss_type = bss_type;
+ 	priv->extra_tx_head_len = 0;
++
+ 	if (bss_type == MLAN_BSS_TYPE_STA) {
+ 		priv->bss_role = MLAN_BSS_ROLE_STA;
+ 	} else if (bss_type == MLAN_BSS_TYPE_UAP) {
+@@ -6518,6 +6519,12 @@ moal_private *woal_add_interface(moal_handle *handle, t_u8 bss_index,
+ 	INIT_LIST_HEAD(&priv->mcast_list);
+ 	spin_lock_init(&priv->mcast_lock);
+ 
++	INIT_WORK(&priv->inform_bss_work, woal_inform_bss_work_handler);
++	atomic_set(&priv->inform_bss_pending, 0);
++
++	priv->pending_scan_req = NULL;
++	priv->pending_need_set_scan_time = MFALSE;
++
+ #ifdef STA_CFG80211
+ 	INIT_LIST_HEAD(&priv->dhcp_discover_queue);
+ 	spin_lock_init(&priv->dhcp_discover_lock);
+@@ -6993,9 +7000,21 @@ void woal_remove_interface(moal_handle *handle, t_u8 bss_index)
+ 	}
+ #endif
+ #endif
+-	priv->phandle->priv[priv->bss_index] = NULL;
+-	priv->phandle = NULL;
+-	priv->netdev = NULL;
++	if (priv) {
++		cancel_work_sync(&priv->inform_bss_work);
++		atomic_set(&priv->inform_bss_pending, 0);
++
++		priv->pending_scan_req = NULL;
++		priv->pending_need_set_scan_time = MFALSE;
++
++		if (priv->phandle)
++			priv->phandle->priv[priv->bss_index] = NULL;
++		else
++			handle->priv[bss_index] = NULL;
++
++		priv->phandle = NULL;
++		priv->netdev = NULL;
++	}
+ 	free_netdev(dev);
+ error:
+ 	LEAVE();
+@@ -13362,26 +13381,41 @@ t_void woal_scan_timeout_handler(struct work_struct *work)
+ 	t_u8 auto_fw_dump = MFALSE;
+ 	moal_handle *ref_handle = NULL;
+ 
++	/* take scan_request out of lock before calling cfg80211 */
++	struct cfg80211_scan_request *req = NULL;
++	t_bool do_fake = MFALSE;
++
+ 	ENTER();
+ 
+ 	if (IS_STA_CFG80211(handle->params.cfg80211_wext)) {
+ 		spin_lock_irqsave(&handle->scan_req_lock, flags);
+ 		if (handle->scan_request && handle->fake_scan_complete) {
+ 			PRINTM(MMSG,
+-			       "wlan: Send fake scan result for scan_request %p\n",
+-			       handle->scan_request);
+-			if (priv)
+-				woal_inform_bss_from_scan_result(priv, NULL,
+-								 MOAL_NO_WAIT);
+-			if (handle->scan_request)
+-				woal_cfg80211_scan_done(handle->scan_request,
+-							MFALSE);
++				"wlan: Send fake scan result for scan_request %p\n",
++				handle->scan_request);
++
++			req = handle->scan_request;
++			do_fake = MTRUE;
++
+ 			handle->scan_request = NULL;
+ 			handle->fake_scan_complete = MFALSE;
+-			spin_unlock_irqrestore(&handle->scan_req_lock, flags);
+-		} else if (handle->scan_request) {
++		}
++		spin_unlock_irqrestore(&handle->scan_req_lock, flags);
++
++		if (do_fake) {
++			if (priv)
++				woal_inform_bss_from_scan_result(priv, NULL, MOAL_NO_WAIT);
++			woal_cfg80211_scan_done(req, MFALSE);
++
++			LEAVE();
++			return;
++		}
++
++		spin_lock_irqsave(&handle->scan_req_lock, flags);
++		if (handle->scan_request) {
+ 			PRINTM(MMSG, "wlan: scan timeout!\n");
+ 			spin_unlock_irqrestore(&handle->scan_req_lock, flags);
++
+ #ifdef DEBUG_LEVEL1
+ 			if (drvdbg & MFW_D)
+ 				auto_fw_dump = MTRUE;
+@@ -13392,8 +13426,7 @@ t_void woal_scan_timeout_handler(struct work_struct *work)
+ 			}
+ 			handle->driver_status = MTRUE;
+ 			mlan_set_driver_status(handle->pmlan_adapter,
+-					       handle->driver_status);
+-
++						handle->driver_status);
+ 			ref_handle = (moal_handle *)handle->pref_mac;
+ 			if (ref_handle) {
+ 				ref_handle->driver_status = MTRUE;
+@@ -13401,7 +13434,6 @@ t_void woal_scan_timeout_handler(struct work_struct *work)
+ 					ref_handle->pmlan_adapter,
+ 					ref_handle->driver_status);
+ 			}
+-
+ 			if (!auto_fw_dump && !handle->fw_dump && priv)
+ 				woal_process_hang(priv->phandle);
+ 			wifi_status = WIFI_STATUS_SCAN_TIMEOUT;
+diff --git a/mlinux/moal_main.h b/mlinux/moal_main.h
+index c77fdda..0881d0a 100644
+--- a/mlinux/moal_main.h
++++ b/mlinux/moal_main.h
+@@ -1850,6 +1850,13 @@ struct _moal_private {
+ 	struct workqueue_struct *mclist_workqueue;
+ 	/** mclist work */
+ 	struct work_struct mclist_work;
++
++	/** Deferred cfg80211 BSS reporting / scan_done */
++	struct work_struct inform_bss_work;
++	atomic_t inform_bss_pending;
++	struct cfg80211_scan_request *pending_scan_req;
++	t_bool pending_need_set_scan_time;
++
+ 	/** Statistics of tcp ack tx dropped */
+ 	t_u32 tcp_ack_drop_cnt;
+ 	/** Statistics of tcp ack tx in total from kernel */
+@@ -4982,6 +4989,7 @@ struct reflective_enum_element {
+ };
+ 
+ extern const char *wlan_errorcode_get_name(enum host_error_code_id id);
++extern void woal_inform_bss_work_handler(struct work_struct *work);
+ 
+ /*
+  * Redefine GFP_KERNEL for coverity issue,
+diff --git a/mlinux/moal_shim.c b/mlinux/moal_shim.c
+index 7452c51..2b18f34 100644
+--- a/mlinux/moal_shim.c
++++ b/mlinux/moal_shim.c
+@@ -99,6 +99,39 @@ extern int wifi_status;
+ /********************************************************
+ 		Global Functions
+ ********************************************************/
++void woal_inform_bss_work_handler(struct work_struct *work)
++{
++	moal_private *priv = container_of(work, moal_private, inform_bss_work);
++	moal_handle *handle = priv->phandle;
++	struct cfg80211_scan_request *req = NULL;
++	t_bool need_set = MFALSE;
++	unsigned long flags;
++	/* Snapshot pending state */
++	spin_lock_irqsave(&handle->scan_req_lock, flags);
++	req = priv->pending_scan_req;
++	priv->pending_scan_req = NULL;
++	need_set = priv->pending_need_set_scan_time;
++	priv->pending_need_set_scan_time = MFALSE;
++	spin_unlock_irqrestore(&handle->scan_req_lock, flags);
++	/* Safe context for cfg80211_inform_bss(... GFP_KERNEL) */
++	woal_inform_bss_from_scan_result(priv, NULL, MOAL_NO_WAIT);
++	if (need_set)
++		woal_set_scan_time(priv,
++				   ACTIVE_SCAN_CHAN_TIME,
++				   PASSIVE_SCAN_CHAN_TIME,
++				   SPECIFIC_SCAN_CHAN_TIME);
++	if (req) {
++		/* Mark scan complete after BSS reporting */
++		woal_cfg80211_scan_done(req, MFALSE);
++		/* Clear scan_request only after scan_done */
++		spin_lock_irqsave(&handle->scan_req_lock, flags);
++		if (handle->scan_request == req)
++			handle->scan_request = NULL;
++		spin_unlock_irqrestore(&handle->scan_req_lock, flags);
++	}
++
++	atomic_set(&priv->inform_bss_pending, 0);
++}
+ /**
+  *  @brief Alloc a buffer
+  *
+@@ -3826,43 +3859,32 @@ mlan_status moal_recv_event(t_void *pmoal, pmlan_event pmevent)
+ 
+ 	case MLAN_EVENT_ID_DRV_SCAN_REPORT:
+ 		PRINTM(MINFO, "Scan report\n");
+-
+ 		if (priv->report_scan_result) {
+ 			priv->report_scan_result = MFALSE;
+ #ifdef STA_CFG80211
+ 			if (IS_STA_CFG80211(cfg80211_wext)) {
+-				spin_lock_irqsave(&priv->phandle->scan_req_lock,
+-						  flags);
++				spin_lock_irqsave(&priv->phandle->scan_req_lock, flags);
++
+ 				if (priv->phandle->scan_request) {
+-					PRINTM(MINFO,
+-					       "Reporting scan results\n");
+-					woal_inform_bss_from_scan_result(
+-						priv, NULL, MOAL_NO_WAIT);
++					/* Keep scan_request valid; worker will scan_done */
++					priv->pending_scan_req = priv->phandle->scan_request;
++					cancel_delayed_work_sync(&priv->phandle->scan_timeout_work);
++
+ 					if (!priv->phandle->first_scan_done) {
+-						priv->phandle->first_scan_done =
+-							MTRUE;
+-						if (!priv->phandle
+-							     ->user_scan_cfg)
+-							woal_set_scan_time(
+-								priv,
+-								ACTIVE_SCAN_CHAN_TIME,
+-								PASSIVE_SCAN_CHAN_TIME,
+-								SPECIFIC_SCAN_CHAN_TIME);
+-					}
+-					if (priv->phandle->scan_request) {
+-						cancel_delayed_work(
+-							&priv->phandle
+-								 ->scan_timeout_work);
+-						woal_cfg80211_scan_done(
+-							priv->phandle
+-								->scan_request,
+-							MFALSE);
+-						priv->phandle->scan_request =
+-							NULL;
++						priv->phandle->first_scan_done = MTRUE;
++						if (!priv->phandle->user_scan_cfg)
++							priv->pending_need_set_scan_time = MTRUE;
+ 					}
+ 				}
+-				spin_unlock_irqrestore(
+-					&priv->phandle->scan_req_lock, flags);
++
++				spin_unlock_irqrestore(&priv->phandle->scan_req_lock, flags);
++
++				/* Defer cfg80211 inform + scan_done to process context */
++				if (priv->pending_scan_req) {
++					if (atomic_xchg(&priv->inform_bss_pending, 1) == 0)
++						queue_work(priv->phandle->evt_workqueue,
++							   &priv->inform_bss_work);
++				}
+ 			}
+ #endif /* STA_CFG80211 */
+ 
+@@ -4390,8 +4412,9 @@ mlan_status moal_recv_event(t_void *pmoal, pmlan_event pmevent)
+ 		if (IS_STA_CFG80211(cfg80211_wext)) {
+ 			if (priv->sched_scanning &&
+ 			    !priv->phandle->cfg80211_suspend) {
+-				woal_inform_bss_from_scan_result(priv, NULL,
+-								 MOAL_NO_WAIT);
++				if (atomic_xchg(&priv->inform_bss_pending, 1) == 0)
++					queue_work(priv->phandle->evt_workqueue, &priv->inform_bss_work);
++
+ 				PRINTM(MMSG,
+ 				       "wlan: Report sched_scan result\n");
+ 				woal_report_sched_scan_result(priv);
+@@ -5747,7 +5770,8 @@ mlan_status moal_recv_event(t_void *pmoal, pmlan_event pmevent)
+ 			req_ie = req_tlv->rsp_ie;
+ 			ie_len = req_tlv->header.len;
+ 		}
+-		woal_inform_bss_from_scan_result(priv, NULL, MOAL_NO_WAIT);
++		if (atomic_xchg(&priv->inform_bss_pending, 1) == 0)
++			queue_work(priv->phandle->evt_workqueue, &priv->inform_bss_work);
+ #if CFG80211_VERSION_CODE >= KERNEL_VERSION(4, 12, 0)
+ 		roam_info =
+ 			kzalloc(sizeof(struct cfg80211_roam_info), GFP_ATOMIC);
+-- 
+2.46.1
+
