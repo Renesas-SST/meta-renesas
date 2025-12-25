@@ -18,6 +18,8 @@ S = "${WORKDIR}/git"
 
 SRC_URI += " \
     file://moal.modprobe.conf \
+    file://0001-moal-assign-per-instance-lockdep-class-to-moal_lock.patch \
+    file://0002-moal-fix-cfg80211-scan-result-reporting-from-atomic-.patch \
 "
 
 inherit module

@@ -1,0 +1,134 @@
+From f8ed3b2634ab332cd969f36e6a48abb3ac592d85 Mon Sep 17 00:00:00 2001
+From: Tien Nguyen <tien.nguyen.uh@renesas.com>
+Date: Thu, 18 Dec 2025 09:33:26 +0000
+Subject: [PATCH 1/2] moal: assign per-instance lockdep class to moal_lock
+
+Assign a per-instance lockdep class to each dynamically allocated moal_lock
+to avoid lockdep false positives when different moal_lock instances are
+nested in the SDIO IRQ thread. Also init flags and unregister the key before
+freeing.
+
+[   23.551494] ============================================
+[   23.556788] WARNING: possible recursive locking detected
+[   23.562083] 6.10.14-yocto-standard #1 Tainted: G        W  O
+[   23.568245] --------------------------------------------
+[   23.573538] ksdioirqd/mmc2/199 is trying to acquire lock:
+[   23.578919] ffff0000c337f498 (&mlock->lock){....}-{2:2}, at: moal_spin_lock+0x18/0x30 [moal]
+[   23.587420]
+[   23.587420] but task is already holding lock:
+[   23.593233] ffff0000c337faf8 (&mlock->lock){....}-{2:2}, at: moal_spin_lock+0x18/0x30 [moal]
+[   23.601708]
+[   23.601708] other info that might help us debug this:
+[   23.608214]  Possible unsafe locking scenario:
+[   23.608214]
+[   23.614113]        CPU0
+[   23.616549]        ----
+[   23.618986]   lock(&mlock->lock);
+[   23.622293]   lock(&mlock->lock);
+[   23.625600]
+[   23.625600]  *** DEADLOCK ***
+[   23.625600]
+[   23.631499]  May be due to missing lock nesting notation
+[   23.631499]
+[   23.638266] 1 lock held by ksdioirqd/mmc2/199:
+[   23.642697]  #0: ffff0000c337faf8 (&mlock->lock){....}-{2:2}, at: moal_spin_lock+0x18/0x30 [moal]
+[   23.651607]
+[   23.651607] stack backtrace:
+[   23.655952] CPU: 1 PID: 199 Comm: ksdioirqd/mmc2 Tainted: G        W  O       6.10.14-yocto-standard #1
+[   23.665319] Hardware name: IMDT V2H SBC (DT)
+[   23.669576] Call trace:
+[   23.672014]  dump_backtrace.part.0+0xd0/0xe0
+[   23.676283]  show_stack+0x14/0x1c
+[   23.679592]  dump_stack_lvl+0x6c/0x90
+[   23.683250]  dump_stack+0x14/0x1c
+[   23.686557]  print_deadlock_bug+0x218/0x21c
+[   23.690734]  __lock_acquire+0xe8c/0x2120
+[   23.694648]  lock_acquire.part.0+0xe0/0x228
+[   23.698822]  lock_acquire+0x64/0x7c
+[   23.702303]  _raw_spin_lock_irqsave+0x5c/0x80
+[   23.706653]  moal_spin_lock+0x18/0x30 [moal]
+[   23.710958]  wlan_prepare_cmd+0x7c/0x694 [mlan]
+[   23.715526]  wlan_send_addba+0x12c/0x174 [mlan]
+[   23.720077]  wlan_wmm_process_tx+0xef0/0xfa0 [mlan]
+[   23.724976]  mlan_main_process+0xa84/0xcdc [mlan]
+[   23.729698]  woal_sdio_interrupt+0xdc/0x19c [moal]
+[   23.734525]  process_sdio_pending_irqs+0x60/0x1a8
+[   23.739221]  sdio_irq_thread+0x7c/0x158
+[   23.743049]  kthread+0x10c/0x110
+[   23.746271]  ret_from_fork+0x10/0x20
+
+Upstream-Status: Pending
+
+Signed-off-by: Tien Nguyen <tien.nguyen.uh@renesas.com>
+---
+ mlinux/moal_shim.c | 24 ++++++++++++++++++++----
+ 1 file changed, 20 insertions(+), 4 deletions(-)
+
+diff --git a/mlinux/moal_shim.c b/mlinux/moal_shim.c
+index 645f56c..7452c51 100644
+--- a/mlinux/moal_shim.c
++++ b/mlinux/moal_shim.c
+@@ -80,6 +80,10 @@ typedef struct _moal_lock {
+ 	spinlock_t lock;
+ 	/** Flags */
+ 	unsigned long flags;
++	/** Per-instance lockdep class key */
++#ifdef CONFIG_LOCKDEP
++	struct lock_class_key dep_key;
++#endif
+ } moal_lock;
+ 
+ /********************************************************
+@@ -795,7 +799,14 @@ mlan_status moal_init_lock(t_void *pmoal, t_void **pplock)
+ 	mlock = kmalloc(sizeof(moal_lock), GFP_ATOMIC);
+ 	if (!mlock)
+ 		return MLAN_STATUS_FAILURE;
++
+ 	spin_lock_init(&mlock->lock);
++	mlock->flags = 0;
++
++#ifdef CONFIG_LOCKDEP
++	lockdep_register_key(&mlock->dep_key);
++	lockdep_set_class(&mlock->lock, &mlock->dep_key);
++#endif
+ 	*pplock = (t_void *)mlock;
+ 
+ 	atomic_inc(&handle->lock_count);
+@@ -816,9 +827,14 @@ mlan_status moal_free_lock(t_void *pmoal, t_void *plock)
+ 	moal_handle *handle = (moal_handle *)pmoal;
+ 	moal_lock *mlock = plock;
+ 
++	if (!mlock)
++		return MLAN_STATUS_SUCCESS;
++
++#ifdef CONFIG_LOCKDEP
++	lockdep_unregister_key(&mlock->dep_key);
++#endif
+ 	kfree(mlock);
+-	if (mlock)
+-		atomic_dec(&handle->lock_count);
++	atomic_dec(&handle->lock_count);
+ 
+ 	return MLAN_STATUS_SUCCESS;
+ }
+@@ -832,7 +848,7 @@ mlan_status moal_free_lock(t_void *pmoal, t_void *plock)
+  *  @return         MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
+  */
+ mlan_status moal_spin_lock(t_void *pmoal, t_void *plock)
+-	__acquires(&plock->lock)
++	__acquires(&((moal_lock *)plock)->lock)
+ {
+ 	moal_lock *mlock = plock;
+ 	unsigned long flags = 0;
+@@ -850,7 +866,7 @@ mlan_status moal_spin_lock(t_void *pmoal, t_void *plock)
+  *  @return         MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
+  */
+ mlan_status moal_spin_unlock(t_void *pmoal, t_void *plock)
+-	__releases(&plock->lock)
++	__releases(&((moal_lock *)plock)->lock)
+ {
+ 	moal_lock *mlock = (moal_lock *)plock;
+ 	spin_unlock_irqrestore(&mlock->lock, mlock->flags);
+-- 
+2.46.1
+
