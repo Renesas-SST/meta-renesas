@@ -1,0 +1,62 @@
+From d7c4116bbf59a1dfc04913b4f6e2b668d0fcff89 Mon Sep 17 00:00:00 2001
+From: Long Trinh <long.trinh.rh@bp.renesas.com>
+Date: Fri, 26 Dec 2025 14:17:35 +0700
+Subject: [PATCH] rz-cmn: Do not parse and init lossy mem area for G2L/G3E/V2H
+ Series
+
+RZ/G2L, RZ/G3E and RZ/V2H series do not support lossy mem area.
+So this commit is created to let mmngr not parse and init
+lossy mem area for them.
+
+Refer from commit 24986e3eedcb9b6bdccfb593c7c1fe00da638b20 by hienhuynh <hien.huynh.px@renesas.com> (Tue, 8 Mar 2022).
+
+Signed-off-by: Long Trinh <long.trinh.rh@bp.renesas.com>
+Upstream-Status: Pending
+---
+ .../mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c     | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index 2535e56..66c48dc 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  MMNGR
+ 
+- Copyright (C) 2015-2019 Renesas Electronics Corporation
++ Copyright (C) 2015-2025 Renesas Electronics Corporation
+ 
+  License        Dual MIT/GPLv2
+ 
+@@ -1172,9 +1172,11 @@ static int parse_legacy_memory_node(struct device_node *np)
+ }
+ #endif
+ 
+-static const struct soc_device_attribute rzg2l_match[] = {
++static const struct soc_device_attribute rz_matches[] = {
+ 	{ .family = "RZ/G2L" },
+ 	{ .family = "RZ/G2UL" },
++	{ .family = "RZ/G3E" },
++	{ .family = "RZ/V2H" },
+ 	{ /* sentinel*/ }
+ };
+ 
+@@ -1193,7 +1195,7 @@ static int parse_reserved_mem_dt(struct device_node *np)
+ 		return ret;
+ 	}
+ 
+-	if (!soc_device_match(rzg2l_match)) {
++	if (!soc_device_match(rz_matches)) {
+ 		/* Parse reserved memory for lossy compression feature */
+ 		ret = _parse_reserved_mem_dt(np, "memory-region",
+ 					     "linux,lossy_decompress",
+@@ -1710,7 +1712,7 @@ static int mm_probe(struct platform_device *pdev)
+ 	}
+ #endif
+ 
+-	if (!soc_device_match(rzg2l_match)) {
++	if (!soc_device_match(rz_matches)) {
+ 		ret = init_lossy_info();
+ 		if (ret) {
+ 			pr_err("MMD mm_init ERROR\n");

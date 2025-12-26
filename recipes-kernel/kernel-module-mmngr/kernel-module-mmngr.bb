@@ -18,6 +18,8 @@ SRC_URI:append = " \
     file://0005-mmngr_drv-mmngr-Update-PA-VA-mapping-table-for-HiHop.patch \
     file://0006-mmngr-change-address-setting-for-H3N-Swap-mode.patch \
     file://0007-mmngr-Update-following-kernel-6.1.patch \
+    file://0008-Do-not-parse-and-init-lossy-mem-area-for-G2L-G3E-V2H.patch \
+    file://0009-mmngr-Add-MM_OMXBUF_SIZE-for-RZG2L-RZG3E-and-RZV2H-O.patch \
     file://0001-Reduce-MM_OMXBUF_SIZE-for-omx.patch \
     file://0002-Fix-ioctl-MM_IOC_VTOP-hang-up.patch \
     file://0003-mmngr_drv-mmngr-module-drv-Update-physical-convert-f.patch \
