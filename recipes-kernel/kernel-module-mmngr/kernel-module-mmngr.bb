@@ -20,11 +20,12 @@ SRC_URI:append = " \
     file://0007-mmngr-Update-following-kernel-6.1.patch \
     file://0008-Do-not-parse-and-init-lossy-mem-area-for-G2L-G3E-V2H.patch \
     file://0009-mmngr-Add-MM_OMXBUF_SIZE-for-RZG2L-RZG3E-and-RZV2H-O.patch \
-    file://0001-Reduce-MM_OMXBUF_SIZE-for-omx.patch \
-    file://0002-Fix-ioctl-MM_IOC_VTOP-hang-up.patch \
-    file://0003-mmngr_drv-mmngr-module-drv-Update-physical-convert-f.patch \
-    file://0004-mmngr-lock-mm-read-before-finding-VMA.patch \
-    file://0005-rzg2l-sbc-mmngr-supports-linux-6.10.patch \
+    file://0010-Reduce-MM_OMXBUF_SIZE-for-omx.patch \
+    file://0011-Fix-ioctl-MM_IOC_VTOP-hang-up.patch \
+    file://0012-mmngr_drv-mmngr-module-drv-Update-physical-convert-f.patch \
+    file://0013-mmngr-lock-mm-read-before-finding-VMA.patch \
+    file://0014-rz-cmn-mmngr-supports-linux-6.10.patch \
+    file://0015-Handle-MM_OMXBUF_SIZE-dynamically.patch \
 "
 
 MMNGR_CFG ?= "MMNGR_SALVATORX"
