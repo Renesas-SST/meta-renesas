@@ -15,7 +15,7 @@ Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
  2 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
-index 777755f..ec78a71 100644
+index 5a562c0..6e68ceb 100644
 --- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
 +++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
 @@ -108,7 +108,7 @@ static u64			ipmmu_addr_section_3;

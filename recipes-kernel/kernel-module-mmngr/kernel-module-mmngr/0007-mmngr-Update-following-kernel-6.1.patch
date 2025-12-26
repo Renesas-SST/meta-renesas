@@ -17,10 +17,10 @@ Signed-off-by: trungvanle <trung.le.xk@renesas.com>
  2 files changed, 110 deletions(-)
 
 diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
-index 2022cb6..5d16e40 100644
+index 6e68ceb..2535e56 100644
 --- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
 +++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
-@@ -1016,91 +1016,6 @@ exit:
+@@ -1010,91 +1010,6 @@ exit:
  	return ret;
  }
  
@@ -112,7 +112,7 @@ index 2022cb6..5d16e40 100644
  static int mmap(struct file *filp, struct vm_area_struct *vma)
  {
  	phys_addr_t	start;
-@@ -1752,9 +1667,6 @@ static const struct file_operations fops = {
+@@ -1734,9 +1649,6 @@ static const struct file_operations fops = {
  	.open		= open,
  	.release	= close,
  	.unlocked_ioctl	= ioctl,
@@ -123,7 +123,7 @@ index 2022cb6..5d16e40 100644
  };
  
 diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
-index 2ccf084..aa3377a 100644
+index 2d012b2..0c7f8c4 100644
 --- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
 +++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
 @@ -142,28 +142,6 @@ struct rcar_ipmmu_data {
