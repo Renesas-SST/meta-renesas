@@ -1,0 +1,91 @@
+From ec10585e867ac3a3a6058f6c34558d55b34e9b60 Mon Sep 17 00:00:00 2001
+From: Long Trinh <long.trinh.rh@bp.renesas.com>
+Date: Fri, 26 Dec 2025 17:19:44 +0700
+Subject: [PATCH] Handle MM_OMXBUF_SIZE dynamically
+
+Previously, MM_OMXBUF_SIZE was changed at build stage. Now all supported
+devices are combined into a single build with MMNGR_SALVATORX defining a
+fixed size.
+
+To properly handle this and avoid future hot‑fixes, the driver is updated
+to determine the buffer size at run time for supported boards, while
+keeping the legacy workflow intact. MM_OMXBUF_SIZE can still be set at
+build time first, and is only overridden if the board is in the supported
+list.
+
+Signed-off-by: Long Trinh <long.trinh.rh@bp.renesas.com>
+Upstream-Status: Pending
+---
+ .../mmngr-module/files/mmngr/drv/mmngr_drv.c  | 22 +++++++++++++------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index c8eee98..2cecd6b 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -87,6 +87,7 @@ static struct BM		bm_ssp;
+ static struct LOSSY_DATA	lossy_entries[MAX_LOSSY_ENTRIES];
+ static struct MM_DRVDATA	*mm_drvdata;
+ static struct cma		*mm_cma_area;
++static const struct soc_device_attribute rz_matches[];
+ static u64			mm_kernel_reserve_addr;
+ static u64			mm_kernel_reserve_size;
+ static u64			mm_lossybuf_addr;
+@@ -1064,11 +1065,17 @@ static int mmap(struct file *filp, struct vm_area_struct *vma)
+ static int validate_memory_map(void)
+ {
+ 	int ret = 0;
++	const struct soc_device_attribute *soc;
++	unsigned long omxbuf_size = MM_OMXBUF_SIZE;
+ #ifdef MMNGR_SSP_ENABLE
+ 	unsigned long buf_size;
+ 	const char *buf_name;
+ #endif
+ 
++	soc = soc_device_match(rz_matches);
++	if (soc && soc->data)
++		omxbuf_size = (unsigned long)soc->data;
++
+ #ifndef IPMMU_MMU_SUPPORT
+ 	if ((mm_kernel_reserve_addr + mm_kernel_reserve_size) > 
+ 	    (legacy_memory_addr + legacy_memory_size)) {
+@@ -1082,16 +1089,16 @@ static int validate_memory_map(void)
+ 	}
+ #endif
+ 
+-	if (mm_kernel_reserve_size < MM_OMXBUF_SIZE) {
++	if (mm_kernel_reserve_size < omxbuf_size) {
+ 		pr_warn("The size (0x%x) of OMXBUF is over "\
+ 			"the kernel reserved size (0x%llx) for Multimedia.\n",
+-			MM_OMXBUF_SIZE, mm_kernel_reserve_size);
++			omxbuf_size, mm_kernel_reserve_size);
+ 		pr_warn("Failed to initialize MMNGR.\n");
+ 		ret = -1;
+ 	}
+ 
+ #ifdef MMNGR_SSP_ENABLE
+-	buf_size = MM_OMXBUF_SIZE + MM_SSPBUF_SIZE;
++	buf_size = omxbuf_size + MM_SSPBUF_SIZE;
+ 	buf_name = "OMXBUF and SSPBUF";
+ 
+ 	if (mm_kernel_reserve_size >= buf_size) {
+@@ -1182,11 +1189,12 @@ static int parse_legacy_memory_node(struct device_node *np)
+ }
+ #endif
+ 
++/* Exclude RZ/G2L, RZ/G2UL, RZ/G3E, RZ/V2H from lossy alloc and define omxbuf size in data*/
+ static const struct soc_device_attribute rz_matches[] = {
+-	{ .family = "RZ/G2L" },
+-	{ .family = "RZ/G2UL" },
+-	{ .family = "RZ/G3E" },
+-	{ .family = "RZ/V2H" },
++	{ .family = "RZ/G2L", .data = (void *)(128 * 1024 * 1024UL) },
++	{ .family = "RZ/G2UL", .data = (void *)(128 * 1024 * 1024UL) },
++	{ .family = "RZ/G3E", .data = (void *)(256 * 1024 * 1024UL) },
++	{ .family = "RZ/V2H", .data = (void *)(256 * 1024 * 1024UL) },
+ 	{ /* sentinel*/ }
+ };
+ 
+-- 
+2.25.1
+
