@@ -9,10 +9,10 @@ Signed-off-by: Khanh Do Duy <khanh.do.yg@bp.renesas.com>
  1 file changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
-index fdef30b..fa96943 100644
+index 218a479..574dc5f 100644
 --- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
 +++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
-@@ -877,15 +877,19 @@ static void mm_cnv_addr(struct MM_PARAM *tmp)
+@@ -847,15 +847,19 @@ static void mm_cnv_addr(struct MM_PARAM *tmp)
  	struct mm_struct *mm = current->mm;
  	unsigned long start;
  	unsigned long pfn;
@@ -33,7 +33,7 @@ index fdef30b..fa96943 100644
  	tmp->hard_addr = pfn << PAGE_SHIFT;
  	mmap_read_unlock(mm);
  
-@@ -1160,9 +1164,9 @@ static int mmap(struct file *filp, struct vm_area_struct *vma)
+@@ -1045,9 +1049,9 @@ static int mmap(struct file *filp, struct vm_area_struct *vma)
  
  	if (p->flag != MM_KERNELHEAP_CACHED) {
  		vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);

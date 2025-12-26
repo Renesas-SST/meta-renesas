@@ -10,10 +10,10 @@ Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
  1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
-index ec78a71..0ad8df1 100644
+index 66c48dc..de66d8d 100644
 --- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
 +++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
-@@ -871,7 +871,7 @@ static int mm_ioc_share(int __user *in, struct MM_PARAM *out)
+@@ -841,7 +841,7 @@ static int mm_ioc_share(int __user *in, struct MM_PARAM *out)
  }
  
  /* change virtual address to physical address */
@@ -22,7 +22,7 @@ index ec78a71..0ad8df1 100644
  {
  	struct vm_area_struct *vma;
  	struct mm_struct *mm = current->mm;
-@@ -965,6 +965,7 @@ static long ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+@@ -935,6 +935,7 @@ static long ioctl(struct file *file, unsigned int cmd, unsigned long arg)
  	struct MM_PARAM	*p = file->private_data;
  	struct MM_CACHE_PARAM *cachep;
  	struct device	*mm_dev;
@@ -30,7 +30,7 @@ index ec78a71..0ad8df1 100644
  
  	mm_dev = mm_drvdata->mm_dev;
  
-@@ -1026,7 +1027,10 @@ static long ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+@@ -996,7 +997,10 @@ static long ioctl(struct file *file, unsigned int cmd, unsigned long arg)
  					cachep->len, DMA_TO_DEVICE);
  		break;
  	case MM_IOC_VTOP:   /* change virtual address to physical address */
