@@ -22,5 +22,5 @@ env/
 ```
 
 ### Files:
-- `.env`: This file includes environment variables relevant to the build process of the target image for the RZ/G2L-SBC platform using Yocto. It contains paths and configurations necessary for building, deploying, and managing the image.
+- `.env`: This file includes environment variables relevant to the build process of the target images for the RZ Common System using Yocto. It contains paths and configurations necessary for building, deploying, and managing the image.
 - `Readme.md`: This Readme explains the purpose and contents of this directory.

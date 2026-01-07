@@ -1,6 +1,6 @@
 # Renesas RZ Common System
 
-This guide provides a quick startup for all supported board in the current release. This README describes the current development status, how to build images, and how to set up the environment for the following boards:
+This guide provides a quick startup for all supported boards in the current release. This README describes the current development status, how to build images, and how to set up the environment for the following boards:
 
 * **RZG2L-SBC** (RZ/G2L Single Board Computer)
 * **RZG2L-EVK** (RZ/G2L Evaluation Kit)
@@ -279,11 +279,19 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
 │       │   ├── linux
 │       │   │   ├── bpgen
 │       │   │   ├── fiptool
+│       │   │   ├── libcrypto.so.1.1
+│       │   │   ├── OPENSSL_LICENSE.txt
 │       │   │   └── Readme.md
 │       │   ├── Readme.md
 │       │   └── windows
 │       │       ├── bpgen.exe
 │       │       ├── fiptool.exe
+│       │       ├── objcopy.exe
+│       │       ├── libcrypto-3-x64.dll
+│       │       ├── libwinpthread-1.dll
+│       │       ├── GNU_BINUTILS_LICENSE.txt
+│       │       ├── LIBWINPTHREAD_LICENSE.txt
+│       │       ├── OPENSSL_LICENSE.txt
 │       │       └── Readme.md
 │       ├── bootloader_flasher
 │       │   ├── bootloader_flash.py
@@ -702,126 +710,172 @@ that necessary files and tools are available.
   - Required cables: USB and UART debug cable
   - SD card (8 GB or larger)
 
-#### Linux setup
+#### Linux Setup
 
-1. **Install Python, Binutils, and build tools**
+1. **Install Python 3**
    ```bash
-   sudo apt update
-   sudo apt install -y python3 python3-pip binutils build-essential libssl-dev android-tools-fastboot
+   sudo apt install python3
    ```
-   - `python3`, `python3-pip`: run host scripts  
-   - `binutils`: provides `objcopy`  
-   - `build-essential` *(optional)*: `gcc`, `g++`, `make` for rebuilding firmware  
-   - `libssl-dev`: OpenSSL headers
-   - `android-tools-fastboot`: Install to get fastboot binary
 
 2. **Install Python dependencies**  
-  It is recommended to use a virtual environment with any supported Python version (3.10, 3.11, or 3.12).
+   It is recommended to use a virtual environment with any supported Python version (3.10, 3.11, or 3.12).
 
-    Example for Python 3.12
+   If Python 3.12 is in use: set up a virtual environment first.
 
-    ```bash
-    sudo apt install -y python3.12-venv
-    python3 -m venv .venv
-    source .venv/bin/activate
-    ```
+   ```bash
+   sudo apt update
+   sudo apt install python3.12-venv
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
 
-    If the distribution uses a different Python 3 version (for example, 3.10 or 3.11), replace 3.12 with the appropriate version.
+   If the distribution uses a different Python 3 version (for example, 3.10 or 3.11), replace 3.12 with the appropriate version.
     
-    After activating the virtual environment, install the required tools using requirements.txt.
+   After activating the virtual environment, choose one of the two install methods:
 
-    ```
-    cd <path/to/package>/host/tools/
-    pip3 install -r requirements.txt
-    ```
+   - Option 1 - Use `requirements.txt` (recommended)
+   ```sh
+   cd <path/to/package>/host/tools/
+   pip3 install -r requirements.txt
+   ```
+
+   - Option 2 - Install manually
+   ```sh
+   # Ensure pip is available
+   sudo apt install python3-pip
+
+   # Install required packages
+   pip3 install pyserial
+   pip3 install dataclasses
+   ```
 
 #### Windows Setup
 1. **Install Python 3**
    - Download and install from <https://www.python.org/>.  
-   - Enable **“Add Python to environment variables.”**  
+   - Enable **"Add Python to environment variables."**  
    If `pip` is missing, repair your Python installation or download [get-pip.py](https://bootstrap.pypa.io/get-pip.py) and run:
 
     ```powershell
     py get-pip.py
     ```
 
-2. **Install Python dependencies (run as Administrator)**  
-   Open **PowerShell**:
+2. **Install Python dependencies**  
    - **Option 1 — Using `requirements.txt` (recommended)**
      ```powershell
      cd <path\to\the\package>\host\tools
      py -m pip install -r requirements.txt
      ```
    - **Option 2 — Install manually**
-     Using the Python launcher:
+     - Using the Python launcher:
      ```powershell
      py -m pip install pyserial
      py -m pip install tomli
-     # Only if using Python < 3.7
-     # py -m pip install dataclasses
+     py -m pip install dataclasses       # Only if Python < 3.7
      ```
-     Or using `pip` directly (if already on PATH):
+     - Or using `pip` directly (if already in PATH):
      ```powershell
      pip install pyserial
      pip install tomli
-     # Only if using Python < 3.7
-     # pip install dataclasses
+     pip install dataclasses   # only if Python < 3.7
      ```
 
-3. **Environment and tool dependencies**
-   - **GNU Binutils**
-     - Download and install [MinGW-w64](https://sourceforge.net/projects/mingw/)
-     - Install to default location (`C:\MinGW`).
-     - Add `C:\MinGW\bin` to **Environment Variables → Path**.
-   - **OpenSSL (for MinGW-w64)**
-     - Download the package from [MinGW-w64 OpenSSL](https://packages.msys2.org/packages/mingw-w64-x86_64-openssl)
-     - Extract the package into: `C:/mingw64`
-     - Tools (e.g., `fiptool.exe`) depend on OpenSSL runtime DLLs.
-       - Add `C:\mingw64\bin` to **Path**, or copy `C:\mingw64\bin\libcrypto-3-x64.dll` into `<path\to\the\package>\host\tools\bin\windows\`.
+### 3.2.2. Environment and Tool Dependencies
 
-    > **Note**: `firmware_compile.py` uses `objcopy` (Binutils). Ensure `C:\MinGW\bin` is on **Path**, or SREC/ELF conversions will fail.
+Make sure you have the following installed or available in `tools/bin/<os>` or `host/tools/bin/<os>`:
+- `bpgen` - unified boot parameter generator (already included in the release package)
+- `fiptool` - TF-A utility (already included in the release package)
+- `objcopy` - part of GNU binutils (see installation steps above)
 
-    - **OTG flashing setup (Windows)** — Fastboot over USB OTG requires Windows to bind the board's **Fastboot / USB-download** interface to **WinUSB**.  
-      > **Note:** Windows binds drivers to the **device/interface present at install time** (VID/PID[/MI]). This Fastboot interface exists **only while** the board is connected over OTG **and** go to OTG download mode.
+Firmware binaries and DTBs must be available in the following location (already included in the release package):
 
-      **Applicability**
-      - **Required** for: **RZ/G2L-EVK**, **RZ/V2L-EVK**, **RZ/V2H-EVK** (when using OTG flashing).
-      - **Not applicable** to: **RZ/G2L-SBC** and **RZ/V2H-RDK** (no OTG port)
+```
+target/images/
+```
 
-      **Step 1: Enter Fastboot (USB OTG mode from U-Boot)**
-      1. Connect the board's **USB-to-serial** to the PC and open a terminal (115200 8-N-1).  
-      2. Power on and interrupt autoboot to reach the `U-Boot>` prompt.  
-      3. **Then**, connect the board's **USB OTG** port to the PC.  
-      4. **Next**, at the `U-Boot>` prompt run:
-        ```sh
-        setenv serial# Renesas_RZ_CMN
-        saveenv
-        fastboot usb 27
-        ```
-        > `27` is the index used on RZ Common System
+#### Linux
 
-      **Step 2: Bind the Fastboot interface to WinUSB (Zadig)**
-      1. **Now**, download and run **Zadig** (no install): https://zadig.akeo.ie/  
-      2. **Options → List All Devices**.  
-      3. In the dropdown, select the **Fastboot / USB-download** interface (may appear as *USB Download Gadget*).  
-      4. **Finally**, choose **WinUSB** → **Install Driver** (or **Replace Driver**).
+Install the required toolchain and fastboot:
+
+```sh
+sudo apt-get update
+sudo apt-get install build-essential android-tools-fastboot -y
+```
+
+#### Windows
+
+**USB OTG Flashing on Windows**
+
+Fastboot/OTG flashing on Windows requires the device's **Fastboot / USB-download** interface to use the **WinUSB** driver.
+
+> **Note:** Windows binds drivers to the **device/interface present at install time** (VID/PID[/MI]). This Fastboot interface exists **only while** the board is connected over OTG **and** go to OTG download mode.
+
+**Steps to verify USB OTG dependencies are installed correctly:**
+
+1. **Prepare connections**
+   - Connect the board's USB-to-serial to the PC and open a terminal (115200 8-N-1).
+   - Open **Tera Term** (or any serial console) on the correct COM port/baud.
+
+2. **Enter U-Boot and switch to USB OTG Fastboot**
+   - **Power on** the board and **interrupt autoboot** to get a `U-Boot>` prompt.
+   - Connect the board's **USB OTG** port to the PC.
+   - At the U-Boot prompt, run:
+     ```bash
+     setenv serial# 'Renesas1'
+     fastboot usb 27
+     ```
+     > This places the board into **USB OTG fastboot/download** mode.\
+     > `27` is the index used on RZ Common System
+
+3. **Bind WinUSB using Zadig**
+   - Download the latest **[Zadig](https://zadig.akeo.ie/)** and run it (no installation needed).
+   - In Zadig, go to **Options → List All Devices**.
+   - From the dropdown, select the device that represents the bootloader/fastboot interface.
+     - **USB Download Gadget**
+   - On the right, set **Driver** to **WinUSB**.
+   - Click **Install Driver** (or **Replace Driver**).
+
+4. **Verify**
+   - Open **PowerShell** or **Command Prompt** and run:
+     ```powershell
+     .\path\to\package\sd_creator\tools\fastboot.exe devices
+     ```
+
+     Expected:
+     ```
+      Renesas1         fastboot
+     ```
+
+> [!NOTE]  
+> **All dependencies bundled for Windows - No Installation Required**  
+> All required tools and runtime libraries are pre-bundled in `tools/bin/windows/`:
+> - `fiptool.exe` + `libcrypto-3-x64.dll` (OpenSSL library)
+> - `bpgen.exe` (statically linked, no DLLs needed)
+> - `objcopy.exe` + `libwinpthread-1.dll` (MinGW runtime)
+>
+> **You do NOT need to install MinGW-w64, MSYS2, or OpenSSL.** The scripts automatically use the bundled binaries.
 
 ### 3.3. Universal Flashing Script
 
-`universal_script.py` is a cross-platform tool that simplifies flashing workflows. It uses a board configuration JSON (`flash_images.json`) to map images and procedures.
+`universal_flash.py` is a cross-platform tool that simplifies flashing workflows. It uses a board configuration JSON (`flash_images.json`) to map images and procedures.
 
 **Location**
 ```
-<path/to/package>/host/tools/universal_script.py
+<path/to/package>/host/tools/universal_flash.py
 ```
 
 **Tools directory hierarchy** (excerpt)
 ```
 host/tools/
-├─ universal_script.py
+├─ bin/
 ├─ bootloader_flasher/
+├─ config/
 ├─ firmware_compile/
-└─ sd_creator/
+├─ flash_images.json
+├─ README.md
+├─ requirements.txt
+├─ sd_creator/
+├─ uload_bootloader/
+└─ universal_flash.py
 ```
 
 #### 3.3.1. `flash_images.json` — File Overview and Usage
@@ -829,7 +883,7 @@ host/tools/
 `flash_images.json` maps **boards → binaries → flashing operations**. It lists which images belong to each board, where they are located, and which flashing methods (e.g., **xSPI** vs **eMMC**, **UDP** vs **OTG**) apply.
 
 **Location**
-- Must reside beside `universal_script.py`.
+- Must reside beside `universal_flash.py`.
 - Images are typically under `<path_to_release>/target/images/` (optionally with subfolders like `atf/`, `u-boot/dtbs/`).
 
 ##### JSON Structure (Schema)
@@ -909,70 +963,129 @@ Field Reference
 - **`rootfs_flash_method`**
   How the **root filesystem (.wic)** is delivered to the SD/eMMC target:
   - `udp` — U-Boot `fastboot udp` over Ethernet
-  - `otg` — U-Boot `fastboot usb` (USB-OTG)
+#### 3.3.2. Flowchart
 
-#### 3.3.2. Flow chart
+The universal flash script prompts the user for options and proceeds through the flashing process based on the input. The detailed procedure is as follows:
+##### Help Menu Flowchart
+
+The following flowchart illustrates the logic when running the help command for the universal flash tool. It shows the user interaction steps and options available:
 
 ```mermaid
 flowchart TD
-    %% ============ Styles ============
-    classDef default fill:#f0f4f8,stroke:#333,stroke-width:1px,font-size:14px
-    classDef decision fill:#fef6e4,stroke:#c89b3c,stroke-width:2px,font-weight:bold
-    classDef actionHost fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
-    classDef actionTarget fill:#ede9fe,stroke:#7c3aed,stroke-width:2px
-    classDef terminal fill:#d1fae5,stroke:#10b981,stroke-width:2px,font-weight:bold
+  classDef default fill:#f0f4f8,stroke:#333,stroke-width:1px,font-size:14px
+  classDef decision fill:#fef6e4,stroke:#c89b3c,stroke-width:2px,font-weight:bold
+  classDef action fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+  classDef terminal fill:#d1fae5,stroke:#10b981,stroke-width:2px,font-weight:bold
 
-    %% Smaller legend variants (no class chaining)
-    classDef terminalLegend fill:#d1fae5,stroke:#10b981,stroke-width:1px,font-size:10px,font-weight:bold
-    classDef decisionLegend fill:#fef6e4,stroke:#c89b3c,stroke-width:1px,font-size:10px,font-weight:bold
-    classDef actionHostLegend fill:#dbeafe,stroke:#3b82f6,stroke-width:1px,font-size:10px
-    classDef actionTargetLegend fill:#ede9fe,stroke:#7c3aed,stroke-width:1px,font-size:10px
-
-    %% ============ Flow ============
-    A[Start]:::terminal --> B[Display available boards]:::actionHost
-    B --> C[User selects board]:::actionHost
-    C --> D[Display available serial ports]:::actionHost
-    D --> E[User selects port and baud rate]:::actionHost
-
-    E --> F{Write RootFS?}:::decision
-    F -->|y| FR[Write RootFS to SD or eMMC]:::actionTarget
-    FR --> G{Write IPL?}:::decision
-    F -->|n| G{Write IPL?}:::decision
-
-    G -->|y| H{Select IPL method}:::decision
-    H -->|BootloaderFlash| M[Compile firmware: build BL2 and FIP with per-board DTB at runtime]:::actionHost
-    M --> J[Write IPL by BootloaderFlash]:::actionTarget
-    H -->|ULoadFlash| K[Write IPL by ULoadFlash]:::actionTarget
-
-    G -->|n| L[End]:::terminal
-    J --> L
-    K --> L
-
-    %% ============ Legend ============
-    subgraph LEGEND[Legend]
-      direction LR
-      L1[Terminal]:::terminalLegend
-      L2{Decision}:::decisionLegend
-      L3[Action – Host: PC tools]:::actionHostLegend
-      L4[Action – Target: Board]:::actionTargetLegend
-    end
+  H1[Start]:::terminal --> H2[Display Help Menu with options]:::action
+  H2 --> H3{"User selects option 1, 2, or 3"}:::decision
+  H3 -->|1: Installation| H4[Show installation and setup instructions]:::action
+  H4 --> H5[Refer user to README.md for details]:::action
+  H5 --> H6{"Prompt: Run flash tool now?"}:::decision
+  H6 -->|y| H7[Run flash tool]:::action
+  H6 -->|n| H8[Exit]:::terminal
+  H3 -->|2: Run tool| H7[Run flash tool]:::action
+  H3 -->|3: Exit| H8[Exit]:::terminal
 ```
+
+To display this help menu, use the following command:
+
+- **On Linux:**
+  ```bash
+  python3 universal_flash.py --help
+  ```
+
+- **On Windows:**
+  ```powershell
+  py universal_flash.py --help
+  ```
+
+##### Installation Flowchart
+This flowchart shows the process when running the universal flash tool directly (without the --help argument). The script will immediately start the flashing workflow:
+
+```mermaid
+flowchart TD
+  classDef default fill:#f0f4f8,stroke:#333,stroke-width:1px,font-size:14px
+  classDef decision fill:#fef6e4,stroke:#c89b3c,stroke-width:2px,font-weight:bold
+  classDef action fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+  classDef terminal fill:#d1fae5,stroke:#10b981,stroke-width:2px,font-weight:bold
+
+  A[Start]:::terminal --> B[Display available boards]:::action
+  B --> C[User selects board]:::action
+  C --> D[Display available serial ports]:::action
+  D --> E[User selects port]:::action
+
+  E --> G{"Write IPL?"}:::decision
+  G -->|Yes| H{"Select IPL method"}:::decision
+  H -->|BootloaderFlash| M[Compile firmware: build BL2 & FIP with per-board DTB at runtime]:::action
+  M --> J[Write IPL by BootloaderFlash]:::action
+  H -->|ULoadFlash| K[Write IPL by ULoadFlash]:::action
+
+  J --> F{"Write RootFS?"}:::decision
+  K --> F{"Write RootFS?"}:::decision
+  G -->|No| F{"Write RootFS?"}:::decision
+
+  F -->|Yes| FR[Write RootFS to SD/eMMC]:::action
+  FR --> L[End]:::terminal
+  F -->|No| L[End]:::terminal
+```
+
+**Explanation:**
+When you run the script without any arguments, it will skip the help menu and immediately prompt you to select a board and begin the flashing process. You will be guided through board selection, serial port setup, IPL and rootfs flashing steps.
+
+Refer to the [Basic Usage](#basic-usage) section for commands to run the tool.
 
 **Notes:**
 - Ensure the board is powered off before flashing.
 - Insert the SD card if rootfs flashing is selected.
 - For Bootloader-flash: set boot switches to SCIF download mode.
 - For Uload-flash or rootfs flashing: set boot switches to normal mode.
+- **Board Reset/Power-cycle:**
+  - **RZ/G2L-SBC**: Does not have a RESET button. You must power-cycle by unplugging and re-plugging the power adapter. Since the debug/OTG USB port is powered from the same power jack, the USB device will disconnect and the serial port will disappear from the host PC during power-cycle. Ensure you reconnect the USB cable to the same PC port after power-cycle to avoid reconnection issues.
+  - **RZ/G2L-EVK, RZ/V2L-EVK boards**: Use the RESET button to reset the board without removing power. The USB connection and serial port remain available during flashing.
+  - **RS-G2L100**: Does not have a RESET button. You must power-cycle by unplugging and re-plugging the power adapter. Since the debug/OTG USB port is powered from the same power jack, the USB device will disconnect and the serial port will disappear from the host PC during power-cycle. Ensure you reconnect the USB cable to the same PC port after power-cycle to avoid reconnection issues.
+  - **RZ/V2H-EVK**: Use the RESET button to reset the board without removing power. The USB connection and serial port remain available during flashing.
+  - **RZ/V2H-RDK board**: Does not have a RESET button. You must power-cycle by unplugging and re-plugging the power adapter. Since the debug/OTG USB port is powered from the same power jack, the USB device will disconnect and the serial port will disappear from the host PC during power-cycle. Ensure you reconnect the USB cable to the same PC port after power-cycle to avoid reconnection issues.
+  - **IMDT V2H-SBC**: Use the RESET button to reset the board without removing power. The USB connection and serial port remain available during flashing.
+- Rootfs flash (UDP Fastboot): U-Boot fastboot-udp uses a single active Ethernet MAC per board. If multiple RJ45/PHY ports exist, only one is active (depending on board support). The script automatically selects the appropriate Ethernet port based on board configuration in `boards_flash_config.toml`. For boards with multiple available ports, the script will prompt you to select which port to use.
 
-#### 3.3.3. Usage
-- Linux:
-```
-python3 universal_script.py
+  | Board         | Ethernet port(s) used |
+  |-------------|----------------------|
+  | rzg2l-sbc    | 1                    |
+  | rs-g2l100    | 0, 1                 |
+  | rzv2l-evk    | 0                    |
+  | rzg2l-evk    | 0                    |
+  | rzv2h-evk    | 0, 1                 |
+  | rzv2h-rdk    | 0                    |
+  | imdt-v2h-sbc | 0, 1                 |
+
+Both fastboot-otg and fastboot-udp write to U-Boot's current MMC device (typically mmc0). Depending on board and revision, mmc0 may point to the SD card or eMMC.
+
+| Board/Rev                                   | Fastboot Method | Typical mmc0 target                                  | How to change target           |
+|---------------------------------------------|-----------------|------------------------------------------------------|-------------------------------|
+| RZ/G2L-SBC                                  | UDP             | Carrier SD (board default)                            | N/A (single device)           |
+| RS-G2L100                                   | UDP, OTG        | eMMC                                                | N/A (single device)           |
+| RZ/V2L-EVK                                  | UDP, OTG        | SD (CN3 on SOM or eMMC device depending on SW1)      | Set SW1-2 ON to SD and OFF to eMMC |
+| RZ/G2L-EVK                                  | UDP, OTG        | SD (CN3 on SOM or eMMC device depending on SW1)      | Set SW1-2 ON to SD and OFF to eMMC |
+| RZ/V2H-EVK (Rev 1 – 2 SD cards)             | UDP, OTG        | SD card slot 0                                       | N/A (single device)           |
+| RZ/V2H-EVK (Rev 2 – SD & eMMC)              | UDP, OTG        | eMMC                                                | N/A (single device)           |
+| RZ/V2H-RDK                                  | UDP             | SD card                                             | N/A (single device)           |
+| IMDT V2H-SBC                                | UDP, OTG        | eMMC                                                | N/A (single device)           |
+
+---
+
+#### 3.3.3. Basic Usage
+
+### On Windows:
+
+```bash
+py universal_flash.py
 ```
 
-- Windows:
-```
-py universal_script.py
+### On Linux:
+
+```bash
+python3 universal_flash.py
 ```
 
 ### 3.4. Dedicated Flashing Scripts
@@ -985,10 +1098,10 @@ This script is used to flash the initial bootloader image onto the board via a s
 
 Location:
 ```
-host/tools/bootloader_flasherr/
+host/tools/bootloader_flasher/
 ```
 
-Refer to the `Readme.md` file in that folder for detail instructions.
+Refer to the `Readme.md` file in that folder for detailed instructions.
 
 #### 3.4.2. Flash Bootloader from U-Boot Console
 
@@ -999,7 +1112,7 @@ Location
 host/tools/uload_bootloader/
 ```
 
-Refer to the `Readme.md` file in that folder for detail instructions.
+Refer to the `Readme.md` file in that folder for detailed instructions.
 
 #### 3.4.3. Flash Root Filesystem to microSD Card
 
@@ -1010,7 +1123,7 @@ Location
 host/tools/sd_creator/
 ```
 
-Refer to the `Readme.md` file in that folder for detail instructions.
+Refer to the `Readme.md` file in that folder for detailed instructions.
 
 ## 4. Accessing Supported Features 
 
@@ -1172,9 +1285,51 @@ In this example, a text file names `uEnv.txt` which is located at `/boot` is sen
 
 #### 4.1.2. On-board Audio Codec with Stereo Jack Analog Audio IO configurations
 
-Each RZ board features an onboard audio codec and may include a dedicated video codec chip, depending on the model. Audio playback and recording are supported via the 3.5mm stereo jack (6-pin).
+Audio capability is board-dependent. Some RZ boards provide an onboard audio codec with an analog connector (for example a 3.5 mm jack). Other boards expose only a digital audio interface (I2S or PCM/TDM) on header pins and require an external codec/breakout to obtain analog headphone and microphone connections.
 - Audio Data Interface: Connected to DAI (SSI1) using the I2S format.
-- Control Interface: Managed via I2C0.
+- Control Interface: Managed via I2C0.  
+
+ **1. Board Capability Summary**
+
+| Board|Analog audio on board|Digital audio on header|HDMI Audio|Notes|
+|------|----------------------|-----------------------|---------|-----|
+|RZ/G2L-SBC|3.5mm jack|Not provided|Not supported|If jack is TRRS, a TRRS headset or TRRS-to-dual-TRS Y-adapter may be required for microphone use.|
+|RZ/G2L-EVK & RZ/V2L-EVK|3.5mm jack|Not provided|Supported|If jack is TRRS, a TRRS headset or TRRS-to-dual-TRS Y-adapter may be required for microphone use.|
+|RS-G2L100|Not supported|Not supported|Supported|<div align="center">-</div>|
+|RZ/V2H-EVK|3.5mm jack|Not provided|Supported|If jack is TRRS, a TRRS headset or TRRS-to-dual-TRS Y-adapter may be required for microphone use.|
+|RZ/V2H-RDK|Not provided|I2S/PCM (SSI0 & SSI9) + I2C (codec control)|Supported (default). Disabled when codec overlay is enabled|External codec/breakout required for headphone/mic.|
+|IMDT-V2H-SBC|3.5mm jack|Not provided|Supported|If jack is TRRS, a TRRS headset or TRRS-to-dual-TRS Y-adapter may be required for microphone use.|
+
+**2. Analog connection**  
+
+Boards with an analog jack typically support headphone/line-out and may support microphone input if the jack is wired for headset operation.  
+Accessory note (headset microphone support):
+- TRS (3-conductor): stereo headphone/line-out only.
+- TRRS (4-conductor): headset (headphone + microphone).
+
+For separate headphone and microphone plugs, a **TRRS-to-dual-TRS Y-adapter** (headset splitter) may be required for better experience.  
+
+**3. Digital connection**
+
+Some boards in this release (for example RZ/V2H-RDK) does not provide an onboard 3.5 mm audio jack. Audio is exposed on the 40‑pin expansion header as a digital serial audio interface. These header signals carry the audio bitstream and codec control; they are not directly compatible with analog headphones or microphones. An external audio codec/breakout board is required to provide analog line-out/headphone output and, if supported by the hardware routing, microphone input.  
+
+Validation was performed using the [DA7219 codec devkit](https://www.renesas.com/en/design-resources/boards-kits/da7219-eval) connected to the expansion header. In this configuration, the device tree configures the digital audio link as I2S over SSI0, with codec control via I2C and an optional interrupt for jack detect.
+
+Other external codec/breakout hardware can be used following the same connection approach (digital audio + I2C control), provided it is electrically compatible and the device-tree/overlay configuration matches the external hardware (codec type, digital audio format, clocking, I2C address, and any required GPIO/interrupt signals).
+
+**4. HDMI Audio**
+HDMI audio is available only on boards where the display interface supports audio and the connected monitor/TV advertises audio capability (EDID). HDMI audio is typically output-only. Refer to Board compability summary table for details on supported boards.
+
+
+**5. Software usage**
+
+On RZ/V2H-RDK, analog audio is provided through an external audio codec/breakout connected to the expansion header. Before running playback or recording commands, the audio codec overlay must be enabled so that the codec is instantiated by the kernel.
+
+Step 0: Enable the audio overlay in U-Boot (if applicable)
+
+Set the U-Boot environment variable enable_overlay_audio_codec. Refer to U-Boot Environment for details. After updating the U-Boot environment, reboot the board to apply the overlay
+
+Then do the following:
 
 Step 1: Discover available audio interfaces
 
@@ -1315,7 +1470,7 @@ To disable all networking services:
 root@rz-cmn:~/network-management# ./disable_networking_stack.sh al
 ```
 
-#### 4.1.4. Kernel Optimization
+**Kernel Optimization**
 
 By default, the release package does not optimize the kernel. This is purposefully done to allow kernel debugging and have more verbose logs.
 
@@ -1339,7 +1494,7 @@ To optimize the kernel, follow these steps to modify the local.conf:
 
 3. Rebuild and deploy the image to apply the changes.
 
-#### 4.1.5. Playing Video Files on RZ/G2L-SBC
+#### 4.1.4. Playing Video Files on the RZ board
 
 Use `gst-launch-1.0` to play video files. The playbin element in GStreamer makes it easy to play multimedia content. Prepare an mp4 file and run the following command:
 
@@ -1355,9 +1510,10 @@ root@rz-cmn:~# gst-launch-1.0 playbin uri=file:///home/root/videos/renesas-bigid
 
 This will start an MP4 video and display it on the screen.
 
-#### 4.1.6. MIPI CSI-2 Cameras
+#### 4.1.5. MIPI CSI-2 Cameras
 
-This section outlines camera enablement per board and how to stream video once enabled.
+This section describes how to enable and use MIPI CSI-2 cameras across the supported boards. All
+boards share a common camera initialization script, but each board requires its own compatible camera module and driver configuration.
 
 ---
 
@@ -1406,19 +1562,11 @@ gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,width=1280,height=720 ! 
 
 ##### RZG2L-EVK / RZV2L-EVK — Coral camera
 
-- A device tree with CSI/CRU + camera nodes is required.
-- Default DTBs:
-  - RZG2L-EVK: `r9a07g044l2-smarc.dtb`
-  - RZV2L-EVK: `r9a07g054l2-smarc.dtb`
-- For camera use, switch to:
-  - RZG2L-EVK: `r9a07g044l2-smarc-cru-csi-ov5645.dtb`
-  - RZV2L-EVK: `r9a07g054l2-smarc-cru-csi-ov5645.dtb`
-
-Update the DTB on **partition 1** (`dtb/renesas/`) or set `fdtfile` in `uEnv.txt` (under partition 1 FAT32), for example:
+- The MIPI CSI-2 interface and the **OmniVision OV5645 sensor** are supported.
+- Enable the camera overlay in `uEnv.txt`:
 
 ```ini
-# Example for RZG2L-EVK
-fdtfile=r9a07g044l2-smarc-cru-csi-ov5645.dtb
+enable_overlay_csi_ov5645=1
 ```
 
 Reboot, then initialize and stream using the same steps as for RZ/G2L-SBC (adjust the resolution as needed).
@@ -1432,18 +1580,35 @@ Reboot, then initialize and stream using the same steps as for RZ/G2L-SBC (adjus
 
 ---
 
+##### IMDT V2H-SBC
+The following cameras are supported based on the available drivers and device tree entries:
+
+|**Camera Sensor**|**Support Status**|
+|------|------|
+|AR1335|Supported|
+|AR0521|Not verified|
+|IMX135|Not verified|
+|IMX219|Not verified|
+|IMX462|Not verified|
+|IMX274| Not verified|
+
+---
+
 **Notes**
 - Ensure the GStreamer pipeline’s `width` and `height` match the resolution configured by `v4l2-init.sh`.
 - If an invalid resolution is provided, `v4l2-init.sh` falls back to `1280x720`.
 
 
-#### 4.1.7. Package Management
+#### 4.1.6. Package Management
 
 The distribution comes with Debian package manager `apt-get` and `dpkg` for binary package handling. 
 
-**Setting up Debian as a backend source**
+Follow the steps below to modify the Debian package repository and install packages according to your needs.
 
-The default configuration for the `sources.list` file, which defines the package repositories, is as follows:
+**1. Add/modify sources.list file to address the packages repository.**
+`sources.list` is a critical configuration file for package installation and updates used by package managers on Debian-based Linux distributions. The `sources.list` file contains a list of URLs for repository addresses where the package manager can find software packages.
+
+Currently, the default `sources.list`, which is located in /etc/apt/sources.list.d/sources.list/ directory is as below.
 
 ```
 deb [arch=arm64] http://old-releases.ubuntu.com/ubuntu/ oracular main multiverse universe
@@ -1452,12 +1617,7 @@ deb [arch=arm64] http://old-releases.ubuntu.com/ubuntu/ oracular-backports main 
 deb [arch=arm64] http://old-releases.ubuntu.com/ubuntu/ oracular-updates main multiverse universe
 ```
 
-**Configuring the Debian package repository**
-
-`sources.list` is a critical configuration file for packages installation and updates used by package managers on Debian-based Linux distributions. The `sources.list` file contains a list of URLs or repository addresses where the package manager can find software packages. These repositories may be maintained by the Linux distribution itself or by third-party individuals or organizations.
-
-The file is located at `/etc/apt/sources.list.d/sources.list`. You can modify it to add or change the repositories according to your needs.
-
+**2. Update the defined package index for apt-get.**
 After configuring the APT repositories, refresh the package database by running:
 
 ```
@@ -1494,15 +1654,16 @@ Remember that sources doesn’t have to be a single origin. It's very common to 
 
 The source management is beyond the scope of this document.
 
-**Using `apt-get` to install packages**
+**3. Using `apt-get` to install packages**
 
 To install a package using `apt-get`, use the following command:
 
 ```
 root@rz-cmn:~# apt-get install <package-name>
 ```
+**Note**:The release currently uses Ubuntu Oracular as the default APT repository source. Modifying the APT sources (e.g., switching to Debian or using third-party repositories) may break the boot or cause installation issues for some applications due to changes in package versions, availability, or dependencies. Proceed with caution if you plan to alter the default APT configuration.
 
-**Using `DPKG` to install packages**
+##### Using `DPKG` to install packages
 
 The utility `dpkg` is the low-level package manager for Debian-based systems. It is the local systemwide package manager. It handles installation, removal, provisioning about package.deb file, indexing and other aspects of packages installed on the system. However, it does not perform any cloud operations. Dpkg also doesn’t handle dependency resolution. This is another task handled by a high-level manager like `apt-get`. In fact, `dpkg` is the backend for `apt-get`. While `apt-get` handles fetching and indexing, the local installations and management of the packages are performed by the `dpkg` manager.
 
@@ -1525,7 +1686,7 @@ After installing a package using dpkg, if you need to resolve dependency issues,
 root@rz-cmn:~# apt-get install -f
 ```
 
-#### 4.1.8. Docker Installation Setup
+##### Docker Installation Setup
 
 Step 1: Enable Docker support in Kernel build
 
@@ -1537,8 +1698,7 @@ To enable Docker integration at the kernel level, set the following configuratio
 # Set to "0" to disable Docker integration (default)
 DOCKER_SUPPORT = "1"
 ```
-
-Rebuilding the kernel is required after changing this setting to apply the update.
+**Note:** Rebuilding the kernel is required after changing this setting to apply the update.
 
 Step 2: Install Docker via APT
 
@@ -1595,16 +1755,18 @@ For more examples and ideas, visit:
  https://docs.docker.com/get-started/
 ```
 
-#### 4.1.9 Generic USB WiFi framework
+#### 4.1.7. Generic USB WiFi framework
 
 The system supports the generic USB WiFi framework, which is derived from the Linux kernel mainline. A wide range of common USB WiFi adapters are supported, including those based on the following chipsets (module support is indicated in parentheses):
 
-* **MediaTek (MTK):** MT7601U, MT76x0U, MT76x2U, MT7663U, MT7921U (Wi-Fi 6), and MT7925U (Wi-Fi 6E).
-* **Realtek (RTL):** RTL8187, RTL8192CU, RTL8XXXU (various 802.11n/ac chips), and the modern **RTW88** family (RTL8822BU, RTL8822CU, RTL8723DU, RTL8821CU).
-* **Ralink (RT2x00):** RT2500USB, RT73USB, and RT2800USB (including RT3573, RT53XX, and RT55XX variants).
-* **Broadcom (BRCM):** BRCMFMAC (including specific USB support, enabled as built-in).
-* **Atheros/Qualcomm:** CARL9170, ATH6KL (USB), and AR5523.
-* **Others:** Libertas (USB/THINFIRM), AT76C50X (USB), RTL8187, and ZD1211RW.
+* **MediaTek (MTK):** MT7601U, MT76x0U, MT76x2U, MT7663U, MT7921U (Wi-Fi 6), MT7925U (Wi-Fi 6E).
+* **Realtek (RTL):** RTL8187, RTL8192CU, RTL8XXXU family, RTW88 family (RTL8822BU, RTL8822CU, RTL8723DU, RTL8821CU).
+* **Ralink (RT2x00):** RT2500USB, RT73USB, RT2800USB (RT3573/53XX/55XX variants).
+* **Broadcom (BRCM):** BCM43xx / BCM43xxx USB variants
+* **Atheros/Qualcomm:** CARL9170, ATH6KL - USB, and AR5523.
+* **Libertas:** Marvell USB (“THINFIRM”)
+* **Atmel:** AT76C50X USB
+* **ZyDAS:** ZD1211 / ZD1211B
 
 **Note:** For many chipsets (especially Realtek and Broadcom), operation requires providing the necessary proprietary firmware files to the system.
 
@@ -1620,11 +1782,13 @@ Some public firmware files are available from the official Linux firmware reposi
 https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/
 
 If they are missing there, please download the latest firmware files from the manufacturer's website.
-Store the firmware file in the system firmware directory so it can be loaded automatically:
-
 ```shell
 root@rz-cmn:~# mkdir -p /lib/firmware
 root@rz-cmn:~# curl -s https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/<firmware_file_name> -o /lib/firmware/<firmware_file_name>
+```
+Store the firmware file in the system firmware directory so it can be loaded automatically:
+
+```shell
 root@rz-cmn:~# cp /lib/firmware/<firmware_file_name> /lib/firmware/$(uname -r)/
 root@rz-cmn:~# chmod 644 /lib/firmware/<firmware_file_name> /lib/firmware/$(uname -r)/<firmware_file_name>
 ```
@@ -1646,10 +1810,38 @@ After connecting the USB WiFi adapter, verify that the kernel has recognized it 
 root@rz-cmn:~# dmesg | tail -n 100
 ```
 If you see an error such as Direct firmware load failed with error -2, ensure the firmware file exists in `/lib/firmware/` and `/lib/firmware/$(uname -r)/`.
-
+For example, if an MT7601U USB Wi-Fi adapter is used. The kernel log below shows the device being detected and initialized successfully:
+```shell
+[ 585.319094] usb 1-1: new high-speed USB device number 3 using ehci-platform
+[ 585.639376] usb 1-1: reset high-speed USB device number 3 using ehci-platform
+[ 585.819387] mt7601u 1-1:1.0: ASIC revision: 76010001 MAC revision: 76010500
+[ 585.831377] mt7601u 1-1:1.0: Firmware Version: 0.1.00 Build: 7640 Build time:
+201302052146____
+[ 586.259966] mt7601u 1-1:1.0: EEPROM ver:0d fae:00
+[ 586.508715] ieee80211 phy1: Selected rate control algorithm 'minstrel_ht'
+[ 586.817026] mt7601u 1-1:1.0 wlu1: renamed from wlan0
+```
+Based on these logs, the Wi-Fi network interface is renamed from wlan0 to wlu1.
 ##### Step 3: Connect to a WiFi network
-
-Once the device is detected, use standard Linux networking tools to connect:
+Once the device is detected and the firmware is loaded, verify that the network interface is up and ready for use:
+```shell
+root@rz-cmn:~# ifconfig wlu1 up
+SIOCSIFFLAGS: Operation not possible due to RF-kill
+```
+If the interface is blocked by rfkill, use the following command to unblock it:
+```shell
+root@rz-cmn:~# rfkill list
+1: phy1: Wireless LAN
+Soft blocked: yes
+Hard blocked: no
+# Unblock the interface
+root@rz-cmn:~# rfkill unblock all
+root@rz-cmn:~# rfkill list
+1: phy1: Wireless LAN
+Soft blocked: no
+Hard blocked: no
+```
+Next, use connmanctl to establish a connection.:
 
 ```
 root@rz-cmn:~# connmanctl
@@ -1681,6 +1873,121 @@ PING www.google.com(hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004)) 56 dat
 64 bytes from hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004): icmp_seq=2 ttl=57 time=81.1 ms
 64 bytes from hkg07s39-in-x04.1e100.net (2404:6800:4005:813::2004): icmp_seq=3 ttl=57 time=124 ms
 ```
+**Note:** Ethernet interfaces may interfere with routing through Wi-Fi. If issues occur, first check which Ethernet interfaces are active and then disable them:
+
+List all active interfaces, this will show all interfaces that are currently UP.
+```shell
+root@rz-cmn:# ip -o link show | grep 'state UP'
+```
+Identify Ethernet interfaces (look for names starting with end). Disable all active Ethernet interface.
+```shell
+root@rz-cmn:~# ifconfig <interface-name> down
+```
+#### 4.1.8. Python GUI Programming with Tkinter
+Tkinter is included with Python by default, so no additional libraries are required.
+**Note**: Note: Running graphical applications such as Tkinter requires access to the X11 display server, which is provided by Xwayland in this setup. Therefore, the application must be run as the weston user (not as root), because only that user has permission to access the running Xwayland display session (DISPLAY=:0).
+The following steps will show how to create a new Tkinter application:
+
+Step 1. Switch to user `weston`
+```
+root@rz-cmn:~# su - weston
+```
+Step 2. Create a working directory on the RZ board to develop and store the Python application.
+```
+rz-cmn:~$ mkdir ~/python_apl
+rz-cmn:~$ cd ~/python_apl
+```
+Step 3. Create a new Python file (For example, main.py) in the work directory.
+```
+rz-cmn:~/python_apl$ vi main.py
+```
+Step 4. Develop a Simple Python GUI Application with Tkinter.
+- Import the tkinter module:
+```
+import tkinter as tk
+```
+This statement imports the Tkinter module, allowing access to its classes and functions for creating GUI elements.
+- Create a main window.
+```
+root = tk.Tk()
+```
+This creates the main application window.
+- Change the window title and resolution as desired.
+```
+root.title(“Sample application”)
+root.geometry(“200x100”)
+```
+- Create and place a label.
+```
+label = tk.Label(root, text="Press the button", width=20, height=2)
+label.pack()
+```
+- Create and place a button.
+```
+button = tk.Button(root, text="Click Me", command=on_button_click, width=10,height=2)
+button.pack()
+```
+This creates a button with the text "Click Me" and associates it with the on_button_click function.
+When the button is pressed, the function is called.
+
+- Define a user function that helps to handle the on-click event and shows “Hello, Tkinter!” on the application’s window.
+```
+def on_button_click():
+  label.config(text="Hello, Tkinter!")
+```
+- Run the application
+```
+root.mainloop()
+```
+This starts the Tkinter event loop, which waits for user interactions and updates the UI accordingly.
+- The completed Python program: “main.py”.
+```
+import tkinter as tk
+def on_button_click():
+label.config(text="Hello, Tkinter!")
+root = tk.Tk()
+root.title("Sample application")
+root.geometry("200x100")
+# Create a label
+label = tk.Label(root, text="Press the button", width=20, height=2)
+label.pack()
+# Create a button
+button = tk.Button(root, text="Click Me", command=on_button_click, width=10,height=2)
+button.pack()
+# Run the application
+root.mainloop()
+```
+4. Run the application
+- Ensure the RZ board is connected to an external display. If the display is not set automatically, set the DISPLAY environment variable as follows:
+```
+rz-cmn:~$ export DISPLAY=:0
+```
+- Run the Python application:
+```
+rz-cmn:~$ python3 main.py
+```
+#### 4.1.9. Install Packages Using Python3-Pip
+The distribution includes Python 3 along with useful libraries/modules/packages such as `Pip3`, Numpy, Pandas, PySerial, Matplotlib, etc. This section will focus on using `Pip3`, the package installer for Python 3, to manage additional packages.
+
+To install a new package using `pip3`, use the following command:
+```
+root@rz-cmn:~# pip3 install <package_name>
+```
+For example, to install the `requests` package, you would run:
+```
+root@rz-cmn:~# pip3 install requests
+```
+To verify that the `requests` package (or any other installed package) is correctly installed, you can use:
+```
+root@rz-cmn:~# pip3 show requests
+```
+This command provides details about the requests package, including its version and installation location.
+
+Alternatively, you can list all installed packages and check if the `requests` package is included:
+```
+root@rz-cmn:~# pip3 list
+```
+This will confirm that the package is installed and available for use.
 
 ### 4.2. RZ/G2L-SBC Yocto Features
 #### 4.2.1. 40-Pin IO Expansion Interface
@@ -1693,7 +2000,14 @@ The RZ/G2L-SBC features a versatile 40-pin IO Expansion Interface that supports 
 - CAN: Channels 0 and 1
 - GPIO: Pin-function (default setting)
 
-By default, I2C Channel 0 and SCIF Channel 0 are enabled. However, you can easily reconfigure the interface to use other channels and functions using FDT overlays.
+**Notes**:
+- The GPIO pin array is multiplexed with peripheral IO lines.
+- By default, I2C channel 0 and SCIF channel 0 are enabled.
+- The rest of the pins are GPIOs by default.
+- Enable the other functions by editing the uEnv.txt on the SD card and enabling the
+appropriate device tree overlay file (DT overlays). This is also how some of the dedicated
+drivers are enabled, like the display.
+- Reboot the board for the overlay to take effect.
 
 ##### 4.2.1.1. Understanding FDT Overlays and uEnv.txt
 
@@ -1769,10 +2083,39 @@ After changing the value of overlays options, we need to run `sync` to ensure th
 
 For further details on FDT overlays and advanced configurations, refer to the `Readme.md` file located in partition 1 of the SD card.
 
-The below section shows how to configure for each GPIO function:
+##### 4.2.1.2. Understanding GPIO and libgpiod'S conepts
+By default, most pins are configured as GPIOs on the SBC’s 40-pin GPIO pin header. This section details how to identify and control these pins using the `libgpiod` library and its associated command-line tools.
 
-##### 4.2.1.2. Configuring GPIO Pins
+Unlike the deprecated sysfs interface, `libgpiod` provides a standardized and kernel-integrated method for GPIO management. It interacts with GPIO character devices (e.g., `/dev/gpiochip0`, `/dev/gpiochip1`) to offer a more efficient and flexible control over individual GPIO lines.
 
+All GPIO pins on the 40-pin header are exposed through `/dev/gpiochip0`.
+
+Instead of a single, linear pin number system, `libgpiod` organizes GPIOs around two key concepts:
+- GPIO Chips: These represent the physical GPIO controllers on your system. Each chip
+manages a specific set of GPIO lines. You'll typically see them identified as `gpiochip0`, `gpiochip1`, and so on.
+- GPIO Lines: Each chip contains a number of individual GPIO lines, identified by an offset within that chip (e.g., `line 0`, `line 1`, `line 2`, etc.).
+
+##### 4.2.1.3. Configuring GPIO Pins
+**Identifying GPIO chips and lines**  
+Before GPIO control can be initiated, the specific chip and line offset corresponding to the desired pin must be identified.
+
+The `gpiodetect` command lists all GPIO controllers on the system:
+```
+root@rz-cmn:# gpiodetect
+```
+Output will be similar to
+```
+root@rz-cmn:# gpiochip0 [chip_name_0] (XX lines)
+root@rz-cmn:# gpiochip1 [chip_name_1] (YY lines)
+# ... additional chips
+```
+**Inspect lines on aspecific GPIO chip**  
+Detailed information about individual lines on a chip is obtained using `gpioinfo`:
+```
+root@rz-cmn:# gpioinfo gpiochip0
+```
+Replace `gpiochip0` with the relevant chip name or number identified via gpiodetect. This command lists each line, including its offset, any assigned name, and its current state. This output is essential for mapping physical pins to libgpiod's chips and offsets.
+**Configuring GPIO pins**
 To set the state of a GPIO pin, use the `gpioset` command with the following syntax:
 
 ```shell
@@ -1797,7 +2140,72 @@ To set GPIO pin 0 on gpiochip0 to a high state:
 root@rz-cmn:~# gpioset -c gpiochip0 0=1
 ```
 
-##### 4.2.1.3. I2C function (channel 3 - RIIC3)
+**Using libgpiod in python**
+
+libgpiod provides an official Python API that allows applications to control GPIO lines using the same chip / line model used by the command-line tools.
+
+First, install the latest supported version (example gpiod-2.4.0) using pip3:
+```bash
+root@rz-cmn:~# pip3 install gpiod
+```
+Expected successful installation message
+```bash
+root@rz-cmn:~# pip3 install gpiod
+Collecting gpiod
+Downloading gpiod-2.4.0-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch
+64.manylinux_2_28_aarch64.whl.metadata (4.1 kB)
+Downloading gpiod-2.4.0-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (104 kB)
+Installing collected packages: gpiod
+Successfully installed gpiod-2.4.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+```
+Once gpiod-2.4.0 is installed, create a Python file (for example: gpio_usage.py) to work with GPIO lines.
+```
+root@rz-cmn:~# vi gpio_usage.py
+```
+1. Importing the library, gpiod and time
+```python
+import gpiod
+import time
+```
+2. Define a GPIO chip and GPIO line, A GPIO chip represents a hardware controller (for example:/dev/gpiochip0). A GPIO line is an individual pin within that chip, identified by a unique offset number.
+```python
+GPIO_CHIP = "/dev/gpiochip0"
+GPIO_LINE = 0
+```
+3. Configuring Direction and Output State: A line must be requested with a configuration before use.
+
+Set as output
+```python
+config = gpiod.LineSettings(
+  direction=gpiod.line.Direction.OUTPUT,
+  output_value=gpiod.line.Value.ACTIVE # initial active
+)
+```
+Or, set as input
+```python
+config = gpiod.LineSettings(
+  direction=gpiod.line.Direction.INPUT,
+)
+```
+4. Requesting the Line
+The configuration is applied when creating a request:
+```python
+request = gpiod.request_lines(
+  GPIO_CHIP,
+  config={GPIO_LINE: config}, # GPIO line 0
+  consumer="gpio-example"
+)
+```
+The request holds ownership of the line
+5. Setting Output Values
+Output lines can be written using:
+```python
+request.set_value(GPIO_LINE, gpiod.line.Value.ACTIVE) # set active for GPIO_LINE
+request.set_value(GPIO_LINE, gpiod.line.Value.INACTIVE) # set inactive for
+GPIO_LINE
+```
+##### 4.2.1.4. I2C function (channel 3 - RIIC3)
 
 You should edit `uEnv.txt` as follows to enable I2C channel 3 on 40 IO expansion interface:
 
@@ -1831,7 +2239,7 @@ root@rz-cmn:~# i2cdetect -y -r 3
 70: -- -- -- -- -- -- -- --
 ```
 
-##### 4.2.1.4. SPI function (channel 0 - RSPI0)
+##### 4.2.1.5. SPI function (channel 0 - RSPI0)
 
 You should edit `uEnv.txt` as follows to enable SPI channel 0 on 40 IO expansion interface:
 
@@ -1854,7 +2262,7 @@ root@rz-cmn:~# echo -n -e "1234567890" | spi-pipe -d /dev/spidev0.0 -s 10000000 
 000000a
 ```
 
-##### 4.2.1.5. CAN function (channel 0,1 - CAN0, CAN1)
+##### 4.2.1.6. CAN function (channel 0,1 - CAN0, CAN1)
 
 You should edit `uEnv.txt` as follows to enable CAN channel 0,1 on 40 IO expansion interface:
 
@@ -1895,7 +2303,7 @@ root@rz-cmn:~# candump can1 & cansend can0 123#01020304050607
 root@rz-cmn:~#
 ```
 
-#### 4.2.2. On-board Wi-Fi Modules configurations
+#### 4.2.2. On-board Wi-Fi 802.11 Modules configurations
 
 RZG2L-SBC has an on-board Wireless modules on it. Currently, we only support for Wi-Fi feature in this release.
 
@@ -1951,6 +2359,281 @@ enable_overlay_dsi=1
 
 **Please note that selecting the MIPI DSI display will cause the HDMI display be disabled.**
 
+#### 4.2.4 Accessing PWM Timers
+The RZG2L-SBC provides PWM (Pulse Width Modulation) timers, which can be used for various applications, including motor control, LED dimming, and signal generation for external devices.
+
+The RZ/G2L-SBC's device tree source (DTS) includes two GPT channels by default, providing PWM functionality for three pins.
+- GPT4: Supports two PWM channels (channel_A and channel_B).
+- GPT5: Supports a signal PWM channel A.
+
+By default, the GPT channels are disabled in the device tree, so they need to be enabled manually.
+```bash
+&gpt4 {
+  pinctrl-0 = <&gpt4_pins>;
+  pinctrl-names = "default";
+  channel = "both_AB";
+  poeg = <&poega &poegb &poegc &poegd>;
+  status = "disabled";
+};
+&gpt5 {
+  pinctrl-0 = <&gpt5_pins>;
+  pinctrl-names = "default";
+  channel="channel_A";
+  poeg = <&poegd>;
+  status = "disabled";
+};
+```
+**Enabling GPT Channels for PWM Use**
+Note: Ensure you have internet access before running the commands.
+1. Install the device tree compiler tool.
+```
+root@rz-cmn:~# apt-get update
+root@rz-cmn:~# apt-get install device-tree-compiler
+```
+2. Decompile the dtb file into a dts file.
+The Device Tree Blob (DTB) is typically stored on a dedicated boot partition, which is often formatted as FAT32. This partition needs to be mounted to access its contents. Create a temporary mount point and mount the boot partition (partition 1 – FAT32)
+```
+root@rz-cmn:~# mkdir -p /mnt/boot_partition
+root@rz-cmn:~# mount /dev/mmcblk0p1 /mnt/boot_partition/
+```
+Following successful mounting, the specific DTB file can be located within `/mnt/boot_partition/``
+```
+root@rz-cmn:~# dtc -I dtb -O dts -f /mnt/boot_partition/dtb/renesas/rzg2l-sbc.dtb -o rzg2l-sbc.dts
+```
+3. Modify the dts file.
+Open the rzg2l-sbc.dts file in a text editor.
+```
+root@rz-cmn:~# vi rzg2l-sbc.dts
+```
+For GPT4, locate gpt@10048400
+For GPT5, locate gpt@10048500
+Change the status property of the node you want to enable from "disabled" to "okay". Save the file after making the changes.
+4. Recompile the dts file back into a dtb file.
+```
+root@rz-cmn:~# dtc -I dts -O dtb -f rzg2l-sbc.dts -o new_rzg2l-sbc.dtb
+```
+5. Deploy the new dtb file:
+Replace the original dtb file with the newly compiled one.
+Note: It is recommended to back up the original DTB file beforehand. After recompiling the DTS into a DTB and deploying it to `/mnt/boot_partition/dtb/renesas/rzg2l-sbc.dtb` in partition 1, ensure that the file retains its original name. If the DTB file is missing or renamed, the boot process may fail.
+```
+root@rz-cmn:~# cp new_rzg2l-sbc.dtb /mnt/boot_partition/dtb/renesas/rzg2l-sbc.dtb
+```
+6. Sync and umount the partition
+```
+root@rz-cmn:~# cd ~
+root@rz-cmn:~# sync
+root@rz-cmn:~# umount /mnt/boot_partition
+root@rz-cmn:~# sync
+```
+7. Reboot the system to apply the changes.
+After booting up, if everything is configured correctly, the PWM device file will be automatically generated in `/sys/class/pwm/pwmchipX`, where X can be 0, 1, 2, and so on.
+
+**Enable PWM channels**
+Before using PWM, the channels need to be exported to the system.
+For example, to use PWM chip 0 and export channel 0, the following steps are required:
+```
+root@rz-cmn:~# cd /sys/class/pwm/pwmchip0/
+root@rz-cmn:/sys/class/pwm/pwmchip0# echo 0 > export
+```
+**Configuring PWM**
+To configure a single PWM channel (For example, from GPT5), follow these steps:
+1. Modify the duty cycle and period.
+Set the period (in nanoseconds).
+```
+root@rz-cmn:/sys/class/pwm/pwmchip0/# cd pwm0
+root@rz-cmn:/sys/class/pwm/pwmchip0/pwm0# echo 1000000 > period
+```
+Set the duty cycle (in nanoseconds).
+```
+root@rz-cmn:/sys/class/pwm/pwmchip0/pwm0# echo 500000 > duty_cycle
+```
+2. Enable the PWM to start output.
+```
+root@rz-cmn:/sys/class/pwm/pwmchip0/pwm0# echo 1 > enable
+```
+For devices like GPT4 that provide two PWM channels (channel A and channel B), each channel needs to be configured separately.
+1. Modify the period.
+Define the period for both channels in nanoseconds. For example, to set the period to 100,000 nanoseconds, use the following command:
+```
+root@rz-cmn:/sys/class/pwm/pwmchip0/pwm0# echo 1000000 > period
+```
+2. Enable the PWM to start output
+```
+root@rz-cmn:/sys/class/pwm/pwmchip0/pwm0# echo 1 > enable
+```
+3. Modify the duty cycle for each channel.
+Navigate to the device directory to configure the duty cycles for both channels.
+```
+root@rz-cmn:/sys/class/pwm/pwmchip0/pwm0# cd /sys/class/pwm/pwmchip0/device
+root@rz-cmn:/sys/class/pwm/pwmchip0/device# echo 1000000 > buffA0
+root@rz-cmn:/sys/class/pwm/pwmchip0/device# echo 500000 > buffB0
+```
+Channel A is set to a duty cycle of 1,000,000 nanoseconds, while channel B is set to
+500,000 nanoseconds. Adjust these values as needed for the desired PWM output
+
+### 4.3. Supported Features in Ubuntu Images 
+Before accessing the features available in both the Ubuntu Core and Ubuntu LXDE images on the supported platforms, please log in using the default credentials:
+- Username: rz
+- Password: 1
+#### 4.3.1 Accessing Supported Features in Ubuntu LXDE
+##### 4.3.1.1 Selecting LXDE session
+
+The LXDE desktop environment is enabled by default:
+1. On first login, the system automatically launches LXDE as the desktop environment.
+2. No manual selection is required, providing a seamless user experience.
+If you wish to use a different desktop environment, click the gear icon in the bottom-right corner of the login screen and choose an alternative. However, note that this may result in a different experience from LXDE’s lightweight and responsive interface.
+
+##### 4.3.1.2 Audacity
+`Audacity` allows users to capture live audio, convert tapes and records into digital recordings, and edit audio files in a variety of formats.
+
+To properly configure `Audacity` for the system:
+1. Open `Audio Settings`: In `Audacity`, click `Audio Setup` in the top-right corner, then select `Audio Settings`.
+2. Select the correct playback and recording devices: In the window that opens, set both the `Playback` and `Recording Device` to the appropriate sound card for the current board in use (e.g.,for the RZG2L-SBC, select the corresponding device).
+3. Set the sample rate: At the bottom left of the main Audacity window, set both the `Project Sample Rate` and `Default Sample` Rate to 48000 to match the hardware requirements.
+4. Increase buffer length if audio problems occur: If audio issues such as glitches, dropouts, or latency are encountered:
+- Open `Edit → Preferences`.
+- Increase the `Buffer Length` to a value greater than the default 100 ms (for example, 10000 ms is recommended).
+- A larger buffer allows more time for the system to process audio data, which can improve performance on embedded platforms, systems under high CPU load, or when using less optimized audio drivers.
+Click OK to save the settings. Then, click the red circle button to begin recording.
+
+To export the recording as an MP3: Select `File -> Export Audio` then fill the audio metadata. Select OK to finish editing the metadata tags. Once the audio file is edited, it can be renamed (e.g., song.mp3). Then, choose the desired directory and click `Save` to store the file.
+
+##### 4.3.1.3. VLC Media Player 
+`VLC Media Player` is a free and open-source multimedia player that supports a wide range of audio and video formats. To play music, simply open `VLC` and follow these steps:
+1. Launch `VLC Media Player`
+2. Click on `Media` in the top Menu, then select `Open File`
+3. Browse to the location of the MP3/MP4 file, select it, and click `Open` to start playing.
+4. Now, the media can be played using `VLC`.
+
+##### 4.3.1.4. Using CSI with VLC
+You can use VLC Media Player to capture and view live videos from a `CSI` camera. Here's how you can do it:
+1. Connect the Camera: Make sure your `CSI` camera is connected to the `CSI` port on your device.
+2. Open `VLC Media Player`:
+- Launch `VLC` from the application menu
+3. Open Capture Device:
+- In `VLC`, click on the Media menu and select `Open Capture Device`....
+- In the `Capture Device tab`, choose the Video device name that corresponds to your CSI camera (it might be listed as `/dev/video0` or something similar).
+4. Configure the Capture Settings:
+- Choose the desired video format (e.g., MJPEG or YUY2) and resolution (e.g., 640x480,
+1280x720) based on your camera capabilities.
+5. Click `Play`:
+- Once you've selected the correct capture device and settings, click `Play` to start viewing the live video feed from your `CSI` camera.
+
+##### 4.3.1.5. Web browser
+Ubuntu LXDE comes with a default web browser pre-installed. This browser provides essential features for browsing the internet and is lightweight, making it suitable for low-resource systems.
+
+##### 4.3.1.6. LXTerminal
+LXTerminal is a VTE-based terminal emulator with support for multiple tabs. It is completely desktopindependent and does not have any unnecessary dependencies. In order to reduce memory usage and increase performance, all instances of the terminal share a single process.
+Features:
+- Lightweight and fast terminal emulator.
+- Supports multiple tabs.
+- Desktop-independent, reducing resource consumption.
+- Optimized for performance with a single shared process for all instances.
+
+##### 4.3.1.7. Ethernet
+Follow these simple steps to connect to an Ethernet network using the `Network Manager` UI:
+1. Open the `Network Manager`:
+- At the bottom-right corner of the screen, click on the network icon, choose Edit connection....
+2. Choose `Your Ethernet Network`:
+- In the `Network Manage`r menu, you should see `Wired Networks` listed. Simply click on your Ethernet connection, or manually configure it as described below (if not automatically connected).
+3. Configure the Connection:
+- If the connection is not automatically established, you can configure network settings such as IP addresses, DNS servers, etc.
+4. Connect: Once the connection settings are confirmed, the Ethernet connection should be ready for use. The network icon will update to indicate a successful connection.
+
+##### 4.3.1.8. Wi-Fi Network
+Ubuntu LXDE provides an easy way to connect to Wi-Fi networks. Follow these simple steps to get connected:
+1. Click on the `Network Icon:` In the lower-right corner of the screen, you will find the network icon. Click on this icon.
+2. Choose Your Wi-Fi Network: A list of available Wi-Fi networks will appear. Find and click on your desired Wi-Fi network from the list.
+3. Enter the Password: After selecting the network, a prompt will appear asking for the Wi-Fi password. Type in the password and click Connect.
+4. Connected: Once the password is verified, your system will be connected to the Wi-Fi
+network.
+
+##### 4.3.1.9. Blueetooth
+Ubuntu LXDE provides an easy way to connect to Bluetooth devices. Follow these simple steps to get
+connected:
+1. Open Bluetooth Manager: Click the LXDE icon in the lower-left corner of the screen, go to `Preferences`, and select `Bluetooth Manager` to access Bluetooth settings.
+2. Enable Bluetooth: If Bluetooth is not already enabled, click the `Turn Bluetooth On` option to activate it.
+3. Search for Devices: Select `Adapter` and click `Search` to view a list of available Bluetooth devices.
+4. Select the device: From the list of available Bluetooth devices, select the desired device to connect to.
+5. Pair the Device: If prompted, confirm the pairing request and enter the required pairing code or PIN if necessary. After confirming, the devices will be paired.
+6. Connection Established: Once the pairing process is complete, the device will be successfully connected.
+
+#### 4.3.2. Accessing Supported Features in Ubuntu Core
+Ubuntu Core provides similar feature support to Yocto-based images, offering a headless environment for command-line operations. Feature usage and functionality align closely with those available in Yocto images.
+
+##### 4.3.2.1. Configure the Network in Ubuntu Core
+The Ubuntu installer configures the system to obtain network settings via DHCP by default. To switch to a static IP address, modify the network configuration using Netplan. The configuration file `/etc/network/interfaces` is no longer used. Instead, edit `/etc/netplan/00-installer-config.yaml` to set a static IP address. For example, the following configuration assigns the IP address 192.168.0.100 and specifies the DNS servers 8.8.4.4 and 8.8.8.8. 
+To open the network configuration file, use:
+```
+root@localhost:~# sudo vi /etc/netplan/00-installer-config.yaml
+```
+After installation, the system uses DHCP, and the network configuration file appears as follows:
+```
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    ens33:
+      dhcp4: true
+  version: 2
+```
+To assign a static IP address (192.168.0.100), modify the file as follows:
+```
+# This file describes the network interfaces available on your system
+
+# For more information, see netplan(5).
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    ens33:
+      dhcp4: no
+      dhcp6: no
+      addresses: [192.168.0.100/24]
+      routes:
+      - to: default
+      via: 192.168.0.1
+      nameservers:
+        addresses: [8.8.8.8,8.8.4.4]
+```
+Then the hosts file needs to be updated to reflect the new hostname and IP address:
+```
+root@localhost:~# sudo vi /etc/hosts
+```
+Modify the file by adding the following entries:
+```
+127.0.0.1 localhost
+
+192.168.0.100 rz-cmn.example.com rz-cmn
+
+# The following lines are desirable for IPv6 capable hosts
+::1 localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+```
+Next, change the hostname, run the following commands:
+```
+root@localhost:~# sudo echo rz > /etc/hostname
+root@localhost:~# sudo hostname rz
+```
+The first command updates /etc/hostname, which is read during boot. The second command applies the change immediately without requiring a reboot. As an alternative to the two commands above. Instead of manually updating the hostname file, the `hostnamectl` command (part of systemd) can be used:
+```
+root@localhost:~# sudo hostnamectl set-hostname rz
+```
+Afterward, run:
+```
+root@localhost:~# hostname
+root@localhost:~# hostname -f
+```
+The first command returns the short hostname, while the second command shows the fully qualified domain name:
+```
+root@localhost:/home/root# hostname
+localhost
+
+root@localhost:/home/root# hostname -f
+localhost.example.com
+
+root@localhost:/home/root#
+```
 ## 5. Network Boot and TFTP
 
 This section outlines the process for network booting using TFTP (Trivial File Transfer Protocol). It includes configuration steps and commands necessary for a successful setup.
@@ -2925,7 +3608,7 @@ Use DIP switch **DSW1** to configure boot mode.
 | DSW1‑2 | OFF    | Input CA55 frequency at cold boot — [OFF:OFF] 1.6 GHz; [OFF:ON] 1.7 GHz (default); [ON:OFF] 1.1 GHz; [ON:ON] 1.5 GHz |
 | DSW1‑3 | ON     | — |
 | DSW1-4/5 | OFF / ON  | **Boot source:** SCIF  
-| DSW1‑6 | ON     | — |
+| DSW1‑6 | OFF     | — |
 | DSW1‑7 | OFF    | SSCG — OFF: SSCG ON (default); ON: SSCG OFF |
 | DSW1‑8 | OFF    | Fixed to OFF  |
 
@@ -2943,6 +3626,18 @@ Use the DIP switch SW1 to configure the SCIF download mode.
 | SW1-2  | ON               |
 | SW1-3  | OFF              |
 | SW1-4  | OFF              |
+
+#### 8.1.5. IMDT RZ/V2H-SBC
+
+Use the DIP switch DSW1 to configure the boot mode:
+
+| Switch | SCIF Download Mode |
+|--------|------------------|
+| DSW1-1  | OFF              |
+| DSW1-2  | ON               |
+| DSW1-3  | OFF              |
+
+In this configuration, the board is placed in SCIF Download mode. This mode is used for programming the bootloader into the xSPI Flash, or the onboard eMMC, over USB Serial.
 
 ---
 
@@ -3018,6 +3713,16 @@ Use the DIP switch SW1 to configure the boot mode.
 | eMMC                          | OFF   | ON    | ON    | OFF   | Boot from on-board eMMC (BootROM loads BL2/BL2+BP from eMMC, then FIP) |
 | QSPI                          | OFF   | OFF   | ON    | OFF   | Boot from QSPI NOR flash |
 
+#### 8.2.5. IMDT V2H-SBC
+
+**Table — DSW1: Boot Device Selection (Normal Boot)**
+
+The IDMT-V2H-SBC also provide on-board DIP switches for boot mode and boot device selection.
+
+| Boot Mode / Device            | DSW1-1 | DSW1-2 | DSW1-3 | Description |
+|-------------------------------|-------|-------|-------|-------------|
+| xSPI Flash                    | OFF   | ON    | ON    | bootROM attempts to load bootloader from xSPI Flash, if fails enter SCIF Download mode |
+| eMMC                          | OFF   | OFF   | OFF   | bootROM attempts to load bootloader from eMMC, if fails enter SCIF Download mode |
 
 ## 9. BSP Interface
 
