@@ -43,6 +43,14 @@ set_config_wm8978() {
 	amixer -q set 'ALC Capture Attack' 10
 }
 
+set_config_tlv320aic3x() {
+	amixer -q cset name='Right PGA Mixer Mic2R Switch' on
+	amixer -q sset 'PGA' 50%
+	amixer -q sset 'PCM' 50%
+	amixer -q sset 'Line' 50%
+	amixer -q sset 'HP' 50%
+}
+
 # Main function
 main() {
 	# Check if 'aplay' command is available
@@ -69,6 +77,10 @@ main() {
 			*da7213*)
 				# DA7213 audio card detected
 				set_config_da7213
+				;;
+			*tlv320aic3x*)
+				# TLV320AIC3X audio card detected
+				set_config_tlv320aic3x
 				;;
 			*)
 				# Other audio card detected
