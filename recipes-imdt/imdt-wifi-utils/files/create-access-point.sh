@@ -19,7 +19,6 @@ function display_usage
 . /opt/imdt/wifi/wifi-lib.sh
 
 # Check command line arguments
-
 case $# in
     0) ;;
     2) ;;
@@ -29,128 +28,101 @@ case $# in
 esac
 
 # If two arguments, update the hostapd.conf file
-
 if [ $# == 2 ]
 then
-
     # Validate inputs
-
     SSID=$1
     PASSPHRASE=$2
-
     SSID_LEN=${#SSID}
     PASSPHRASE_LEN=${#PASSPHRASE}
-
+    
     if [ $SSID_LEN -gt 32 ]
     then
         echo "Error - SSID is too long"
         display_usage
     fi
-
+    
     if [ $PASSPHRASE_LEN -lt 8 ]
     then
         echo "Error - passphrase is too short"
         display_usage
     fi
-
+    
     if [ $PASSPHRASE_LEN -gt 63 ]
     then
         echo "Error - passphrase is too long"
         display_usage
     fi
-
+    
     # Generate PSK
-
     PSK=""
-
     TMP_FILE=`mktemp`
-
     wpa_passphrase "$SSID" "$PASSPHRASE" > $TMP_FILE
-
     if [ $? == 0 ]
     then
         while IFS== read KEY VALUE
         do
             KEY=${KEY//$'\t'/}
-
             case $KEY in
                 "psk") PSK=$VALUE;;
                 *);;
             esac
         done < "$TMP_FILE"
     fi
-
     rm $TMP_FILE
-
+    
     PSK_LENGTH=${#PSK}
-
     if [ $PSK_LENGTH -lt 64 ]
     then
         echo "Error - PSK length is incorrect ($PSK_LENGTH)"
         display_usage
     fi
-
+    
     # Create new hostapd.conf file
-
     EXISTING_CONF_FILE="/etc/hostapd.conf"
     BACKUP_CONF_FILE="$EXISTING_CONF_FILE.bak"
-
     NEW_CONF_FILE=`mktemp`
-
+    
+    # Get dynamic network IP
+    NETWORK_IP=$(get_network_ip)
+    
     while IFS== read KEY VALUE
     do
         case $KEY in
             "ssid") VALUE=$SSID;;
             "wpa_psk") VALUE=$PSK;;
+            "own_ip_addr") VALUE=$NETWORK_IP;;
             *);;
         esac
-
         echo "$KEY=$VALUE" >> $NEW_CONF_FILE
-
     done < "$EXISTING_CONF_FILE"
-
+    
     # Backup old conf file
-
     cp $EXISTING_CONF_FILE $BACKUP_CONF_FILE
-
     # Copy new file over old file
-
     cp $NEW_CONF_FILE $EXISTING_CONF_FILE
-
+    rm $NEW_CONF_FILE
 fi
 
+prepare_wifi_hardware
+
 # Correct behaviour depends on the mode
-
 MODE=`/opt/imdt/wifi/get-wifi-mode.sh`
-
 if [ $MODE == "AP" ]
 then
-
     if [ $# == 2 ]
     then
-
         restart_access_point
-
     else
-
         echo "WiFi interface is already in Access Point mode"
         exit 1
-
     fi
-
 elif [ $MODE == "STA" ]
 then
-
     disable_station
-
     enable_access_point_network_unit
-
     enable_access_point
-
 else
-
     enable_access_point_network_unit
-
     enable_access_point
-
 fi
