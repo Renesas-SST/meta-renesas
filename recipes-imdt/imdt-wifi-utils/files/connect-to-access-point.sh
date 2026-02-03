@@ -64,6 +64,7 @@ then
 
     if [ $? == 0 ]
     then
+	mkdir -p /etc/wpa_supplicant
         cp $TMP_FILE /etc/wpa_supplicant/wpa_supplicant-nl80211-wlan0.conf
     else
         echo "Failed to create wpa_supplicant configuration file ($?)"
@@ -77,6 +78,8 @@ fi
 # Enable or restart STA mode, depending on the current mode
 
 MODE=`/opt/imdt/wifi/get-wifi-mode.sh`
+
+prepare_wifi_hardware
 
 if [ $MODE == "AP" ]
 then
