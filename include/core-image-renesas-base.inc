@@ -27,7 +27,6 @@ IMAGE_INSTALL:append = " \
     murata-binaries \
     udev-extraconf \
     wireless-tools \
-    dhcpcd \
     hostapd \
 "
 

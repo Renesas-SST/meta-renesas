@@ -1,0 +1,13 @@
+[Unit]
+Description=Disable virtual Wi-Fi interface
+After=multi-user.target
+Wants=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/disable-virtual-interface.sh
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target
