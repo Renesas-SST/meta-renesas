@@ -2,7 +2,7 @@ require recipes-graphics/images/core-image-weston.bb
 require include/core-image-renesas-base.inc
 require include/core-image-renesas-mmp.inc
 require include/core-image-bsp.inc
-require include/core-image-renesas-cmn.inc
+require include/core-image-renesas-sbc.inc
 require include/core-image-renesas-quickboot.inc
 require include/renesas-qt5-framework.inc
 

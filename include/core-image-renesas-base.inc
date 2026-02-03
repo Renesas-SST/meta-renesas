@@ -18,16 +18,6 @@ IMAGE_INSTALL:append = " \
     libgpiod \
     libgpiod-tools \
     libgpiod-dev \
-    imdt-can-utils \
-    imdt-ethernet-utils \
-    imdt-wifi-utils \
-    imdt-pico-modem \
-    iw \
-    kernel-module-nxp-wlan \
-    murata-binaries \
-    udev-extraconf \
-    wireless-tools \
-    hostapd \
 "
 
 # Add necessary firmware packages

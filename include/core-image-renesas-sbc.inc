@@ -11,6 +11,7 @@ IMAGE_INSTALL:append = " \
     bluez5 \
     bluez5-dev \
     obexftp \
+    kernel-module-nxp-wlan \
     linux-firmware-mt7601u \
     linux-firmware-mt7650 \
     linux-firmware-mt76x2 \
@@ -40,6 +41,15 @@ IMAGE_INSTALL:append = " \
     python3-matplotlib \
     python3-pip \
     apt-sources-config \
+    imdt-can-utils \
+    imdt-ethernet-utils \
+    imdt-wifi-utils \
+    imdt-pico-modem \
+    iw \
+    murata-binaries \
+    udev-extraconf \
+    wireless-tools \
+    hostapd \
 "
 
 CORE_IMAGE_EXTRA_INSTALL += " packagegroup-tools-bluetooth "
