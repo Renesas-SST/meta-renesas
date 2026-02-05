@@ -279,11 +279,19 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
 │       │   ├── linux
 │       │   │   ├── bpgen
 │       │   │   ├── fiptool
+│       │   │   ├── libcrypto.so.1.1
+│       │   │   ├── OPENSSL_LICENSE.txt
 │       │   │   └── Readme.md
 │       │   ├── Readme.md
 │       │   └── windows
 │       │       ├── bpgen.exe
 │       │       ├── fiptool.exe
+│       │       ├── objcopy.exe
+│       │       ├── libcrypto-3-x64.dll
+│       │       ├── libwinpthread-1.dll
+│       │       ├── GNU_BINUTILS_LICENSE.txt
+│       │       ├── LIBWINPTHREAD_LICENSE.txt
+│       │       ├── OPENSSL_LICENSE.txt
 │       │       └── Readme.md
 │       ├── bootloader_flasher
 │       │   ├── bootloader_flash.py
@@ -702,126 +710,172 @@ that necessary files and tools are available.
   - Required cables: USB and UART debug cable
   - SD card (8 GB or larger)
 
-#### Linux setup
+#### Linux Setup
 
-1. **Install Python, Binutils, and build tools**
+1. **Install Python 3**
    ```bash
-   sudo apt update
-   sudo apt install -y python3 python3-pip binutils build-essential libssl-dev android-tools-fastboot
+   sudo apt install python3
    ```
-   - `python3`, `python3-pip`: run host scripts  
-   - `binutils`: provides `objcopy`  
-   - `build-essential` *(optional)*: `gcc`, `g++`, `make` for rebuilding firmware  
-   - `libssl-dev`: OpenSSL headers
-   - `android-tools-fastboot`: Install to get fastboot binary
 
 2. **Install Python dependencies**  
-  It is recommended to use a virtual environment with any supported Python version (3.10, 3.11, or 3.12).
+   It is recommended to use a virtual environment with any supported Python version (3.10, 3.11, or 3.12).
 
-    Example for Python 3.12
+   If Python 3.12 is in use: set up a virtual environment first.
 
-    ```bash
-    sudo apt install -y python3.12-venv
-    python3 -m venv .venv
-    source .venv/bin/activate
-    ```
+   ```bash
+   sudo apt update
+   sudo apt install python3.12-venv
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
 
-    If the distribution uses a different Python 3 version (for example, 3.10 or 3.11), replace 3.12 with the appropriate version.
+   If the distribution uses a different Python 3 version (for example, 3.10 or 3.11), replace 3.12 with the appropriate version.
     
-    After activating the virtual environment, install the required tools using requirements.txt.
+   After activating the virtual environment, choose one of the two install methods:
 
-    ```
-    cd <path/to/package>/host/tools/
-    pip3 install -r requirements.txt
-    ```
+   - Option 1 - Use `requirements.txt` (recommended)
+   ```sh
+   cd <path/to/package>/host/tools/
+   pip3 install -r requirements.txt
+   ```
+
+   - Option 2 - Install manually
+   ```sh
+   # Ensure pip is available
+   sudo apt install python3-pip
+
+   # Install required packages
+   pip3 install pyserial
+   pip3 install dataclasses
+   ```
 
 #### Windows Setup
 1. **Install Python 3**
    - Download and install from <https://www.python.org/>.  
-   - Enable **“Add Python to environment variables.”**  
+   - Enable **"Add Python to environment variables."**  
    If `pip` is missing, repair your Python installation or download [get-pip.py](https://bootstrap.pypa.io/get-pip.py) and run:
 
     ```powershell
     py get-pip.py
     ```
 
-2. **Install Python dependencies (run as Administrator)**  
-   Open **PowerShell**:
+2. **Install Python dependencies**  
    - **Option 1 — Using `requirements.txt` (recommended)**
      ```powershell
      cd <path\to\the\package>\host\tools
      py -m pip install -r requirements.txt
      ```
    - **Option 2 — Install manually**
-     Using the Python launcher:
+     - Using the Python launcher:
      ```powershell
      py -m pip install pyserial
      py -m pip install tomli
-     # Only if using Python < 3.7
-     # py -m pip install dataclasses
+     py -m pip install dataclasses       # Only if Python < 3.7
      ```
-     Or using `pip` directly (if already on PATH):
+     - Or using `pip` directly (if already in PATH):
      ```powershell
      pip install pyserial
      pip install tomli
-     # Only if using Python < 3.7
-     # pip install dataclasses
+     pip install dataclasses   # only if Python < 3.7
      ```
 
-3. **Environment and tool dependencies**
-   - **GNU Binutils**
-     - Download and install [MinGW-w64](https://sourceforge.net/projects/mingw/)
-     - Install to default location (`C:\MinGW`).
-     - Add `C:\MinGW\bin` to **Environment Variables → Path**.
-   - **OpenSSL (for MinGW-w64)**
-     - Download the package from [MinGW-w64 OpenSSL](https://packages.msys2.org/packages/mingw-w64-x86_64-openssl)
-     - Extract the package into: `C:/mingw64`
-     - Tools (e.g., `fiptool.exe`) depend on OpenSSL runtime DLLs.
-       - Add `C:\mingw64\bin` to **Path**, or copy `C:\mingw64\bin\libcrypto-3-x64.dll` into `<path\to\the\package>\host\tools\bin\windows\`.
+### 3.2.2. Environment and Tool Dependencies
 
-    > **Note**: `firmware_compile.py` uses `objcopy` (Binutils). Ensure `C:\MinGW\bin` is on **Path**, or SREC/ELF conversions will fail.
+Make sure you have the following installed or available in `tools/bin/<os>` or `host/tools/bin/<os>`:
+- `bpgen` - unified boot parameter generator (already included in the release package)
+- `fiptool` - TF-A utility (already included in the release package)
+- `objcopy` - part of GNU binutils (see installation steps above)
 
-    - **OTG flashing setup (Windows)** — Fastboot over USB OTG requires Windows to bind the board's **Fastboot / USB-download** interface to **WinUSB**.  
-      > **Note:** Windows binds drivers to the **device/interface present at install time** (VID/PID[/MI]). This Fastboot interface exists **only while** the board is connected over OTG **and** go to OTG download mode.
+Firmware binaries and DTBs must be available in the following location (already included in the release package):
 
-      **Applicability**
-      - **Required** for: **RZ/G2L-EVK**, **RZ/V2L-EVK**, **RZ/V2H-EVK** (when using OTG flashing).
-      - **Not applicable** to: **RZ/G2L-SBC** and **RZ/V2H-RDK** (no OTG port)
+```
+target/images/
+```
 
-      **Step 1: Enter Fastboot (USB OTG mode from U-Boot)**
-      1. Connect the board's **USB-to-serial** to the PC and open a terminal (115200 8-N-1).  
-      2. Power on and interrupt autoboot to reach the `U-Boot>` prompt.  
-      3. **Then**, connect the board's **USB OTG** port to the PC.  
-      4. **Next**, at the `U-Boot>` prompt run:
-        ```sh
-        setenv serial# Renesas_RZ_CMN
-        saveenv
-        fastboot usb 27
-        ```
-        > `27` is the index used on RZ Common System
+#### Linux
 
-      **Step 2: Bind the Fastboot interface to WinUSB (Zadig)**
-      1. **Now**, download and run **Zadig** (no install): https://zadig.akeo.ie/  
-      2. **Options → List All Devices**.  
-      3. In the dropdown, select the **Fastboot / USB-download** interface (may appear as *USB Download Gadget*).  
-      4. **Finally**, choose **WinUSB** → **Install Driver** (or **Replace Driver**).
+Install the required toolchain and fastboot:
+
+```sh
+sudo apt-get update
+sudo apt-get install build-essential android-tools-fastboot -y
+```
+
+#### Windows
+
+**USB OTG Flashing on Windows**
+
+Fastboot/OTG flashing on Windows requires the device's **Fastboot / USB-download** interface to use the **WinUSB** driver.
+
+> **Note:** Windows binds drivers to the **device/interface present at install time** (VID/PID[/MI]). This Fastboot interface exists **only while** the board is connected over OTG **and** go to OTG download mode.
+
+**Steps to verify USB OTG dependencies are installed correctly:**
+
+1. **Prepare connections**
+   - Connect the board's USB-to-serial to the PC and open a terminal (115200 8-N-1).
+   - Open **Tera Term** (or any serial console) on the correct COM port/baud.
+
+2. **Enter U-Boot and switch to USB OTG Fastboot**
+   - **Power on** the board and **interrupt autoboot** to get a `U-Boot>` prompt.
+   - Connect the board's **USB OTG** port to the PC.
+   - At the U-Boot prompt, run:
+     ```bash
+     setenv serial# 'Renesas1'
+     fastboot usb 27
+     ```
+     > This places the board into **USB OTG fastboot/download** mode.\
+     > `27` is the index used on RZ Common System
+
+3. **Bind WinUSB using Zadig**
+   - Download the latest **[Zadig](https://zadig.akeo.ie/)** and run it (no installation needed).
+   - In Zadig, go to **Options → List All Devices**.
+   - From the dropdown, select the device that represents the bootloader/fastboot interface.
+     - **USB Download Gadget**
+   - On the right, set **Driver** to **WinUSB**.
+   - Click **Install Driver** (or **Replace Driver**).
+
+4. **Verify**
+   - Open **PowerShell** or **Command Prompt** and run:
+     ```powershell
+     .\path\to\package\sd_creator\tools\fastboot.exe devices
+     ```
+
+     Expected:
+     ```
+      Renesas1         fastboot
+     ```
+
+> [!NOTE]  
+> **All dependencies bundled for Windows - No Installation Required**  
+> All required tools and runtime libraries are pre-bundled in `tools/bin/windows/`:
+> - `fiptool.exe` + `libcrypto-3-x64.dll` (OpenSSL library)
+> - `bpgen.exe` (statically linked, no DLLs needed)
+> - `objcopy.exe` + `libwinpthread-1.dll` (MinGW runtime)
+>
+> **You do NOT need to install MinGW-w64, MSYS2, or OpenSSL.** The scripts automatically use the bundled binaries.
 
 ### 3.3. Universal Flashing Script
 
-`universal_script.py` is a cross-platform tool that simplifies flashing workflows. It uses a board configuration JSON (`flash_images.json`) to map images and procedures.
+`universal_flash.py` is a cross-platform tool that simplifies flashing workflows. It uses a board configuration JSON (`flash_images.json`) to map images and procedures.
 
 **Location**
 ```
-<path/to/package>/host/tools/universal_script.py
+<path/to/package>/host/tools/universal_flash.py
 ```
 
 **Tools directory hierarchy** (excerpt)
 ```
 host/tools/
-├─ universal_script.py
+├─ bin/
 ├─ bootloader_flasher/
+├─ config/
 ├─ firmware_compile/
-└─ sd_creator/
+├─ flash_images.json
+├─ README.md
+├─ requirements.txt
+├─ sd_creator/
+├─ uload_bootloader/
+└─ universal_flash.py
 ```
 
 #### 3.3.1. `flash_images.json` — File Overview and Usage
@@ -829,7 +883,7 @@ host/tools/
 `flash_images.json` maps **boards → binaries → flashing operations**. It lists which images belong to each board, where they are located, and which flashing methods (e.g., **xSPI** vs **eMMC**, **UDP** vs **OTG**) apply.
 
 **Location**
-- Must reside beside `universal_script.py`.
+- Must reside beside `universal_flash.py`.
 - Images are typically under `<path_to_release>/target/images/` (optionally with subfolders like `atf/`, `u-boot/dtbs/`).
 
 ##### JSON Structure (Schema)
@@ -909,70 +963,129 @@ Field Reference
 - **`rootfs_flash_method`**
   How the **root filesystem (.wic)** is delivered to the SD/eMMC target:
   - `udp` — U-Boot `fastboot udp` over Ethernet
-  - `otg` — U-Boot `fastboot usb` (USB-OTG)
+#### 3.3.2. Flowchart
 
-#### 3.3.2. Flow chart
+The universal flash script prompts the user for options and proceeds through the flashing process based on the input. The detailed procedure is as follows:
+##### Help Menu Flowchart
+
+The following flowchart illustrates the logic when running the help command for the universal flash tool. It shows the user interaction steps and options available:
 
 ```mermaid
 flowchart TD
-    %% ============ Styles ============
-    classDef default fill:#f0f4f8,stroke:#333,stroke-width:1px,font-size:14px
-    classDef decision fill:#fef6e4,stroke:#c89b3c,stroke-width:2px,font-weight:bold
-    classDef actionHost fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
-    classDef actionTarget fill:#ede9fe,stroke:#7c3aed,stroke-width:2px
-    classDef terminal fill:#d1fae5,stroke:#10b981,stroke-width:2px,font-weight:bold
+  classDef default fill:#f0f4f8,stroke:#333,stroke-width:1px,font-size:14px
+  classDef decision fill:#fef6e4,stroke:#c89b3c,stroke-width:2px,font-weight:bold
+  classDef action fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+  classDef terminal fill:#d1fae5,stroke:#10b981,stroke-width:2px,font-weight:bold
 
-    %% Smaller legend variants (no class chaining)
-    classDef terminalLegend fill:#d1fae5,stroke:#10b981,stroke-width:1px,font-size:10px,font-weight:bold
-    classDef decisionLegend fill:#fef6e4,stroke:#c89b3c,stroke-width:1px,font-size:10px,font-weight:bold
-    classDef actionHostLegend fill:#dbeafe,stroke:#3b82f6,stroke-width:1px,font-size:10px
-    classDef actionTargetLegend fill:#ede9fe,stroke:#7c3aed,stroke-width:1px,font-size:10px
-
-    %% ============ Flow ============
-    A[Start]:::terminal --> B[Display available boards]:::actionHost
-    B --> C[User selects board]:::actionHost
-    C --> D[Display available serial ports]:::actionHost
-    D --> E[User selects port and baud rate]:::actionHost
-
-    E --> F{Write RootFS?}:::decision
-    F -->|y| FR[Write RootFS to SD or eMMC]:::actionTarget
-    FR --> G{Write IPL?}:::decision
-    F -->|n| G{Write IPL?}:::decision
-
-    G -->|y| H{Select IPL method}:::decision
-    H -->|BootloaderFlash| M[Compile firmware: build BL2 and FIP with per-board DTB at runtime]:::actionHost
-    M --> J[Write IPL by BootloaderFlash]:::actionTarget
-    H -->|ULoadFlash| K[Write IPL by ULoadFlash]:::actionTarget
-
-    G -->|n| L[End]:::terminal
-    J --> L
-    K --> L
-
-    %% ============ Legend ============
-    subgraph LEGEND[Legend]
-      direction LR
-      L1[Terminal]:::terminalLegend
-      L2{Decision}:::decisionLegend
-      L3[Action – Host: PC tools]:::actionHostLegend
-      L4[Action – Target: Board]:::actionTargetLegend
-    end
+  H1[Start]:::terminal --> H2[Display Help Menu with options]:::action
+  H2 --> H3{"User selects option 1, 2, or 3"}:::decision
+  H3 -->|1: Installation| H4[Show installation and setup instructions]:::action
+  H4 --> H5[Refer user to README.md for details]:::action
+  H5 --> H6{"Prompt: Run flash tool now?"}:::decision
+  H6 -->|y| H7[Run flash tool]:::action
+  H6 -->|n| H8[Exit]:::terminal
+  H3 -->|2: Run tool| H7[Run flash tool]:::action
+  H3 -->|3: Exit| H8[Exit]:::terminal
 ```
+
+To display this help menu, use the following command:
+
+- **On Linux:**
+  ```bash
+  python3 universal_flash.py --help
+  ```
+
+- **On Windows:**
+  ```powershell
+  py universal_flash.py --help
+  ```
+
+##### Installation Flowchart
+This flowchart shows the process when running the universal flash tool directly (without the --help argument). The script will immediately start the flashing workflow:
+
+```mermaid
+flowchart TD
+  classDef default fill:#f0f4f8,stroke:#333,stroke-width:1px,font-size:14px
+  classDef decision fill:#fef6e4,stroke:#c89b3c,stroke-width:2px,font-weight:bold
+  classDef action fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+  classDef terminal fill:#d1fae5,stroke:#10b981,stroke-width:2px,font-weight:bold
+
+  A[Start]:::terminal --> B[Display available boards]:::action
+  B --> C[User selects board]:::action
+  C --> D[Display available serial ports]:::action
+  D --> E[User selects port]:::action
+
+  E --> G{"Write IPL?"}:::decision
+  G -->|Yes| H{"Select IPL method"}:::decision
+  H -->|BootloaderFlash| M[Compile firmware: build BL2 & FIP with per-board DTB at runtime]:::action
+  M --> J[Write IPL by BootloaderFlash]:::action
+  H -->|ULoadFlash| K[Write IPL by ULoadFlash]:::action
+
+  J --> F{"Write RootFS?"}:::decision
+  K --> F{"Write RootFS?"}:::decision
+  G -->|No| F{"Write RootFS?"}:::decision
+
+  F -->|Yes| FR[Write RootFS to SD/eMMC]:::action
+  FR --> L[End]:::terminal
+  F -->|No| L[End]:::terminal
+```
+
+**Explanation:**
+When you run the script without any arguments, it will skip the help menu and immediately prompt you to select a board and begin the flashing process. You will be guided through board selection, serial port setup, IPL and rootfs flashing steps.
+
+Refer to the [Basic Usage](#basic-usage) section for commands to run the tool.
 
 **Notes:**
 - Ensure the board is powered off before flashing.
 - Insert the SD card if rootfs flashing is selected.
 - For Bootloader-flash: set boot switches to SCIF download mode.
 - For Uload-flash or rootfs flashing: set boot switches to normal mode.
+- **Board Reset/Power-cycle:**
+  - **RZ/G2L-SBC**: Does not have a RESET button. You must power-cycle by unplugging and re-plugging the power adapter. Since the debug/OTG USB port is powered from the same power jack, the USB device will disconnect and the serial port will disappear from the host PC during power-cycle. Ensure you reconnect the USB cable to the same PC port after power-cycle to avoid reconnection issues.
+  - **RZ/G2L-EVK, RZ/V2L-EVK boards**: Use the RESET button to reset the board without removing power. The USB connection and serial port remain available during flashing.
+  - **RS-G2L100**: Does not have a RESET button. You must power-cycle by unplugging and re-plugging the power adapter. Since the debug/OTG USB port is powered from the same power jack, the USB device will disconnect and the serial port will disappear from the host PC during power-cycle. Ensure you reconnect the USB cable to the same PC port after power-cycle to avoid reconnection issues.
+  - **RZ/V2H-EVK**: Use the RESET button to reset the board without removing power. The USB connection and serial port remain available during flashing.
+  - **RZ/V2H-RDK board**: Does not have a RESET button. You must power-cycle by unplugging and re-plugging the power adapter. Since the debug/OTG USB port is powered from the same power jack, the USB device will disconnect and the serial port will disappear from the host PC during power-cycle. Ensure you reconnect the USB cable to the same PC port after power-cycle to avoid reconnection issues.
+  - **IMDT V2H-SBC**: Use the RESET button to reset the board without removing power. The USB connection and serial port remain available during flashing.
+- Rootfs flash (UDP Fastboot): U-Boot fastboot-udp uses a single active Ethernet MAC per board. If multiple RJ45/PHY ports exist, only one is active (depending on board support). The script automatically selects the appropriate Ethernet port based on board configuration in `boards_flash_config.toml`. For boards with multiple available ports, the script will prompt you to select which port to use.
 
-#### 3.3.3. Usage
-- Linux:
-```
-python3 universal_script.py
+  | Board         | Ethernet port(s) used |
+  |-------------|----------------------|
+  | rzg2l-sbc    | 1                    |
+  | rs-g2l100    | 0, 1                 |
+  | rzv2l-evk    | 0                    |
+  | rzg2l-evk    | 0                    |
+  | rzv2h-evk    | 0, 1                 |
+  | rzv2h-rdk    | 0                    |
+  | imdt-v2h-sbc | 0, 1                 |
+
+Both fastboot-otg and fastboot-udp write to U-Boot's current MMC device (typically mmc0). Depending on board and revision, mmc0 may point to the SD card or eMMC.
+
+| Board/Rev                                   | Fastboot Method | Typical mmc0 target                                  | How to change target           |
+|---------------------------------------------|-----------------|------------------------------------------------------|-------------------------------|
+| RZ/G2L-SBC                                  | UDP             | Carrier SD (board default)                            | N/A (single device)           |
+| RS-G2L100                                   | UDP, OTG        | eMMC                                                | N/A (single device)           |
+| RZ/V2L-EVK                                  | UDP, OTG        | SD (CN3 on SOM or eMMC device depending on SW1)      | Set SW1-2 ON to SD and OFF to eMMC |
+| RZ/G2L-EVK                                  | UDP, OTG        | SD (CN3 on SOM or eMMC device depending on SW1)      | Set SW1-2 ON to SD and OFF to eMMC |
+| RZ/V2H-EVK (Rev 1 – 2 SD cards)             | UDP, OTG        | SD card slot 0                                       | N/A (single device)           |
+| RZ/V2H-EVK (Rev 2 – SD & eMMC)              | UDP, OTG        | eMMC                                                | N/A (single device)           |
+| RZ/V2H-RDK                                  | UDP             | SD card                                             | N/A (single device)           |
+| IMDT V2H-SBC                                | UDP, OTG        | eMMC                                                | N/A (single device)           |
+
+---
+
+#### 3.3.3. Basic Usage
+
+### On Windows:
+
+```bash
+py universal_flash.py
 ```
 
-- Windows:
-```
-py universal_script.py
+### On Linux:
+
+```bash
+python3 universal_flash.py
 ```
 
 ### 3.4. Dedicated Flashing Scripts
@@ -985,10 +1098,10 @@ This script is used to flash the initial bootloader image onto the board via a s
 
 Location:
 ```
-host/tools/bootloader_flasherr/
+host/tools/bootloader_flasher/
 ```
 
-Refer to the `Readme.md` file in that folder for detail instructions.
+Refer to the `Readme.md` file in that folder for detailed instructions.
 
 #### 3.4.2. Flash Bootloader from U-Boot Console
 
@@ -999,7 +1112,7 @@ Location
 host/tools/uload_bootloader/
 ```
 
-Refer to the `Readme.md` file in that folder for detail instructions.
+Refer to the `Readme.md` file in that folder for detailed instructions.
 
 #### 3.4.3. Flash Root Filesystem to microSD Card
 
@@ -1010,7 +1123,7 @@ Location
 host/tools/sd_creator/
 ```
 
-Refer to the `Readme.md` file in that folder for detail instructions.
+Refer to the `Readme.md` file in that folder for detailed instructions.
 
 ## 4. Accessing Supported Features 
 
