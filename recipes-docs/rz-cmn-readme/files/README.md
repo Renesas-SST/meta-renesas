@@ -181,8 +181,7 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
 │   │           │   ├── ubuntu_core
 │   │           │   │   ├── audio-init-core.sh
 │   │           │   │   ├── network_interfaces.conf
-│   │           │   │   ├── NetworkManager.conf
-│   │           │   │   └── resolved.conf
+│   │           │   │   └── NetworkManager.conf
 │   │           │   └── ubuntu_lxde
 │   │           │       ├── audio-init-lxde.sh
 │   │           │       ├── connman-gtk.desktop
@@ -194,6 +193,7 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
 │   │           │       ├── panel
 │   │           │       ├── rsyslog
 │   │           │       ├── ttyS0.conf
+│   │           │       ├── v4l2-init.service
 │   │           │       └── v4l2-init.sh
 │   │           ├── config.ini
 │   │           ├── docs
@@ -247,8 +247,7 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
 │   │           │   ├── ubuntu_core
 │   │           │   │   ├── prepare_conf.sh
 │   │           │   │   ├── prepare_env.sh
-│   │           │   │   ├── prepare_rootfs.sh
-│   │           │   │   └── setup_dns.sh
+│   │           │   │   └── prepare_rootfs.sh
 │   │           │   └── ubuntu_lxde
 │   │           │       ├── create_swap.sh
 │   │           │       ├── prepare_conf.sh
@@ -257,6 +256,7 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
 │   │           ├── script
 │   │           │   ├── common
 │   │           │   │   ├── dpkg-install-lock-fix.sh
+│   │           │   │   ├── enable_ping.sh
 │   │           │   │   └── setup_dns_and_time.sh
 │   │           │   ├── ubuntu_core
 │   │           │   │   ├── apt_install_base.sh
@@ -286,11 +286,11 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
 │       │   └── windows
 │       │       ├── bpgen.exe
 │       │       ├── fiptool.exe
-│       │       ├── objcopy.exe
+│       │       ├── GNU_BINUTILS_LICENSE.txt
 │       │       ├── libcrypto-3-x64.dll
 │       │       ├── libwinpthread-1.dll
-│       │       ├── GNU_BINUTILS_LICENSE.txt
 │       │       ├── LIBWINPTHREAD_LICENSE.txt
+│       │       ├── objcopy.exe
 │       │       ├── OPENSSL_LICENSE.txt
 │       │       └── Readme.md
 │       ├── bootloader_flasher
@@ -344,11 +344,7 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
     │   │   ├── dtbs
     │   │   │   ├── overlays
     │   │   │   │   ├── Readme.md
-    │   │   │   │   ├── rzg2l-sbc-can.dtbo
-    │   │   │   │   ├── rzg2l-sbc-dsi.dtbo
-    │   │   │   │   ├── rzg2l-sbc-ext-i2c.dtbo
-    │   │   │   │   ├── rzg2l-sbc-ext-spi.dtbo
-    │   │   │   │   └── rzg2l-sbc-ov5640.dtbo
+    │   │   │   │   └── <board-name>-<rev-major>.<rev-minor>-feature.dtbo
     │   │   │   ├── <board-name>--<kernel-version>-rz-cmn-<timestamp>.dtbo
     │   │   │   ├── <board-name>.dtb -> <board-name>--<kernel-version>-rz-cmn-<timestamp>.dtbo
     │   │   │   └── Readme.md
