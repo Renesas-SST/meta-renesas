@@ -47,7 +47,6 @@ IMAGE_INSTALL:append = " \
     imdt-pico-modem \
     iw \
     murata-binaries \
-    udev-extraconf \
     wireless-tools \
     hostapd \
 "
