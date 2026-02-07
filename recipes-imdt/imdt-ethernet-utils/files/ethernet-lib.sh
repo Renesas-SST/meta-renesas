@@ -7,7 +7,7 @@ function enable_ethernet_network_unit
 {
     local num=$1
     pushd /lib/systemd/network 1>/dev/null
-    mv 19-eth${num}.network.disabled 19-eth${num}.network 2>/dev/null
+    mv 19-end${num}.network.disabled 19-end${num}.network 2>/dev/null
     popd 1>/dev/null
 
     systemctl restart systemd-networkd
@@ -17,7 +17,7 @@ function disable_ethernet_network_unit
 {
     local num=$1
     pushd /lib/systemd/network 1>/dev/null
-    mv 19-eth${num}.network 19-eth${num}.network.disabled 2>/dev/null
+    mv 19-end${num}.network 19-end${num}.network.disabled 2>/dev/null
     popd 1>/dev/null
 
     systemctl restart systemd-networkd
@@ -26,11 +26,11 @@ function disable_ethernet_network_unit
 function take_down_eth
 {
     local num=$1
-    ip link set eth${num} down
+    ip link set end${num} down
 }
 
 function bring_up_eth
 {
     local num=$1
-    ip link set eth${num} up
+    ip link set end${num} up
 }

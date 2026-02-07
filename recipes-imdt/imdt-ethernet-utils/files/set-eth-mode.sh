@@ -50,21 +50,21 @@ MODE=$(/opt/imdt/ethernet/get-eth-mode.sh "${INTERFACE_NUMBER}")
 # where lan == 1
 if [ "$MODE" == "LAN" ]; then
     if [ "$MODE_ARG" == 1 ]; then
-        echo "Ethernet eth${INTERFACE_NUMBER} is already in LAN mode"
+        echo "Ethernet end${INTERFACE_NUMBER} is already in LAN mode"
         exit 0
     else
         enable_ethernet_network_unit "${INTERFACE_NUMBER}"
-        echo "Ethernet eth${INTERFACE_NUMBER} set to ADHOC mode."
+        echo "Ethernet end${INTERFACE_NUMBER} set to ADHOC mode."
     fi
 elif [ "$MODE" == "ADHOC" ]; then
     if [ "$MODE_ARG" == 2 ]; then
-        echo "Ethernet eth${INTERFACE_NUMBER} is already in ADHOC mode"
+        echo "Ethernet end${INTERFACE_NUMBER} is already in ADHOC mode"
         exit 0
     else
         disable_ethernet_network_unit "${INTERFACE_NUMBER}"
-        echo "Ethernet eth${INTERFACE_NUMBER} set to LAN mode."
+        echo "Ethernet end${INTERFACE_NUMBER} set to LAN mode."
     fi
 else
-    echo "Error: unrecognized ethernet mode for eth${INTERFACE_NUMBER}!"
+    echo "Error: unrecognized ethernet mode for end${INTERFACE_NUMBER}!"
     exit 1
 fi
