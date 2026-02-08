@@ -173,10 +173,12 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
 │   │       │       └── 0001-uboot-config-Fix-devtool-modify.patch
 │   │       ├── README.md
 │   │       ├── rz_builder.sh
-│   │       ├── site.conf
 │   │       └── ubuntu
 │   │           ├── config
 │   │           │   ├── common
+│   │           │   │   ├── hostapd.conf
+│   │           │   │   ├── hostapd.service
+│   │           │   │   ├── moal.conf
 │   │           │   │   └── resolved.conf
 │   │           │   ├── ubuntu_core
 │   │           │   │   ├── audio-init-core.sh
@@ -237,12 +239,13 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
 │   │           │   │   ├── allow_empty_password.sh
 │   │           │   │   ├── create_wic.sh
 │   │           │   │   ├── install_gstreamer.sh
+│   │           │   │   ├── install_imdt_utils.sh
 │   │           │   │   ├── install_weston.sh
 │   │           │   │   ├── mount.sh
 │   │           │   │   ├── prepare_env_rootfs.sh
 │   │           │   │   ├── prepare_env.sh
 │   │           │   │   ├── prepare_ubuntu_base.sh
-│   │           │   │   ├── setup_dns.sh
+│   │           │   │   ├── setup_conf.sh
 │   │           │   │   └── yocto_working.sh
 │   │           │   ├── ubuntu_core
 │   │           │   │   ├── prepare_conf.sh
@@ -344,7 +347,7 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
     │   │   ├── dtbs
     │   │   │   ├── overlays
     │   │   │   │   ├── Readme.md
-    │   │   │   │   └── <board-name>-<rev-major>.<rev-minor>-feature.dtbo
+    │   │   │   │   └── <board-name>-<rev-major>.<rev-minor>-<feature>.dtbo
     │   │   │   ├── <board-name>--<kernel-version>-rz-cmn-<timestamp>.dtbo
     │   │   │   ├── <board-name>.dtb -> <board-name>--<kernel-version>-rz-cmn-<timestamp>.dtbo
     │   │   │   └── Readme.md
@@ -356,8 +359,8 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
     │   ├── renesas-core-image-weston.wic
     │   ├── renesas-quickboot-cli.wic
     │   ├── renesas-quickboot-wayland.wic
-    │   ├── ubuntu-core-image.wic.gz
-    │   ├── ubuntu-lxde-image.wic.gz
+    │   ├── ubuntu-core-image.wic.gz
+    │   ├── ubuntu-lxde-image.wic.gz
     │   ├── rootfs
     │   │   ├── core-image-bsp.tar.bz2
     │   │   ├── core-image-minimal.tar.bz2
