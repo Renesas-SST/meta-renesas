@@ -1,0 +1,4 @@
+interest-noawait /lib
+interest-noawait /lib/aarch64-linux-gnu
+interest-noawait /usr/lib
+interest-noawait /usr/lib/aarch64-linux-gnu
