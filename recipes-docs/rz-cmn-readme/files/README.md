@@ -2,13 +2,13 @@
 
 This guide provides a quick startup for all supported boards in the current release. This README describes the current development status, how to build images, and how to set up the environment for the following boards:
 
-* **RZG2L-SBC** (RZ/G2L Single Board Computer)
-* **RZG2L-EVK** (RZ/G2L Evaluation Kit)
-* **RS-G2L100** (Geniatech RS-G2L100)
-* **RZV2L-EVK** (RZ/V2L Evaluation Kit)
-* **RZV2H-EVK** (RZ/V2H Evaluation Kit)
-* **RZV2H-RDK** (RZ/V2H Robot Kit)
-* **IMDT-V2H‑SBC** (IMDT V2H Single Board Computer)
+- [RZG2L-SBC](https://www.renesas.com/en/design-resources/boards-kits/rz-g2l-sbc?srsltid=AfmBOopW7k6H7kvdtnxYYs72c6Pm_8u667-UDBi8v9-WXPHjQvzWlhLN)
+- [RZG2L-EVK](https://www.renesas.com/en/design-resources/boards-kits/rz-g2l-evkit?srsltid=AfmBOoqqLvuA9ZrzAhhRLi9JR1JVUcoc9MUICwtZ78ZER-hchmQ3ps5I)
+- [RS-G2L100](https://www.renesas.com/en/products/microcontrollers-microprocessors/rz-mpus/rz-partner-solutions/geniatech-g2l100)
+- [RZV2L-EVK](https://www.renesas.com/en/design-resources/boards-kits/rz-v2l-evkit?srsltid=AfmBOooz3AGWNCJNed1qk6NS0qeZBngU79XQ4h2KUkmMam82y615JPjr)
+- [RZV2H-EVK](https://www.renesas.com/en/design-resources/boards-kits/rz-v2h-evk?srsltid=AfmBOooL-eoj5j3zum-HIL5v0JE9SROaKosWHYCOHfvySpJ4g39N9R_V)
+- [RZV2H-RDK](https://www.renesas.com/en/design-resources/boards-kits/ws125-v2hrdkrefz)
+- [IMDT V2H-SBC](https://www.renesas.com/en/products/microcontrollers-microprocessors/rz-mpus/rz-partner-solutions/imdt-v2-sbc)
 
 ## 1. Overview
 
@@ -1039,13 +1039,19 @@ Refer to the [Basic Usage](#basic-usage) section for commands to run the tool.
 - Insert the SD card if rootfs flashing is selected.
 - For Bootloader-flash: set boot switches to SCIF download mode.
 - For Uload-flash or rootfs flashing: set boot switches to normal mode.
-- **Board Reset/Power-cycle:**
-  - **RZ/G2L-SBC**: Does not have a RESET button. You must power-cycle by unplugging and re-plugging the power adapter. Since the debug/OTG USB port is powered from the same power jack, the USB device will disconnect and the serial port will disappear from the host PC during power-cycle. Ensure you reconnect the USB cable to the same PC port after power-cycle to avoid reconnection issues.
-  - **RZ/G2L-EVK, RZ/V2L-EVK boards**: Use the RESET button to reset the board without removing power. The USB connection and serial port remain available during flashing.
-  - **RS-G2L100**: Does not have a RESET button. You must power-cycle by unplugging and re-plugging the power adapter. Since the debug/OTG USB port is powered from the same power jack, the USB device will disconnect and the serial port will disappear from the host PC during power-cycle. Ensure you reconnect the USB cable to the same PC port after power-cycle to avoid reconnection issues.
-  - **RZ/V2H-EVK**: Use the RESET button to reset the board without removing power. The USB connection and serial port remain available during flashing.
-  - **RZ/V2H-RDK board**: Does not have a RESET button. You must power-cycle by unplugging and re-plugging the power adapter. Since the debug/OTG USB port is powered from the same power jack, the USB device will disconnect and the serial port will disappear from the host PC during power-cycle. Ensure you reconnect the USB cable to the same PC port after power-cycle to avoid reconnection issues.
-  - **IMDT V2H-SBC**: Use the RESET button to reset the board without removing power. The USB connection and serial port remain available during flashing.
+- **Reset and power-cycle behavior by board:**
+  - **RZ/G2L-SBC**
+    This board does not provide a dedicated **RESET** button. To restart the board or apply a boot mode change, you must power-cycle it.
+  - **RZ/G2L-EVK** and **RZ/V2L-EVK**
+    These boards provide a **RESET** button. You can reset the board without removing power, and the USB connection and serial port typically remain available.
+  - **RS-G2L100**
+    This board does not provide a dedicated **RESET** button. To restart the board or apply a boot mode change, you must power-cycle it.
+  - **RZ/V2H-EVK**
+    This board provides a **RESET** button. You can reset the board without removing power, and the USB connection and serial port typically remain available.
+  - **RZ/V2H-RDK**
+    This board does not provide a dedicated **RESET** button. To restart the board or apply a boot mode change, you must power-cycle it by unplugging and reconnecting the power adapter. Because the USB serial interface is powered from the same source, the USB device disconnects during power-cycle and the serial port disappears from the host PC. When power-cycling the board, keep the USB cable connected to the same USB port on the host PC to avoid enumeration or reconnection issues.
+  - **IMDT V2H-SBC**
+    This board provides a **RESET** button. You can reset the board without removing power, and the USB connection and serial port typically remain available.
 - Rootfs flash (UDP Fastboot): U-Boot fastboot-udp uses a single active Ethernet MAC per board. If multiple RJ45/PHY ports exist, only one is active (depending on board support). The script automatically selects the appropriate Ethernet port based on board configuration in `boards_flash_config.toml`. For boards with multiple available ports, the script will prompt you to select which port to use.
 
   | Board         | Ethernet port(s) used |
