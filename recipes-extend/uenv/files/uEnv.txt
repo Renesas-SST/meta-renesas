@@ -6,5 +6,7 @@
             #enable_overlay_audio_codec=1
             #enable_overlay_csi_ov5640=1
             #enable_overlay_csi_ov5645=1
+            #enable_overlay_csi22_ar1335=1
+            #enable_overlay_csi23_ar1335=1
 
             prodsdboot=run mmc_do_boot

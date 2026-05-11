@@ -1136,7 +1136,89 @@ Refer to the `Readme.md` file in that folder for detailed instructions.
 
 This section describes features generally supported across Renesas RZ/G2L and RZ/V2L series and RZ/V2H boards. Specific peripheral availability may depend on the board design will introduce later.
 
-#### 4.1.1. Generic USB Bluetooth Framework
+##### 4.1.1. U-Boot Environment
+
+Overlays are supported for all RZ CMN boards. Each board has its own individual overlay settings. Enabling overlays intended for other boards may have no effect.
+
+The device tree overlay loading follows the pattern `${model_string}-${revision_major}.${revision_minor}`. These U-Boot environment variables are automatically set by U-Boot during runtime. Details:
+
+- `${model_string}`: Board model string (e.g., `rzg2l-sbc`)
+- `${revision_major}`: Board major revision
+- `${revision_minor}`: Board minor revision
+
+Sample `rzg2l-sbc` device tree overlay list:
+
+- `rzg2l-sbc-1.0-ext-i2c.dtbo`
+- `rzg2l-sbc-1.0-ext-spi.dtbo`
+- `rzg2l-sbc-1.0-can.dtbo`
+- `rzg2l-sbc-1.0-dsi.dtbo`
+- `rzg2l-sbc-1.0-ov5640.dtbo`
+
+| Config                        | Description                                         | Value if set | To be loading                                                               | Board supported          |
+| ----------------------------  | -------------------------------------------         | ------------ | -----------------------------------------------------------------------     | ----------------------   |
+| `enable_overlay_i2c`          | Enable external I2C bus on expansion header         | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-ext-i2c.dtbo            | RZ/G2L-SBC               |
+| `enable_overlay_spi`          | Enable external SPI bus on expansion header         | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-ext-spi.dtbo            | RZ/G2L-SBC, RZ/V2H-RDK   |
+| `enable_overlay_can`          | Enable CAN controller and pin mux                   | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-can.dtbo                | RZ/G2L-SBC, RZ/V2H-RDK   |
+| `enable_overlay_dsi`          | Enable MIPI-DSI display interface                   | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-dsi.dtbo                | RZ/G2L-SBC, IMDT-V2H-SBC |
+| `enable_overlay_audio_codec`  | Enable on-board analog audio codec                  | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-audio_codec.dtbo        | RZ/V2H-RDK               |
+| `enable_overlay_csi_ov5640`   | Enable MIPI-CSI camera module OV5640                | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-ov5640.dtbo             | RZ/G2L-SBC               |
+| `enable_overlay_csi_ov5645`   | Enable MIPI-CSI camera module OV5645                | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-cru-csi-ov5645.dtbo     | RZ/G2L-EVK, RZ/V2L-EVK   |
+| `enable_overlay_csi22_ar1335` | Enable MIPI-CSI2 AR1335 camera on slot 3 (CSI2-2)   | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-cru-csi22-ar1335.dtbo   | IMDT-V2H-SBC             |
+| `enable_overlay_csi23_ar1335` | Enable MIPI-CSI2 AR1335 camera on slot 4 (CSI2-3)   | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-cru-csi23-ar1335.dtbo   | IMDT-V2H-SBC             |
+---
+
+```
+default settings:
+    #enable_overlay_i2c=1
+    #enable_overlay_spi=1
+    #enable_overlay_can=1
+    #enable_overlay_dsi=1
+    #enable_overlay_audio_codec=1
+    #enable_overlay_csi_ov5640=1
+    #enable_overlay_csi_ov5645=1
+    #enable_overlay_csi22_ar1335=1
+    #enable_overlay_csi23_ar1335=1
+```
+(Note: Lines starting with # are commented out and not active.)
+
+
+**How to Edit uEnv.txt**
+
+The `uEnv.txt` file can be edited using two primary methods:
+
+- On Windows
+
+Mount the SD card on a Windows computer. The `uEnv.txt` file should be accessible for direct editing as it resides in the first partition, typically formatted as FAT32.
+
+- On Linux
+
+When working within a Linux environment (e.g., via SSH or serial console on the RZG2L-SBC), the SD card's first partition can be mounted and the file edited:
+
+
+You can refer to the `Readme.md` file in partition 1 for the FDT overlays information.
+You can mount the sdcard on Windows to edit the uEnv.txt or do it on linux as below
+
+Step 1: Mount the partition
+```shell
+root@rz-cmn:~# mount /dev/mmcblk0p1 /tmp
+root@rz-cmn:/tmp# ls uEnv.txt
+uEnv.txt
+root@rz-cmn:/tmp# vi uEnv.txt
+```
+
+After modifying `uEnv.txt`, save the file and umount the partition:
+
+```shell
+root@rz-cmn:/tmp# cd ~
+root@rz-cmn:~# umount /tmp
+root@rz-cmn:~# sync
+```
+
+After changing the value of overlays options, we need to run `sync` to ensure that the changes are affected. Then, execute `reboot` to apply the changes.
+
+For further details on FDT overlays and advanced configurations, refer to the `Readme.md` file located in partition 1 of the SD card.
+
+#### 4.1.2. Generic USB Bluetooth Framework
 
 The RZ boards support the generic USB Bluetooth framework, which is back-ported from the Linux kernel mainline. TP-Link UB500 Bluetooth 5.0 Nano USB Adapter (Realtek chipset) has been tested and proven to work on the board.
 
@@ -1288,7 +1370,7 @@ Transfer /org/bluez/obex/client/session0/transfer0
 
 In this example, a text file names `uEnv.txt` which is located at `/boot` is sent to the target Bluetooth device.
 
-#### 4.1.2. On-board Audio Codec with Stereo Jack Analog Audio IO configurations
+#### 4.1.3. On-board Audio Codec with Stereo Jack Analog Audio IO configurations
 
 Audio capability is board-dependent. Some RZ boards provide an onboard audio codec with an analog connector (for example a 3.5 mm jack). Other boards expose only a digital audio interface (I2S or PCM/TDM) on header pins and require an external codec/breakout to obtain analog headphone and microphone connections.
 - Audio Data Interface: Connected to DAI (SSI1) using the I2S format.
@@ -1404,7 +1486,7 @@ To adjust the level of the audio record/playback, use the following command to o
 root@rz-cmn:~# alsamixer
 ```
 
-#### 4.1.3. Quickboot Images and Network Configurations
+#### 4.1.4. Quickboot Images and Network Configurations
 
 Renesas provides custom Quickboot images optimized for faster boot times. These images include 
 necessary systemd optimizations and a streamlined kernel to minimize boot delays.
@@ -1499,7 +1581,7 @@ To optimize the kernel, follow these steps to modify the local.conf:
 
 3. Rebuild and deploy the image to apply the changes.
 
-#### 4.1.4. Playing Video Files on the RZ board
+#### 4.1.5. Playing Video Files on the RZ board
 
 Use `gst-launch-1.0` to play video files. The playbin element in GStreamer makes it easy to play multimedia content. Prepare an mp4 file and run the following command:
 
@@ -1515,7 +1597,7 @@ root@rz-cmn:~# gst-launch-1.0 playbin uri=file:///home/root/videos/renesas-bigid
 
 This will start an MP4 video and display it on the screen.
 
-#### 4.1.5. MIPI CSI-2 Cameras
+#### 4.1.6. MIPI CSI-2 Cameras
 
 This section describes how to enable and use MIPI CSI-2 cameras across the supported boards. All
 boards share a common camera initialization script, but each board requires its own compatible camera module and driver configuration.
@@ -1604,7 +1686,7 @@ The following cameras are supported based on the available drivers and device tr
 - If an invalid resolution is provided, `v4l2-init.sh` falls back to `1280x720`.
 
 
-#### 4.1.6. Package Management
+#### 4.1.7. Package Management
 
 The distribution comes with Debian package manager `apt-get` and `dpkg` for binary package handling. 
 
@@ -1760,7 +1842,7 @@ For more examples and ideas, visit:
  https://docs.docker.com/get-started/
 ```
 
-#### 4.1.7. Generic USB WiFi framework
+#### 4.1.8. Generic USB WiFi framework
 
 The system supports the generic USB WiFi framework, which is derived from the Linux kernel mainline. A wide range of common USB WiFi adapters are supported, including those based on the following chipsets (module support is indicated in parentheses):
 
@@ -1888,7 +1970,7 @@ Identify Ethernet interfaces (look for names starting with end). Disable all act
 ```shell
 root@rz-cmn:~# ifconfig <interface-name> down
 ```
-#### 4.1.8. Python GUI Programming with Tkinter
+#### 4.1.9. Python GUI Programming with Tkinter
 Tkinter is included with Python by default, so no additional libraries are required.
 **Note**: Note: Running graphical applications such as Tkinter requires access to the X11 display server, which is provided by Xwayland in this setup. Therefore, the application must be run as the weston user (not as root), because only that user has permission to access the running Xwayland display session (DISPLAY=:0).
 The following steps will show how to create a new Tkinter application:
@@ -1971,7 +2053,7 @@ rz-cmn:~$ export DISPLAY=:0
 ```
 rz-cmn:~$ python3 main.py
 ```
-#### 4.1.9. Install Packages Using Python3-Pip
+#### 4.1.10. Install Packages Using Python3-Pip
 The distribution includes Python 3 along with useful libraries/modules/packages such as `Pip3`, Numpy, Pandas, PySerial, Matplotlib, etc. This section will focus on using `Pip3`, the package installer for Python 3, to manage additional packages.
 
 To install a new package using `pip3`, use the following command:
@@ -1994,7 +2076,7 @@ root@rz-cmn:~# pip3 list
 ```
 This will confirm that the package is installed and available for use.
 
-#### 4.1.10. U-Boot: Select Kernel Image via `image_flavor`
+#### 4.1.11. U-Boot: Select Kernel Image via `image_flavor`
 
 Linux for the Renesas RZ Common System typically provides **three kernel image variants**, each optimized for a different use case:
 
@@ -2087,81 +2169,7 @@ appropriate device tree overlay file (DT overlays). This is also how some of the
 drivers are enabled, like the display.
 - Reboot the board for the overlay to take effect.
 
-##### 4.2.1.1. Understanding FDT Overlays and uEnv.txt
-
-The RZ/G2L-SBC uses FDT (Flattened Device Tree) overlays to manage the configuration of its IO expansion interface. These overlays are enabled by setting specific environment variables in the `uEnv.txt` file.
-
-The `uEnv.txt` file is located in partition 1 of the SD card.
-
-The following table details the available configuration options that can be set in uEnv.txt:
-
-```
-## For RZ SBC U-Boot Env
-/------------------------------|--------------|------------------------------
-|       Config                 | Value if set |     To be loading
-|------------------------------|--------------|------------------------------
-| enable_overlay_i2c           | '1' or 'yes' |  rzg2l-sbc-ext-i2c.dtbo
-|------------------------------|--------------|------------------------------
-| enable_overlay_spi           | '1' or 'yes' |  rzg2l-sbc-ext-spi.dtbo
-|------------------------------|--------------|------------------------------
-| enable_overlay_can           | '1' or 'yes' |  rzg2l-sbc-can.dtbo
-|------------------------------|--------------|------------------------------
-| enable_overlay_dsi           | '1' or 'yes' |  rzg2l-sbc-dsi.dtbo
-|------------------------------|--------------|------------------------------
-| enable_overlay_csi_ov5640    | '1' or 'yes' |  rzg2l-sbc-ov5640.dtbo
-|----------------------------------------------------------------------------
-| fdtfile   : is a base dtb file, should be set rzg2l-sbc.dtb
-|----------------------------------------------------------------------------
-| uboot env : you could set U-Boot's environment variables here, such as 'console=' 'bootargs='
-\---------------------------------------------------------------------------
-
-default settings:
-    #enable_overlay_i2c=1
-    #enable_overlay_spi=1
-    #enable_overlay_can=1
-    #enable_overlay_dsi=1
-    #enable_overlay_csi_ov5640=1
-
-(Note: Lines starting with # are commented out and not active.)
-```
-
-**How to Edit uEnv.txt**
-
-The `uEnv.txt` file can be edited using two primary methods:
-
-- On Windows
-
-Mount the SD card on a Windows computer. The `uEnv.txt` file should be accessible for direct editing as it resides in the first partition, typically formatted as FAT32.
-
-- On Linux
-
-When working within a Linux environment (e.g., via SSH or serial console on the RZG2L-SBC), the SD card's first partition can be mounted and the file edited:
-
-
-You can refer to the `Readme.md` file in partition 1 for the FDT overlays information.
-You can mount the sdcard on Windows to edit the uEnv.txt or do it on linux as below
-
-Step 1: Mount the partition
-```shell
-root@rz-cmn:~# mount /dev/mmcblk0p1 /tmp
-root@rz-cmn:/tmp# ls uEnv.txt
-uEnv.txt
-root@rz-cmn:/tmp# vi uEnv.txt
-```
-
-After modifying `uEnv.txt`, save the file and umount the partition:
-
-```shell
-root@rz-cmn:/tmp# cd ~
-root@rz-cmn:~# umount /tmp
-root@rz-cmn:~# sync
-```
-
-After changing the value of overlays options, we need to run `sync` to ensure that the changes are affected. Then, execute `reboot` to apply the changes.
-
-For further details on FDT overlays and advanced configurations, refer to the `Readme.md` file located in partition 1 of the SD card.
-
-##### 4.2.1.2. Understanding GPIO and libgpiod'S conepts
+##### 4.2.1.1. Understanding GPIO and libgpiod'S conepts
 By default, most pins are configured as GPIOs on the SBC’s 40-pin GPIO pin header. This section details how to identify and control these pins using the `libgpiod` library and its associated command-line tools.
 
 Unlike the deprecated sysfs interface, `libgpiod` provides a standardized and kernel-integrated method for GPIO management. It interacts with GPIO character devices (e.g., `/dev/gpiochip0`, `/dev/gpiochip1`) to offer a more efficient and flexible control over individual GPIO lines.
@@ -2173,7 +2181,7 @@ Instead of a single, linear pin number system, `libgpiod` organizes GPIOs around
 manages a specific set of GPIO lines. You'll typically see them identified as `gpiochip0`, `gpiochip1`, and so on.
 - GPIO Lines: Each chip contains a number of individual GPIO lines, identified by an offset within that chip (e.g., `line 0`, `line 1`, `line 2`, etc.).
 
-##### 4.2.1.3. Configuring GPIO Pins
+##### 4.2.1.2. Configuring GPIO Pins
 **Identifying GPIO chips and lines**  
 Before GPIO control can be initiated, the specific chip and line offset corresponding to the desired pin must be identified.
 
@@ -2283,7 +2291,7 @@ request.set_value(GPIO_LINE, gpiod.line.Value.ACTIVE) # set active for GPIO_LINE
 request.set_value(GPIO_LINE, gpiod.line.Value.INACTIVE) # set inactive for
 GPIO_LINE
 ```
-##### 4.2.1.4. I2C function (channel 3 - RIIC3)
+##### 4.2.1.3. I2C function (channel 3 - RIIC3)
 
 You should edit `uEnv.txt` as follows to enable I2C channel 3 on 40 IO expansion interface:
 
@@ -2317,7 +2325,7 @@ root@rz-cmn:~# i2cdetect -y -r 3
 70: -- -- -- -- -- -- -- --
 ```
 
-##### 4.2.1.5. SPI function (channel 0 - RSPI0)
+##### 4.2.1.4. SPI function (channel 0 - RSPI0)
 
 You should edit `uEnv.txt` as follows to enable SPI channel 0 on 40 IO expansion interface:
 
@@ -2340,7 +2348,7 @@ root@rz-cmn:~# echo -n -e "1234567890" | spi-pipe -d /dev/spidev0.0 -s 10000000 
 000000a
 ```
 
-##### 4.2.1.6. CAN function (channel 0,1 - CAN0, CAN1)
+##### 4.2.1.5. CAN function (channel 0,1 - CAN0, CAN1)
 
 You should edit `uEnv.txt` as follows to enable CAN channel 0,1 on 40 IO expansion interface:
 
