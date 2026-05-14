@@ -383,3 +383,8 @@ PREFERRED_VERSION_alsa-utils = "1.2.11"
 # with libgpiod 2.x. Forcing 1.6.5 avoids rootfs dependency resolution
 # issues caused by mixed libgpiod versions.
 PREFERRED_VERSION_libgpiod = "1.6.5"
+
+# OP-TEE is disabled by default. Enable this to build open-source OP-TEE
+# from renesas-rz/rzg_optee-os and include tee-supplicant in the image.
+# ENABLE_SPD_OPTEE = "1"
+# OPTEE_PLATFORM_FLAVOR = "g2l_smarc_2"

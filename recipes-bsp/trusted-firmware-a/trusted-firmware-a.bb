@@ -11,6 +11,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 # Set S variable to folder that includes Makefile
 S = "${WORKDIR}/git"
 DEPENDS:append = " dtc-native xxd-native"
+DEPENDS:append = " ${@oe.utils.conditional('ENABLE_SPD_OPTEE', '1', ' optee-os', '', d)}"
 
 # Trusted Firmware-A source code repository
 SRC_URI:rz-cmn = " \
@@ -33,9 +34,17 @@ SEC_FLAGS = " \
     ${@oe.utils.conditional("ENABLE_SPD_OPTEE", "1", " SPD=opteed", "",d)} \
 "
 
-EXTRA_FLAGS:append = "${SEC_FLAGS}"
+BL32_FLAGS = " \
+    ${@oe.utils.conditional('ENABLE_SPD_OPTEE', '1', ' BL32=${STAGING_DIR_HOST}/boot/tee-${MACHINE}.bin', '', d)} \
+"
 
-FILESEXTRAPATHS:append := "${THISDIR}/files"
+EXTRA_FLAGS:append = "${SEC_FLAGS}${BL32_FLAGS}"
+
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+SRC_URI:append:rz-cmn = " \
+    file://0001-rz-cmn-optee-expand-bl32-memory.patch \
+    file://0002-rz-cmn-optee-fix-bl32-entry-spsr.patch \
+"
 
 ECC_FLAGS = " DDR_ECC_ENABLE=1 "
 ECC_FLAGS += "${@oe.utils.conditional("ECC_MODE", "ERR_DETECT", "DDR_ECC_DETECT=1", "",d)}"

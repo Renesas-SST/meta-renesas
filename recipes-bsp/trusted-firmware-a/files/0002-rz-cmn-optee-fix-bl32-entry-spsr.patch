@@ -1,0 +1,24 @@
+Upstream-Status: Pending
+
+From 0000000000000000000000000000000000000002 Mon Sep 17 00:00:00 2001
+From: Quoc Trinh <quoctrinh021102@gmail.com>
+Date: Tue, 13 May 2026 00:00:00 +0000
+Subject: [PATCH 2/2] rz-cmn-optee: fix bl32 entry spsr
+
+Upstream-Status: Inappropriate [platform specific]
+Signed-off-by: Quoc Trinh <quoctrinh021102@gmail.com>
+---
+diff --git a/plat/renesas/rz/common/bl2_plat_mem_params_desc.c b/plat/renesas/rz/common/bl2_plat_mem_params_desc.c
+index 0a5c30eb0..25f1a1f98 100755
+--- a/plat/renesas/rz/common/bl2_plat_mem_params_desc.c
++++ b/plat/renesas/rz/common/bl2_plat_mem_params_desc.c
+@@ -50,7 +50,8 @@ static bl_mem_params_node_t bl2_mem_params_descs[] = {
+ 		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
+ 			entry_point_info_t, SECURE | EXECUTABLE),
+ 		.ep_info.pc = BL32_BASE,
+-		.ep_info.spsr = 0,
++		.ep_info.spsr = SPSR_64(MODE_EL1, MODE_SP_ELX,
++			DISABLE_ALL_EXCEPTIONS),
+ 
+ 		SET_STATIC_PARAM_HEAD(image_info, PARAM_EP, VERSION_2,
+ 			image_info_t, 0),

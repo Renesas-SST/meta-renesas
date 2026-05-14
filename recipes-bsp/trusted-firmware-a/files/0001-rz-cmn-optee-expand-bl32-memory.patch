@@ -1,0 +1,23 @@
+Upstream-Status: Pending
+
+From 0000000000000000000000000000000000000001 Mon Sep 17 00:00:00 2001
+From: Quoc Trinh <quoctrinh021102@gmail.com>
+Date: Tue, 13 May 2026 00:00:00 +0000
+Subject: [PATCH 1/2] rz-cmn-optee: expand bl32 memory
+
+Upstream-Status: Inappropriate [platform specific]
+Signed-off-by: Quoc Trinh <quoctrinh021102@gmail.com>
+---
+diff --git a/plat/renesas/rz/common/include/platform_def.h b/plat/renesas/rz/common/include/platform_def.h
+index 740e1143f..3c6b861ad 100644
+--- a/plat/renesas/rz/common/include/platform_def.h
++++ b/plat/renesas/rz/common/include/platform_def.h
+@@ -88,7 +88,7 @@
+  ******************************************************************************/
+ #ifndef SPD_none
+ #define BL32_BASE				(0x44100000)
+-#define BL32_LIMIT				(BL32_BASE + 0x100000)
++#define BL32_LIMIT				(BL32_BASE + 0x03D00000)
+ #endif
+ 
+ //#define REMOVE_UBOOT
