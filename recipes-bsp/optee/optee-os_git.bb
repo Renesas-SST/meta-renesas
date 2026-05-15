@@ -43,6 +43,7 @@ EXTRA_OEMAKE = " \
     CFG_RPMB_FS=n \
     CFG_CRYPTO_WITH_CE=n \
     CFG_RZ_SCE=${RZ_SCE} \
+    CFG_DT=y \
     CROSS_COMPILE64=${TARGET_PREFIX} \
 "
 
