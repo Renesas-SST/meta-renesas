@@ -18,7 +18,7 @@ SRC_URI:rz-cmn = " \
     git://github.com/vudangRVC/rz-atf-sst.git;name=machine;branch=${BRANCH};protocol=https \
 "
 BRANCH:rz-cmn = "styhead/rz-cmn-quoctrinh-optee"
-SRCREV_machine:rz-cmn = "0b9096d2836088c2f396af681345fb26f29f5f48"
+SRCREV_machine:rz-cmn = "421d6a99d7ab9f4d46ba4bb5e56aa9c9a6ca4bea"
 PV = "v2.9+git"
 
 # Configuration for rz-cmn board
