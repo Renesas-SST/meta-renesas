@@ -15,10 +15,10 @@ DEPENDS:append = " ${@oe.utils.conditional('ENABLE_SPD_OPTEE', '1', ' optee-os',
 
 # Trusted Firmware-A source code repository
 SRC_URI:rz-cmn = " \
-    git://github.com/Renesas-SST/rz-atf.git;name=machine;branch=${BRANCH};protocol=https \
+    git://github.com/vudangRVC/rz-atf-sst.git;name=machine;branch=${BRANCH};protocol=https \
 "
-BRANCH:rz-cmn = "styhead/rz-cmn"
-SRCREV_machine:rz-cmn = "${AUTOREV}"
+BRANCH:rz-cmn = "styhead/rz-cmn-quoctrinh-optee"
+SRCREV_machine:rz-cmn = "0b9096d2836088c2f396af681345fb26f29f5f48"
 PV = "v2.9+git"
 
 # Configuration for rz-cmn board
@@ -42,7 +42,6 @@ EXTRA_FLAGS:append = "${SEC_FLAGS}${BL32_FLAGS}"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 SRC_URI:append:rz-cmn = " \
-    file://0001-rz-cmn-optee-expand-bl32-memory.patch \
     file://0002-rz-cmn-optee-fix-bl32-entry-spsr.patch \
 "
 
