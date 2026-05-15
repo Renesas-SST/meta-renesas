@@ -41,9 +41,6 @@ BL32_FLAGS = " \
 EXTRA_FLAGS:append = "${SEC_FLAGS}${BL32_FLAGS}"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
-SRC_URI:append:rz-cmn = " \
-    file://0002-rz-cmn-optee-fix-bl32-entry-spsr.patch \
-"
 
 ECC_FLAGS = " DDR_ECC_ENABLE=1 "
 ECC_FLAGS += "${@oe.utils.conditional("ECC_MODE", "ERR_DETECT", "DDR_ECC_DETECT=1", "",d)}"
