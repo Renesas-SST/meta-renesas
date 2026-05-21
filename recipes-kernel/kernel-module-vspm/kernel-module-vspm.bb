@@ -35,6 +35,7 @@ SRC_URI:append:rz-cmn = " \
         file://0013-vspm-isu-Check-addr-of-1st-plane-in-parameter-for-RP.patch \
         file://0014-rzg2l-sbc-get-interrupt-number.patch \
         file://0015-rzg2l-sbc-vspm-supports-kernel-6.10.patch \
+        file://0016-vspm-module-update-following-kernel-6.18.patch \
 "
 
 S = "${WORKDIR}/git"

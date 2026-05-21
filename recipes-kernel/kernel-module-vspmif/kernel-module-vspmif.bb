@@ -27,6 +27,7 @@ SRC_URI:append:rz-cmn = " \
     file://0003-Correcting-variable-type.patch \
     file://0004-Remove-unused-memory.patch \
     file://0005-Correction-32bit-variable.patch \
+    file://0006-drv-vspm_if-update-following-the-kernel-6.18.patch \
 "
 
 S = "${WORKDIR}/git"
@@ -37,6 +38,22 @@ includedir = "${RENESAS_DATADIR}/include"
 
 # Build VSP Manager Interface kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
+
+
+MMNGR_PATHMAP_FLAGS = " \
+    -fmacro-prefix-map=${STAGING_KERNEL_DIR}=/usr/src/kernel \
+    -ffile-prefix-map=${STAGING_KERNEL_DIR}=/usr/src/kernel \
+    -fdebug-prefix-map=${STAGING_KERNEL_DIR}=/usr/src/kernel \
+    -fmacro-prefix-map=${S}=/usr/src/debug/${PN}/${PV} \
+    -ffile-prefix-map=${S}=/usr/src/debug/${PN}/${PV} \
+    -fdebug-prefix-map=${S}=/usr/src/debug/${PN}/${PV} \
+"
+
+EXTRA_OEMAKE:append = " \
+    KCFLAGS='${MMNGR_PATHMAP_FLAGS}' \
+    KBUILD_EXTRA_CPPFLAGS='${MMNGR_PATHMAP_FLAGS}' \
+"
+
 
 do_install () {
     # Create destination directories

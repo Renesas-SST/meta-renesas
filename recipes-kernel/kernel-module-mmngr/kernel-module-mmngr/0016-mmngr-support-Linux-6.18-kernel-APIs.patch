@@ -1,0 +1,111 @@
+From fa1cfaf989c22977acfb73258ab70dee070f2b9d Mon Sep 17 00:00:00 2001
+From: Tien Nguyen <tien.nguyen.uh@renesas.com>
+Date: Thu, 21 May 2026 08:19:52 +0000
+Subject: [PATCH] mmngr: support Linux 6.18 kernel APIs
+
+Update mmngr for Linux 6.18 API changes.
+
+The follow_pte() helper is no longer available to this external module
+build, so replace the virtual-to-physical conversion path with
+follow_pfnmap_start() and follow_pfnmap_end().
+
+Also update the platform driver remove callback to return void, matching
+the current struct platform_driver API.
+
+Upstream-Status: Pending
+
+Signed-off-by: Tien Nguyen <tien.nguyen.uh@renesas.com>
+---
+ .../mmngr-module/files/mmngr/drv/mmngr_drv.c  | 44 ++++++++++++-------
+ .../files/mmngr/include/mmngr_private.h       |  2 +-
+ 2 files changed, 29 insertions(+), 17 deletions(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index c63bbcd..fddfb2b 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -848,23 +848,37 @@ static void mm_cnv_addr(struct MM_PARAM *tmp)
+ 	struct mm_struct *mm = current->mm;
+ 	unsigned long start;
+ 	unsigned long pfn;
+-	pte_t *ptep;
+-	spinlock_t *ptl;
+-	int lp = 0;
+-	int ret = 0;
++	int ret;
++	struct follow_pfnmap_args args = {};
+ 
+ 	mmap_read_lock(mm);
+-	vma = find_vma(mm, tmp->user_virt_addr);
++
+ 	start = tmp->user_virt_addr & PAGE_MASK;
+-	ret = follow_pte(vma, start, &ptep, &ptl);
+-	if(ret != 0)
+-		 pr_warn("Could not convert virt[%p] addr", tmp->user_virt_addr);
+-	pfn = pte_pfn(ptep_get(ptep));
+-	pte_unmap_unlock(ptep, ptl);
+-	tmp->hard_addr = pfn << PAGE_SHIFT;
+-	mmap_read_unlock(mm);
++	vma = find_vma(mm, start);
++	if (!vma || start < vma->vm_start) {
++		pr_warn("Could not find VMA for virt[0x%lx]\n",
++			(unsigned long)tmp->user_virt_addr);
++		goto out_unlock;
++	}
+ 
+-	return;
++	args.vma = vma;
++	args.address = start;
++
++	ret = follow_pfnmap_start(&args);
++	if (ret) {
++		pr_warn("Could not convert virt[0x%lx] addr, ret=%d\n",
++			(unsigned long)tmp->user_virt_addr, ret);
++		goto out_unlock;
++	}
++
++	pfn = args.pfn;
++	tmp->hard_addr = (pfn << PAGE_SHIFT) |
++			(tmp->user_virt_addr & ~PAGE_MASK);
++
++	follow_pfnmap_end(&args);
++
++out_unlock:
++	mmap_read_unlock(mm);
+ }
+ 
+ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma)
+@@ -1795,7 +1809,7 @@ err_alloc:
+ 	return -1;
+ }
+ 
+-static int mm_remove(struct platform_device *pdev)
++static void mm_remove(struct platform_device *pdev)
+ {
+ 	u32 i;
+ 
+@@ -1827,8 +1841,6 @@ static int mm_remove(struct platform_device *pdev)
+ 			(dma_addr_t)mm_drvdata->reserve_phy_addr);
+ 
+ 	kfree(mm_drvdata);
+-
+-	return 0;
+ }
+ 
+ static const struct of_device_id mm_of_match[] = {
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
+index 6e40494..7538793 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
+@@ -176,7 +176,7 @@ static int close(struct inode *inode, struct file *file);
+ static long ioctl(struct file *file, unsigned int cmd, unsigned long arg);
+ static int mmap(struct file *filp, struct vm_area_struct *vma);
+ static int mm_probe(struct platform_device *pdev);
+-static int mm_remove(struct platform_device *pdev);
++static void mm_remove(struct platform_device *pdev);
+ static int mm_init(void);
+ static void mm_exit(void);
+ 
+-- 
+2.43.0
+
