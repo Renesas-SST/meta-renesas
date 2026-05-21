@@ -38,14 +38,6 @@ SRC_URI:append:rz-cmn =	" \
 	file://rzg2l-sbc/touch.cfg \
 "
 
-# Pull in the RT patch artifact along with the per-variant config fragments
-# so they are available during do_compile_*.
-SRC_URI:append:rz-cmn = " \
-    file://common/preempt-rt.cfg \
-    file://common/nonpreempt.cfg \
-    file://common/base-preempt.cfg \
-"
-
 S = "${UNPACKDIR}/git-nonrt"
 
 ####################################################################
@@ -57,7 +49,7 @@ RENESAS_KERNEL_VARIANTS:rz-cmn = "preempt_rt nonpreempt"
 RENESAS_KERNEL_VARIANT_nonpreempt_SRCTREE:rz-cmn  = "${UNPACKDIR}/git-nonrt"
 # Let TREE default to ${WORKDIR}/git-nonpreempt (set by the class)
 RENESAS_KERNEL_VARIANT_nonpreempt_PRETTY:rz-cmn   = "non-preempt"
-RENESAS_KERNEL_VARIANT_nonpreempt_CONFIG:rz-cmn   = "${WORKDIR}/sources-unpack/common/nonpreempt.cfg"
+RENESAS_KERNEL_VARIANT_nonpreempt_CONFIG:rz-cmn = "${THISDIR}/rz-cmn/common/nonpreempt.cfg"
 RENESAS_KERNEL_VARIANT_nonpreempt_IMAGE:rz-cmn    = "Image-nonpreempt-${KERNEL_ARTIFACT_NAME}.bin"
 RENESAS_KERNEL_VARIANT_nonpreempt_SYMLINK:rz-cmn  = "Image-nonpreempt"
 RENESAS_KERNEL_VARIANT_nonpreempt_MODULES:rz-cmn  = "${PN}-modules-nonpreempt"
@@ -66,7 +58,7 @@ RENESAS_KERNEL_VARIANT_nonpreempt_MODULES:rz-cmn  = "${PN}-modules-nonpreempt"
 RENESAS_KERNEL_VARIANT_preempt_rt_SRCTREE:rz-cmn  = "${UNPACKDIR}/git-rt"
 # Let TREE default to ${WORKDIR}/git-preempt_rt
 RENESAS_KERNEL_VARIANT_preempt_rt_PRETTY:rz-cmn   = "PREEMPT_RT"
-RENESAS_KERNEL_VARIANT_preempt_rt_CONFIG:rz-cmn   = "${WORKDIR}/sources-unpack/common/preempt-rt.cfg"
+RENESAS_KERNEL_VARIANT_preempt_rt_CONFIG:rz-cmn = "${THISDIR}/rz-cmn/common/preempt-rt.cfg"
 RENESAS_KERNEL_VARIANT_preempt_rt_IMAGE:rz-cmn    = "Image-preempt_rt-${KERNEL_ARTIFACT_NAME}.bin"
 RENESAS_KERNEL_VARIANT_preempt_rt_SYMLINK:rz-cmn  = "Image-preempt_rt"
 RENESAS_KERNEL_VARIANT_preempt_rt_MODULES:rz-cmn  = "${PN}-modules-preempt-rt"
@@ -76,8 +68,8 @@ RENESAS_KERNEL_VARIANT_preempt_rt_MODULES:rz-cmn  = "${PN}-modules-preempt-rt"
 ####################################################################
 PACKAGES:append:rz-cmn = " ${PN}-modules-preempt-rt ${PN}-modules-nonpreempt"
 FILES:${PN}-modules-preempt-rt:rz-cmn = " \
-    ${nonarch_base_libdir}/modules/*-rt*/modules.* \
-    ${nonarch_base_libdir}/modules/*-rt*/kernel/** \
+    ${nonarch_base_libdir}/modules/*rt*/modules.* \
+    ${nonarch_base_libdir}/modules/*rt*/kernel/** \
 "
 FILES:${PN}-modules-nonpreempt:rz-cmn = " \
     ${nonarch_base_libdir}/modules/*-nonpreempt*/modules.* \
@@ -159,9 +151,10 @@ SRCREV_nonrt:rz-cmn ?= "${AUTOREV}"
 SRCREV_rt:rz-cmn ?= "${AUTOREV}"
 SRCREV_FORMAT = "nonrt_rt"
 
-LINUX_VERSION:rz-cmn ?= "6.10.14"
+LINUX_VERSION:rz-cmn ?= "6.18.20"
 
 # COMPATIBLE_MACHINE is regex matcher.
 COMPATIBLE_MACHINE:rz-cmn = "(rz-cmn)"
 COMPATIBLE_MACHINE = "^(aarch64|rz-cmn)$"
 
+EXTRA_OEMAKE += "${PARALLEL_MAKE}"
