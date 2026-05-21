@@ -1,0 +1,13 @@
+[Unit]
+Description=OP-TEE Supplicant daemon
+After=dev-tee0.device
+Wants=dev-tee0.device
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/tee-supplicant
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
