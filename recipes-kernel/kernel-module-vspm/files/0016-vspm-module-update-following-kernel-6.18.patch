@@ -1,0 +1,84 @@
+From 16fcf1b5597953ccd72034631c34bb71dba5d4fc Mon Sep 17 00:00:00 2001
+From: Tien Nguyen <tien.nguyen.uh@renesas.com>
+Date: Thu, 21 May 2026 10:29:49 +0000
+Subject: [PATCH] vspm: support Linux 6.18 kernel APIs
+
+Upstream-Status: Pending
+
+Signed-off-by: Tien Nguyen <tien.nguyen.uh@renesas.com>
+---
+ vspm-module/files/vspm/drv/Makefile    |  2 ++
+ vspm-module/files/vspm/drv/vspm_main.c | 12 ++++++------
+ 2 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/Makefile b/vspm-module/files/vspm/drv/Makefile
+index 4a0acf8..67a6479 100644
+--- a/vspm-module/files/vspm/drv/Makefile
++++ b/vspm-module/files/vspm/drv/Makefile
+@@ -1,3 +1,5 @@
++ccflags-y += -I$(src)
++ccflags-y += -I$(src)/../include
+ CFILES = vspm_main.c vspm_sub.c
+ CFILES += frame.c
+ CFILES += manager/vspm_control.c manager/vspm_drv_vsp.c manager/vspm_drv_fdp.c manager/vspm_exec_manager.c manager/vspm_drv_isu.c
+diff --git a/vspm-module/files/vspm/drv/vspm_main.c b/vspm-module/files/vspm/drv/vspm_main.c
+index 65edb84..f7b67dc 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.c
++++ b/vspm-module/files/vspm/drv/vspm_main.c
+@@ -343,7 +343,7 @@ static int vspm_vsp_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int vspm_vsp_remove(struct platform_device *pdev)
++static void vspm_vsp_remove(struct platform_device *pdev)
+ {
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+ 	struct device_node *np = pdev->dev.of_node;
+@@ -365,7 +365,7 @@ static int vspm_vsp_remove(struct platform_device *pdev)
+ 	for (i = 0; i < CLKNUM; i++)
+ 		pdrv->vsp_clks[ch][i] = NULL;
+ 
+-	return 0;
++	return;
+ }
+ 
+ static int vspm_fdp_probe(struct platform_device *pdev)
+@@ -419,7 +419,7 @@ static int vspm_fdp_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int vspm_fdp_remove(struct platform_device *pdev)
++static void vspm_fdp_remove(struct platform_device *pdev)
+ {
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+ 	struct device_node *np = pdev->dev.of_node;
+@@ -441,7 +441,7 @@ static int vspm_fdp_remove(struct platform_device *pdev)
+ 	for (i = 0; i < CLKNUM; i++)
+ 		pdrv->fdp_clks[ch][i] = NULL;
+ 
+-	return 0;
++	return;
+ }
+ 
+ static int vspm_isu_probe(struct platform_device *pdev)
+@@ -504,7 +504,7 @@ static int vspm_isu_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int vspm_isu_remove(struct platform_device *pdev)
++static void vspm_isu_remove(struct platform_device *pdev)
+ {
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+ 	struct device_node *np = pdev->dev.of_node;
+@@ -526,7 +526,7 @@ static int vspm_isu_remove(struct platform_device *pdev)
+ 	for (i = 0; i < CLKNUM; i++)
+ 		pdrv->isu_clks[ch][i] = NULL;
+ 
+-	return 0;
++	return;
+ }
+ 
+ 
+-- 
+2.43.0
+

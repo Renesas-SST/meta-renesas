@@ -10,6 +10,7 @@ SRC_URI:append = " \
     file://0001-mmngrbuf-Add-support-dmabuf_vmap-api.patch \
     file://0002-mmngrbuf-Update-following-kernel-6.1.patch \
     file://0003-mmngrbuf-Using-vm_flags_set-to-modify-flags.patch \
+    file://0004-mmngrbuf-update-following-kernel-6.18.patch \
 "
 
 S = "${WORKDIR}/git"
@@ -21,6 +22,23 @@ SSTATE_ALLOW_OVERLAP_FILES += "${STAGING_INCDIR}"
 
 # Build Memory Manager Buffer kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
+
+MMNGRBUF_PATHMAP_FLAGS = " \
+    -fmacro-prefix-map=${STAGING_KERNEL_DIR}=/usr/src/kernel \
+    -ffile-prefix-map=${STAGING_KERNEL_DIR}=/usr/src/kernel \
+    -fdebug-prefix-map=${STAGING_KERNEL_DIR}=/usr/src/kernel \
+    -fmacro-prefix-map=${S}=/usr/src/debug/${PN}/${PV} \
+    -ffile-prefix-map=${S}=/usr/src/debug/${PN}/${PV} \
+    -fdebug-prefix-map=${S}=/usr/src/debug/${PN}/${PV} \
+    -fmacro-prefix-map=${B}=/usr/src/debug/${PN}/${PV} \
+    -ffile-prefix-map=${B}=/usr/src/debug/${PN}/${PV} \
+    -fdebug-prefix-map=${B}=/usr/src/debug/${PN}/${PV} \
+"
+
+EXTRA_OEMAKE:append = " \
+    KCFLAGS='${MMNGRBUF_PATHMAP_FLAGS}' \
+    KBUILD_EXTRA_CPPFLAGS='${MMNGRBUF_PATHMAP_FLAGS}' \
+"
 
 do_compile:prepend() {
     install -d ${INCSHARED}
