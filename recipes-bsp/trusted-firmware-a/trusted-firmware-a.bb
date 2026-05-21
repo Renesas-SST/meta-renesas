@@ -16,7 +16,7 @@ DEPENDS:append = " dtc-native xxd-native"
 SRC_URI:rz-cmn = " \
     git://github.com/Renesas-SST/rz-atf.git;name=machine;branch=${BRANCH};protocol=https \
 "
-BRANCH:rz-cmn = "styhead/rz-cmn"
+BRANCH:rz-cmn = "styhead/rz-cmn-3.3"
 SRCREV_machine:rz-cmn = "${AUTOREV}"
 PV = "v2.9+git"
 
@@ -35,7 +35,7 @@ SEC_FLAGS = " \
 
 EXTRA_FLAGS:append = "${SEC_FLAGS}"
 
-FILESEXTRAPATHS:append := "${THISDIR}/files"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 ECC_FLAGS = " DDR_ECC_ENABLE=1 "
 ECC_FLAGS += "${@oe.utils.conditional("ECC_MODE", "ERR_DETECT", "DDR_ECC_DETECT=1", "",d)}"
