@@ -28,6 +28,7 @@ IMAGE_INSTALL:append = " \
 "
 
 IMAGE_INSTALL:append:rz-cmn = " uenv"
+IMAGE_INSTALL:append:rz-cmn = " ${@oe.utils.conditional('ENABLE_SPD_OPTEE', '1', 'optee-client', '', d)}"
 
 WKS_FILE = "rz-cmn-image-bootpart-mmc0.wks"
 
