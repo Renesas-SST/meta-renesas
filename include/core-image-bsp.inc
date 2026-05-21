@@ -31,8 +31,5 @@ IMAGE_INSTALL:append = " \
     connman-tools \
     connman-tests \
     connman-wait-online \
-    lttng-modules \
-    lttng-tools \
-    lttng-ust \
     tcf-agent \
 "
