@@ -1,0 +1,45 @@
+From 8d88dae4e52f5e1e038d623a653580f6ce72a329 Mon Sep 17 00:00:00 2001
+From: Tien Nguyen <tien.nguyen.uh@renesas.com>
+Date: Thu, 21 May 2026 10:48:04 +0000
+Subject: [PATCH] drv: vspm_if: update following the kernel 6.18
+
+Upstream-Status: Pending
+
+Signed-off-by: Tien Nguyen <tien.nguyen.uh@renesas.com>
+---
+ vspm_if-module/files/vspm_if/drv/Makefile       | 2 ++
+ vspm_if-module/files/vspm_if/drv/vspm_if_main.c | 3 +--
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/vspm_if-module/files/vspm_if/drv/Makefile b/vspm_if-module/files/vspm_if/drv/Makefile
+index bf082d7..a149380 100644
+--- a/vspm_if-module/files/vspm_if/drv/Makefile
++++ b/vspm_if-module/files/vspm_if/drv/Makefile
+@@ -3,6 +3,8 @@ CFILES = vspm_if_main.c vspm_if_sub.c
+ obj-m += vspm_if.o
+ vspm_if-objs := $(CFILES:.c=.o)
+ 
++ccflags-y += -I$(M)/../include
++
+ U_INCLUDE := -I$(PWD)
+ U_INCLUDE += -I$(PWD)/../include
+ U_INCLUDE += -I$(KERNELSRC)/include
+diff --git a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+index 6139190..0f76488 100644
+--- a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
++++ b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+@@ -1019,10 +1019,9 @@ static int vspm_if_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int vspm_if_remove(struct platform_device *pdev)
++static void vspm_if_remove(struct platform_device *pdev)
+ {
+ 	g_vspmif_pdev = NULL;
+-	return 0;
+ }
+ 
+ static const struct of_device_id vspm_if_of_match[] = {
+-- 
+2.43.0
+

@@ -16,6 +16,16 @@ MRVL_SRC ?= "git://github.com/nxp-imx/mwifiex.git;protocol=https"
 SRC_URI = "${MRVL_SRC};branch=${SRCBRANCH};patchdir=${WORKDIR}/git"
 S = "${WORKDIR}/git"
 
+NXP_WLAN_PATHMAP_FLAGS = " \
+    -fmacro-prefix-map=${STAGING_KERNEL_DIR}=/usr/src/kernel \
+    -fmacro-prefix-map=${STAGING_KERNEL_BUILDDIR}=/usr/src/kernel \
+"
+
+EXTRA_OEMAKE:append = " \
+    KCFLAGS='${NXP_WLAN_PATHMAP_FLAGS}' \
+    KBUILD_EXTRA_CPPFLAGS='${NXP_WLAN_PATHMAP_FLAGS}' \
+"
+
 SRC_URI += " \
     file://moal.modprobe.conf \
     file://0001-moal-assign-per-instance-lockdep-class-to-moal_lock.patch \
