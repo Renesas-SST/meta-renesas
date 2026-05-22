@@ -10,7 +10,8 @@ require include/rz-optee-config.inc
 inherit deploy python3native
 
 PV = "4.10.0+git${SRCPV}"
-BRANCH = "styhead/rz-cmn"
+# [dev] PR #1: quoctrinh/rz-cmn-integration
+BRANCH = "quoctrinh/rz-cmn-integration"
 SRCREV = "${AUTOREV}"
 
 SRC_URI = "git://github.com/Renesas-SST/rz_optee_os.git;branch=${BRANCH};protocol=https"

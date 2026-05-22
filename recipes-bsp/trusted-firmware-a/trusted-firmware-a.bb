@@ -13,10 +13,11 @@ S = "${WORKDIR}/git"
 DEPENDS:append = " dtc-native xxd-native"
 
 # Trusted Firmware-A source code repository
+# [dev] PR #26: vudangRVC/rz-atf-sst lts-v2.14.1-optee
 SRC_URI:rz-cmn = " \
-    git://github.com/Renesas-SST/rz-atf.git;name=machine;branch=${BRANCH};protocol=https \
+    git://github.com/vudangRVC/rz-atf-sst.git;name=machine;branch=${BRANCH};protocol=https \
 "
-BRANCH:rz-cmn = "styhead/rz-cmn-3.3"
+BRANCH:rz-cmn = "lts-v2.14.1-optee"
 SRCREV_machine:rz-cmn = "${AUTOREV}"
 PV = "v2.9+git"
 
