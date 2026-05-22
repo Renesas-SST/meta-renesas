@@ -52,12 +52,17 @@ LDFLAGS[unexport] = "1"
 AS[unexport] = "1"
 LD[unexport] = "1"
 
+# ENABLE_PIE=1 (set by rz platform) requires ld.bfd for --no-dynamic-linker / --emit-relocs.
+# TF-A bl2-all sub-makes pass LD=${LD} down; provide it explicitly so toolchain.mk
+# detects gnu-ld (not gnu-gcc) and uses direct ld flags instead of -Xlinker wrappers.
+TF_LD = "${TARGET_PREFIX}ld.bfd"
+
 # Make args with option ${EXTRA_OEMAKE}
 # Builds:
 #   - all BL2 variants (xSPI, eMMC, eSD) via the `bl2-all` target
 #   - BL31
 #   - FCONF device trees (dtbs)
-EXTRA_OEMAKE="PLAT=${PLATFORM} ${EXTRA_FLAGS} bl2-all bl31 dtbs"
+EXTRA_OEMAKE="PLAT=${PLATFORM} ${EXTRA_FLAGS} LD=${TF_LD} bl2-all bl31 dtbs"
 
 # Install bl2.bin and bl31.bin to boot folder and rename
 do_install() {
