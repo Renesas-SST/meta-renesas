@@ -57,12 +57,28 @@ LD[unexport] = "1"
 # detects gnu-ld (not gnu-gcc) and uses direct ld flags instead of -Xlinker wrappers.
 TF_LD = "${TARGET_PREFIX}ld.bfd"
 
-# Make args with option ${EXTRA_OEMAKE}
-# Builds:
-#   - all BL2 variants (xSPI, eMMC, eSD) via the `bl2-all` target
-#   - BL31
-#   - FCONF device trees (dtbs)
-EXTRA_OEMAKE="PLAT=${PLATFORM} ${EXTRA_FLAGS} LD=${TF_LD} bl2-all bl31 dtbs"
+# Common make flags shared by all targets
+TFA_MAKE_FLAGS = "PLAT=${PLATFORM} ${EXTRA_FLAGS} LD=${TF_LD}"
+
+# bl2-all calls `make clean` between each BL2 variant, which wipes bl31.bin and dtbs.
+# Build bl31 + dtbs first, save them to a staging dir, then build bl2-all, then restore.
+do_compile() {
+    # Build BL31 and FDTs first — before bl2-all wipes them with make clean
+    oe_runmake ${TFA_MAKE_FLAGS} bl31 dtbs
+
+    # Stage bl31 + fdts so bl2-all's make clean cannot delete them
+    mkdir -p ${S}/build-staged
+    cp ${S}/build/${PLATFORM}/release/bl31.bin ${S}/build-staged/bl31.bin
+    cp -r ${S}/build/${PLATFORM}/release/fdts   ${S}/build-staged/fdts
+
+    # Build all BL2 storage variants (calls make clean internally)
+    oe_runmake ${TFA_MAKE_FLAGS} bl2-all
+
+    # Restore bl31 + fdts after bl2-all's clean passes
+    cp ${S}/build-staged/bl31.bin ${S}/build/${PLATFORM}/release/bl31.bin
+    mkdir -p ${S}/build/${PLATFORM}/release/fdts
+    cp -r ${S}/build-staged/fdts/. ${S}/build/${PLATFORM}/release/fdts/
+}
 
 # Install bl2.bin and bl31.bin to boot folder and rename
 do_install() {
