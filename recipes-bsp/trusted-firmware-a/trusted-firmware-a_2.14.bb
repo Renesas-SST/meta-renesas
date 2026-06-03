@@ -18,7 +18,7 @@ SRC_URI:rz-cmn = " \
 "
 BRANCH:rz-cmn = "styhead/rz-cmn"
 SRCREV_machine:rz-cmn = "${AUTOREV}"
-PV = "v2.9+git"
+PV = "v2.14+git"
 
 # Configuration for rz-cmn board
 PLATFORM:rz-cmn = "cmn"
@@ -56,7 +56,7 @@ LD[unexport] = "1"
 #   - all BL2 variants (xSPI, eMMC, eSD) via the `bl2-all` target
 #   - BL31
 #   - FCONF device trees (dtbs)
-EXTRA_OEMAKE="PLAT=${PLATFORM} ${EXTRA_FLAGS} bl2-all bl31 dtbs"
+EXTRA_OEMAKE = "PLAT=${PLATFORM} ${EXTRA_FLAGS} LD=${TARGET_PREFIX}ld.bfd bl2-all bl31 dtbs"
 
 # Install bl2.bin and bl31.bin to boot folder and rename
 do_install() {
