@@ -2,7 +2,7 @@ require recipes-bsp/u-boot/u-boot-common.inc
 require recipes-bsp/u-boot/u-boot.inc
 
 PROVIDES += "u-boot"
-DEPENDS += "bc-native dtc-native"
+DEPENDS += "lzop-native srecord-native bc-native dtc-native python3-pyelftools-native gnutls-native"
 
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
@@ -35,7 +35,7 @@ do_install() {
 
     install -m 644 ${KCONFIG_CONFIG_ROOTDIR}/u-boot-nodtb.bin ${D}/boot/
     for dtb_name in ${DEVICETREE_NAME}; do
-        install -m 644 ${KCONFIG_CONFIG_ROOTDIR}/arch/arm/dts/${dtb_name}.dtb ${D}/boot/dtbs
+        install -m 644 ${KCONFIG_CONFIG_ROOTDIR}/dts/upstream/src/arm64/renesas/${dtb_name}.dtb ${D}/boot/dtbs
     done
 }
 
