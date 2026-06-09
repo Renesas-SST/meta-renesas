@@ -9,8 +9,8 @@ S = "${WORKDIR}/sources"
 UNPACKDIR = "${S}"
 
 SRC_URI = " \
-    file://r11qs0072eu0310-rz-cmn-srp-um-quick-start-guide.pdf \
-    file://r12uz0204eu0310-rz-cmn-srp-um.pdf \
+    file://r11qs0072eu0320-rz-cmn-srp-um-quick-start-guide.pdf \
+    file://r12uz0204eu0320-rz-cmn-srp-um.pdf \
     file://RZ_System_Release_Package_Evaluation_license.pdf \
     file://Disclaimer051.pdf \
 "
@@ -19,8 +19,8 @@ FILES:${PN} += "/util"
 
 do_install () {
     install -d ${D}/util
-    install -m 0644 ${S}/r11qs0072eu0310-rz-cmn-srp-um-quick-start-guide.pdf ${D}/util/r11qs0072eu0310-rz-cmn-srp-um-quick-start-guide.pdf
-    install -m 0644 ${S}/r12uz0204eu0310-rz-cmn-srp-um.pdf ${D}/util/r12uz0204eu0310-rz-cmn-srp-um.pdf
+    install -m 0644 ${S}/r11qs0072eu0320-rz-cmn-srp-um-quick-start-guide.pdf ${D}/util/r11qs0072eu0320-rz-cmn-srp-um-quick-start-guide.pdf
+    install -m 0644 ${S}/r12uz0204eu0320-rz-cmn-srp-um.pdf ${D}/util/r12uz0204eu0320-rz-cmn-srp-um.pdf
     install -m 0644 ${S}/RZ_System_Release_Package_Evaluation_license.pdf ${D}/util/RZ_System_Release_Package_Evaluation_license.pdf
 
     # Disclaimer files
@@ -33,8 +33,8 @@ addtask deploy after do_install
 do_deploy () {
     # Install the user guide into the build folder
     install -d ${DEPLOYDIR}/
-    install -m 0644 ${D}/util/r11qs0072eu0310-rz-cmn-srp-um-quick-start-guide.pdf ${DEPLOYDIR}/
-    install -m 0644 ${D}/util/r12uz0204eu0310-rz-cmn-srp-um.pdf ${DEPLOYDIR}/
+    install -m 0644 ${D}/util/r11qs0072eu0320-rz-cmn-srp-um-quick-start-guide.pdf ${DEPLOYDIR}/
+    install -m 0644 ${D}/util/r12uz0204eu0320-rz-cmn-srp-um.pdf ${DEPLOYDIR}/
     install -m 0644 ${D}/util/RZ_System_Release_Package_Evaluation_license.pdf ${DEPLOYDIR}/
 
     # Install license files into the license folder in the build
