@@ -15,6 +15,11 @@ do_install:append() {
     # Use own weston.ini file
     install -d ${D}/${sysconfdir}/xdg/weston
     install -m 0755 ${S}/weston.ini ${D}/${sysconfdir}/xdg/weston/weston.ini
+    
+    # Strip xwayland if Mali is enabled
+    if [ "${RZ_FEATURE_PANFROST}" = "0" ]; then
+        sed -i '/xwayland=true/d' ${D}${sysconfdir}/xdg/weston/weston.ini
+    fi
 
     # Set XDG_RUNTIME_DIR to /run/user/$UID (e.g. run/user/0)
     install -d ${D}/${sysconfdir}/profile.d

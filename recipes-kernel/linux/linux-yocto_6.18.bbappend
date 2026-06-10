@@ -6,8 +6,8 @@ inherit kernel
 inherit kernel-devicetree
 inherit renesas-kernel-variants
 
-KBRANCH  = "styhead/rz-cmn"
-KBRANCH_RT = "styhead/rz-cmn-rt"
+KBRANCH  = "3.3-multi-os"
+KBRANCH_RT = "styhead/rz-cmn-3.3-rt"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}:"
 
@@ -15,14 +15,14 @@ FILESEXTRAPATHS:prepend := "${THISDIR}:"
 # Comment out the following entries to use the Yocto Git repositories instead.
 # This may conflict with the current setup.
 SRC_URI:rz-cmn = " \
-  git://github.com/Renesas-SST/linux-rz.git;name=nonrt;branch=${KBRANCH};protocol=https;destsuffix=git-nonrt \
+  git://github.com/vudangRVC/linux-rz-sst.git;name=nonrt;branch=${KBRANCH};protocol=https;destsuffix=git-nonrt \
   git://github.com/Renesas-SST/linux-rz.git;name=rt;branch=${KBRANCH_RT};protocol=https;destsuffix=git-rt \
 "
 
 # Common config fragments and patches
 SRC_URI:append:rz-cmn = " \
 	file://common/kernel-common.cfg \
-	file://common/panfrost.cfg \
+        ${@oe.utils.conditional('RZ_FEATURE_PANFROST', '1', 'file://common/enable-panfrost.cfg', 'file://common/disable-panfrost.cfg', d)} \
 	file://common/usb-serial.cfg \
 	file://common/usb-can.cfg \
 	file://common/firmware-edid.cfg \

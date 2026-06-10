@@ -1,7 +1,7 @@
-PACKAGECONFIG:append = " egl kmsro panfrost"
+PACKAGECONFIG:append = " ${@oe.utils.conditional('RZ_FEATURE_PANFROST', '1', 'egl kmsro panfrost', '', d)}"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI:append = " \
-    file://mesa_add_rzg2l_du_entrypoint.patch \
+    ${@oe.utils.conditional('RZ_FEATURE_PANFROST', '1', 'file://mesa_add_rzg2l_du_entrypoint.patch', '', d)} \
 "

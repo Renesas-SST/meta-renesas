@@ -16,7 +16,7 @@ DEPENDS:append = " dtc-native xxd-native"
 SRC_URI:rz-cmn = " \
     git://github.com/Renesas-SST/rz-atf.git;name=machine;branch=${BRANCH};protocol=https \
 "
-BRANCH:rz-cmn = "styhead/rz-cmn"
+BRANCH:rz-cmn = "styhead/rz-cmn-3.3"
 SRCREV_machine:rz-cmn = "${AUTOREV}"
 PV = "v2.14+git"
 
