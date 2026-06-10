@@ -386,6 +386,8 @@ PREFERRED_VERSION_libgpiod = "1.6.5"
 
 # OP-TEE is disabled by default. Enable this to build open-source OP-TEE
 # from Renesas-SST/rz_optee_os and include tee-supplicant in the image.
-# The recipe builds both G2L/V2L (g2l_smarc_2, CFG_DT=y) and V2H (v2h_evk_1,
-# CFG_DT=n) binaries in a single build run.
+# The recipe builds three flavors in a single build run:
+#   G2L/V2L (g2l_smarc_2, CFG_DT=y) -> tee-rz-cmn-g2l.bin
+#   V2H     (v2h_evk_1,   CFG_DT=n) -> tee-rz-cmn-v2h.bin
+#   V4H     (plat-rcar_gen4, LSI=V4H, CFG_DT=n) -> tee-rz-cmn-v4h.bin
 # ENABLE_SPD_OPTEE = "1"

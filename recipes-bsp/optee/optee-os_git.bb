@@ -19,6 +19,8 @@ COMPATIBLE_MACHINE = "rz-cmn"
 S = "${WORKDIR}/git"
 
 PLATFORM = "rz"
+PLATFORM_V4H = "rcar_gen4"
+LSI_V4H = "V4H"
 
 LD[unexport] = "1"
 LDFLAGS[unexport] = "1"
@@ -29,7 +31,7 @@ CFLAGS:prepend = "--sysroot=${STAGING_DIR_HOST} "
 
 RZ_SCE = "${@oe.utils.conditional('ENABLE_RZ_SCE', '1', 'y', 'n', d)}"
 
-# Common make flags shared by both flavors
+# Common make flags for RZ CMN (G2L/V2L, V2H) flavors
 OPTEE_COMMON_FLAGS = " \
     PLATFORM=${PLATFORM} \
     CFG_ARM64_core=y \
@@ -55,13 +57,23 @@ do_compile() {
         PLATFORM_FLAVOR=v2h_evk_1 \
         CFG_DT=n \
         O=${S}/out-v2h
+
+    # Build V4H flavor (plat-rcar_gen4, LSI=V4H, CFG_DT=n: BL31 does not pass DTB)
+    oe_runmake -C ${S} \
+        PLATFORM=${PLATFORM_V4H} \
+        LSI=${LSI_V4H} \
+        CFG_ARM64_core=y \
+        CFG_DT=n \
+        CROSS_COMPILE64=${TARGET_PREFIX} \
+        O=${S}/out-v4h
 }
 
 do_install() {
     install -d ${D}/boot
 
-    install -m 0644 ${S}/out-g2l/core/tee-raw.bin  ${D}/boot/tee-${MACHINE}-g2l.bin
-    install -m 0644 ${S}/out-v2h/core/tee-raw.bin  ${D}/boot/tee-${MACHINE}-v2h.bin
+    install -m 0644 ${S}/out-g2l/core/tee-raw.bin          ${D}/boot/tee-${MACHINE}-g2l.bin
+    install -m 0644 ${S}/out-v2h/core/tee-raw.bin          ${D}/boot/tee-${MACHINE}-v2h.bin
+    install -m 0644 ${S}/out-v4h/core/tee-raw.bin                 ${D}/boot/tee-${MACHINE}-v4h.bin
 
     install -d ${D}${includedir}/optee/export-user_ta
     cp -aR ${S}/out-g2l/export-ta_arm64/* ${D}${includedir}/optee/export-user_ta/
@@ -72,6 +84,7 @@ do_deploy() {
 
     install -m 0644 ${D}/boot/tee-${MACHINE}-g2l.bin ${DEPLOYDIR}/target/images/atf/tee-${MACHINE}-g2l.bin
     install -m 0644 ${D}/boot/tee-${MACHINE}-v2h.bin ${DEPLOYDIR}/target/images/atf/tee-${MACHINE}-v2h.bin
+    install -m 0644 ${D}/boot/tee-${MACHINE}-v4h.bin ${DEPLOYDIR}/target/images/atf/tee-${MACHINE}-v4h.bin
 }
 
 addtask deploy after do_install
