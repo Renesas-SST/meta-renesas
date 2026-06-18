@@ -1138,7 +1138,7 @@ Refer to the `Readme.md` file in that folder for detailed instructions.
 
 This section describes features generally supported across Renesas RZ/G2L and RZ/V2L series and RZ/V2H boards. Specific peripheral availability may depend on the board design will introduce later.
 
-##### 4.1.1. U-Boot Environment
+#### 4.1.1. U-Boot Environment
 
 Overlays are supported for all RZ CMN boards. Each board has its own individual overlay settings. Enabling overlays intended for other boards may have no effect.
 
@@ -1775,7 +1775,195 @@ After installing a package using dpkg, if you need to resolve dependency issues,
 root@rz-cmn:~# apt-get install -f
 ```
 
-##### Docker Installation Setup
+#### 4.1.8 APT Compatibility Bridge for Yocto Rootfs
+
+This release image includes an APT compatibility mechanism for mixed Yocto/Ubuntu package usage.
+
+##### Overview
+
+The compatibility setup uses a combination of **package bridging** and **pinning/holding** to make selected Debian/Ubuntu package dependencies resolve more safely against the Yocto base system. The generated bridge package declares selected Debian/Ubuntu package names as already satisfied by the Yocto base system, while Yocto-built packages are placed on hold to reduce the risk of the base rootfs being overwritten by Ubuntu packages.
+
+This is especially useful for:
+- Debian/Ubuntu package name differences
+- Selected Ubuntu `t64` transition names
+- Some side-by-side library installation cases
+
+##### How it is applied
+
+The compatibility setup is applied automatically on first boot through a systemd oneshot service.
+
+The APT compatibility setup is implemented by:
+- `apply-compat.sh`
+- `gen-bridge.sh`
+- `yocto-apt-compat.service`
+
+These files are installed into the target image by the Yocto recipe. The scripts are installed under:
+
+```sh
+/usr/sbin/apply-compat.sh
+/usr/sbin/gen-bridge.sh
+```
+
+The systemd service is installed under:
+
+```sh
+/lib/systemd/system/yocto-apt-compat.service
+```
+
+On first boot, `yocto-apt-compat.service` runs `apply-compat.sh`, which generates and installs the bridge package, applies package holds to Yocto-built packages, and prepares the system for safer mixed Yocto/Ubuntu package usage.
+
+The service runs once on first boot and is skipped on subsequent boots after successful completion.
+
+##### How to verify it has been applied
+
+You can confirm that the compatibility setup has completed successfully by checking:
+
+```sh
+test -f /var/lib/yocto-compat/.done && echo "compat applied"
+dpkg -s yocto-debian-compat
+systemctl status yocto-apt-compat.service
+```
+
+##### What it does **not** guarantee
+
+This mechanism does **not** guarantee that all Ubuntu/Debian packages can be installed successfully.
+
+Some packages may still fail due to:
+- Debian maintainer scripts expecting a different userspace behavior
+- File collisions between Ubuntu packages and Yocto-installed files
+- Strict Debian versioned dependencies not satisfied by Yocto package versions
+- Package `Breaks` / `Conflicts`
+- Larger desktop or framework dependency chains
+
+In practice, simple user-space tools may work, but more complex packages may still fail.
+
+Because of these limitations, the APT bridge should be treated as a **best-effort compatibility layer**, not as full Ubuntu compatibility.
+
+##### Recommended usage
+
+Before installing any package, simulate it first:
+
+```sh
+apt-get install -s --no-install-recommends <package>
+```
+
+Prefer packages that:
+- Do not upgrade held Yocto packages
+- Pull only a small number of additional packages
+- Do not involve core runtime, init, Perl, Python, or desktop base packages
+
+A successful simulation does **not** guarantee a successful installation. Some packages may still fail during unpacking, configuration, or runtime due to maintainer-script incompatibility, file collisions, or unresolved runtime dependencies.
+
+After installation, verify runtime linkage if needed:
+
+```sh
+LD_TRACE_LOADED_OBJECTS=1 /usr/bin/<binary> 2>&1 | grep -i 'not found'
+```
+
+##### Optional: Host a Local Yocto Package Feed
+
+For packages that should be installed through the Yocto package manager flow, it is recommended to host a local Yocto package feed instead of relying only on external Ubuntu repositories.
+
+**Why use a local Yocto feed**
+
+A local Yocto feed provides packages built from the same Yocto configuration as the image. This is safer and more consistent than mixing large numbers of Ubuntu packages into the rootfs.
+
+Benefits include:
+- Package versions aligned with the image
+- Reduced file collision risk
+- Consistent dependency handling within the Yocto package set
+- Easier validation and support
+
+Build the required Yocto packages and publish the generated package feed output to a local server or internal repository accessible by the target.
+
+At a high level:
+1. Build the required package or image in Yocto
+2. Collect the generated package feed output
+3. Host the feed on a local HTTP server or internal package server
+4. Configure the target to use that feed
+
+**Notes**
+- `world` recipe is generally **not** recommended just to create a feed, because it builds much more than is usually needed.
+- It is better to build only the required packages or image targets.
+- The feed content must match the image architecture and configuration used on the target.
+
+**When to use this**
+
+Use a local Yocto feed when:
+- Additional packages are needed after deployment
+- The package should remain aligned with the Yocto image
+- Installation through Ubuntu `apt` is failing or considered too risky
+
+##### Steps for local Yocto package using eSDK
+
+Before proceeding with this guide, it is assumed that you have already installed the eSDK and prepared the environment. If not, please refer to section **2.6.1. Installing the eSDK on the Host System** for instructions on installing the eSDK, and section **2.6.2. Using `devtool` in the Yocto eSDK** for guidance on using `devtool`.
+
+Once that is complete, follow the steps below. The practical flow is as follows:
+
+1. **Build the package or image**
+
+   Build only what you need, for example:
+
+   ```sh
+   devtool rsync
+   ```
+
+   or:
+
+   ```sh
+   devtool <your-image>
+   ```
+
+   Do **not** use `devtool world` unless you really want everything. It may take a few hours to build everything.
+
+2. **Find generated package feed output**
+
+   Your packages will be under something like:
+
+   ```sh
+   <yocto-esdk-workspace>/tmp/deploy/deb/
+   ```
+
+3. **Host the feed**
+
+   You can host the deploy directory with a simple HTTP server for testing.
+
+   Example:
+
+   ```sh
+   cd <yocto-esdk-workspace>/tmp/deploy/deb
+   python3 -m http.server 8000
+   ```
+
+   Or use an internal web server or artifact server for persistent hosting.
+
+4. **Add feed to target**
+
+   On target, add an apt source pointing to your hosted Yocto feed.
+
+   Example shape:
+
+   ```text
+    deb [trusted=yes] http://<server>:8000/all ./
+    deb [trusted=yes] http://<server>:8000/cortexa55 ./
+    deb [trusted=yes] http://<server>:8000/rz_cmn ./ 
+   ```
+
+   Exact path depends on your deployed directory structure. Ensure that the board can connect to this server.
+
+5. **Update package index on target**
+
+   ```sh
+   apt update
+   ```
+
+6. **Install package from Yocto feed**
+
+   ```sh
+   apt install rsync
+   ```
+
+#### 4.1.9 Docker Installation Setup
 
 Step 1: Enable Docker support in Kernel build
 
@@ -1844,7 +2032,7 @@ For more examples and ideas, visit:
  https://docs.docker.com/get-started/
 ```
 
-#### 4.1.8. Generic USB WiFi framework
+#### 4.1.10. Generic USB WiFi framework
 
 The system supports the generic USB WiFi framework, which is derived from the Linux kernel mainline. A wide range of common USB WiFi adapters are supported, including those based on the following chipsets (module support is indicated in parentheses):
 
@@ -1972,7 +2160,7 @@ Identify Ethernet interfaces (look for names starting with end). Disable all act
 ```shell
 root@rz-cmn:~# ifconfig <interface-name> down
 ```
-#### 4.1.9. Python GUI Programming with Tkinter
+#### 4.1.11. Python GUI Programming with Tkinter
 Tkinter is included with Python by default, so no additional libraries are required.
 **Note**: Note: Running graphical applications such as Tkinter requires access to the X11 display server, which is provided by Xwayland in this setup. Therefore, the application must be run as the weston user (not as root), because only that user has permission to access the running Xwayland display session (DISPLAY=:0).
 The following steps will show how to create a new Tkinter application:
@@ -2055,7 +2243,7 @@ rz-cmn:~$ export DISPLAY=:0
 ```
 rz-cmn:~$ python3 main.py
 ```
-#### 4.1.10. Install Packages Using Python3-Pip
+#### 4.1.12. Install Packages Using Python3-Pip
 The distribution includes Python 3 along with useful libraries/modules/packages such as `Pip3`, Numpy, Pandas, PySerial, Matplotlib, etc. This section will focus on using `Pip3`, the package installer for Python 3, to manage additional packages.
 
 To install a new package using `pip3`, use the following command:
@@ -2078,7 +2266,7 @@ root@rz-cmn:~# pip3 list
 ```
 This will confirm that the package is installed and available for use.
 
-#### 4.1.11. U-Boot: Select Kernel Image via `image_flavor`
+#### 4.1.13. U-Boot: Select Kernel Image via `image_flavor`
 
 Linux for the Renesas RZ Common System typically provides **three kernel image variants**, each optimized for a different use case:
 
@@ -3829,3 +4017,4 @@ A dedicated **BSP Manual Set** is also available for the **RZ/V2H Evaluation Kit
 This manual is recommended for developers working with the RZ/V2H platform and Verified Linux Package.
 
 **Download the RZ/V2H BSP Manual Set:** [RZ/V2H BSP Manual Set (v1.01)](https://www.renesas.com/en/document/mas/rzv2h-bsp-manual-set-rtk0ef0045z94001azj-v101zip?queryID=d686656abe19aa9183debd3bc17b5b28)
+
