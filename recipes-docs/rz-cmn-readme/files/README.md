@@ -157,6 +157,7 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
 │   ├── src
 │   │   └── rz-cmn-srp
 │   │       ├── config.json
+│   │       ├── layer_override.json
 │   │       ├── files_to_add
 │   │       │   └── meta-rz-features
 │   │       │       ├── 0001-rzg2l-sbc-Bring-compat_alloc_user_space-back.patch
@@ -405,6 +406,7 @@ and preparing the system images.
   (all-yocto-images, all-ubuntu-images, all-supported-images).
       - git_patch.json: Contains json keys and repository configuration such as: url, 
   branch, tag, commit, repo type and patch paths to apply.
+      - layer_override.json: Pre-build customization file to add/remove meta-layers in BBLAYERS, append/exclude image packages, and select GPU mode (none/panfrost/mali). Applied before BitBake runs.
     - ubuntu/: Main folder for Ubuntu-based image generation for RZ boards.
     - config/: The folder that holds configuration files for different Ubuntu variants.
     - docs/: Contains documentation detailing supported features and usage 
@@ -879,7 +881,7 @@ host/tools/
 
 #### 3.3.1. `flash_images.json` — File Overview and Usage
 
-`flash_images.json` maps **boards → binaries → flashing operations**. It lists which images belong to each board, where they are located, and which flashing methods (e.g., **xSPI** vs **eMMC**, **UDP** vs **OTG**) apply.
+`flash_images.json` maps **boards → binaries → flashing operations**. It lists which images belong to each board, where they are located, and which flashing methods (e.g., **xSPI**, **eMMC** or **eSD**; **UDP** vs **OTG**) apply.
 
 **Location**
 - Must reside beside `universal_flash.py`.
@@ -896,7 +898,7 @@ host/tools/
 | `atf_fdts`            | FCONF DTB(s) for BL2                                                         | `<board>.dtb`                             |
 | `uboot_dtb`           | U‑Boot device tree blob                                                      | `<board>.dtb`                             |
 | `flash_writer`        | Flash Writer binary for low‑level programming                                | `Flash_Writer_SCIF_<board>.mot`           |
-| `ipl_flash_method`    | IPL media used for flashing                                                  | `xspi`, `emmc`                            |
+| `ipl_flash_method`    | IPL media used for flashing                                                  | `xspi`, `emmc`, `esd`                            |
 | `rootfs`              | Root filesystem image                                                        | `core-image-minimal.wic`                  |
 | `rootfs_flash_method` | Method to flash rootfs                                                       | `udp`, `otg`                              |
 
@@ -913,7 +915,7 @@ The `flash_images.json` file is located at the same level as the universal scrip
 - **atf_fdts**: FCONF device tree name
 - **uboot_dtb**: U-boot device tree name
 - **flash_writer**: Flash Writer image name
-- **ipl_flash_method**: Method used by the IPL bootloader for flashing (`qspi` or `emmc`)
+- **ipl_flash_method**: Method used by the IPL bootloader for flashing (`qspi`, `emmc` or `esd`)
 - **rootfs**: Root filesystem image name (`*.wic`)
 - **rootfs_flash_method**: Method to flash the SD card (`udp` or `otg`)
 
@@ -939,16 +941,15 @@ This table below lists the available options (and sensible defaults) for `ipl_fl
 | Board                 | SoC | `ipl_flash_method` (options) | Default | `rootfs_flash_method` (options)  | Default |
 |-----------------------|-----|------------------------------|---------|----------------------------------|---------|
 | **rzg2l-sbc**         | g2l | `xspi`                       | `xspi`  | `udp`                            | `udp`   |
-| **rzg2l-evk**         | g2l | `xspi`, `emmc`               | `xspi`  | `udp`, `otg`                     | `otg`   |
+| **rzg2l-evk**         | g2l | `xspi`, `emmc`, `esd`        | `xspi`  | `udp`, `otg`                     | `otg`   |
 | **rs-g2l100**         | g2l | `xspi`                       | `xspi`  | `udp`, `otg`                     | `otg`   |
-| **rzv2l-evk**         | v2l | `xspi`, `emmc`               | `xspi`  | `udp`, `otg`                     | `otg`   |
-| **rzv2h-evk**         | v2h | `xspi`                       | `xspi`  | `udp`, `otg`                     | `otg`   |
+| **rzv2l-evk**         | v2l | `xspi`, `emmc`, `esd`        | `xspi`  | `udp`, `otg`                     | `otg`   |
+| **rzv2h-evk**         | v2h | `xspi`, `esd`                | `xspi`  | `udp`, `otg`                     | `otg`   |
 | **rzv2h-rdk**         | v2h | `xspi`                       | `xspi`  | `udp`                            | `udp`   |
 | **imdt-v2h-sbc**      | v2h | `xspi`                       | `xspi`  | `udp`, `otg`                     | `otg`   |
 
 **Notes:**
 - *IPL flash method*: `emmc` for `rzv2h-evk` is **not supported yet**.
-- *IPL flash method*: `eSD` for all boards is **not supported yet**.
 - *The RZ/G2L-SBC* board does not provide a USB OTG port; accordingly, OTG is not supported.
 ---
 
@@ -958,6 +959,7 @@ Field Reference
   Defines where the **IPL/BL2** image is flashed:
   - `xspi` — xSPI flash for RZ/V2H, QSPI for RZV2L/RZG2L
   - `emmc` — eMMC device
+  - `esd` - Targets an embedded SD card or standard SD card slot.
 
 - **`rootfs_flash_method`**
   How the **root filesystem (.wic)** is delivered to the SD/eMMC target:
