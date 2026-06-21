@@ -109,7 +109,7 @@ DISTRO ?= "poky"
 #  - 'package_rpm' for rpm style packages
 # E.g.: PACKAGE_CLASSES ?= "package_rpm package_deb package_ipk"
 # OE-Core defaults to ipkg, whilst Poky defaults to rpm:
-PACKAGE_CLASSES ?= "package_rpm package_deb"
+PACKAGE_CLASSES ?= "package_deb"
 
 #
 # SDK target architecture
@@ -349,8 +349,8 @@ SUPPORT_TARGETS = " \
     imdt-v2h-sbc \
 "
 
-# Build essential and openssh packages
-IMAGE_INSTALL:append = " packagegroup-core-buildessential"
+# Build essentials and install GnuPG for encryption and key management
+IMAGE_INSTALL:append = " packagegroup-core-buildessential gnupg"
 
 # Enable SSH server selection
 # Default is set to OpenSSH

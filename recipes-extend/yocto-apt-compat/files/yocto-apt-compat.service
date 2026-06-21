@@ -1,0 +1,15 @@
+[Unit]
+Description=Apply Yocto/Debian APT compatibility bridge
+ConditionPathExists=!/var/lib/yocto-compat/.done
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/apply-compat.sh
+ExecStartPost=/bin/sh -c 'mkdir -p /var/lib/yocto-compat && touch /var/lib/yocto-compat/.done'
+StandardOutput=journal
+StandardError=journal
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

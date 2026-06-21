@@ -1,0 +1,35 @@
+From 593ead8e820fc1f24d5586c490a8c62384cb2840 Mon Sep 17 00:00:00 2001
+From: Tien Nguyen <tien.nguyen.uh@renesas.com>
+Date: Thu, 18 Jun 2026 07:27:43 +0000
+Subject: [PATCH] update-alternatives: accept --quiet as a no-op
+
+Debian maintainer scripts may invoke update-alternatives with the
+--quiet option. The opkg-utils implementation does not support this
+option, which causes package maintainer scripts such as less postinst
+and prerm to fail on mixed Yocto/Debian systems.
+
+Accept --quiet and ignore it for compatibility.
+
+Upstream-Status: Pending
+
+Signed-off-by: Tien Nguyen <tien.nguyen.uh@renesas.com>
+---
+ update-alternatives | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/update-alternatives b/update-alternatives
+index e0b31bf..48a20b5 100644
+--- a/update-alternatives
++++ b/update-alternatives
+@@ -190,6 +190,8 @@ while [ $# -gt 0 ]; do
+ 		do_remove $*
+ 		exit $?
+ 		;;
++	--quiet)
++		;;
+ 	*)
+ 		usage "unknown argument \`$arg'"
+ 		;;
+-- 
+2.43.0
+
