@@ -2339,6 +2339,73 @@ root@rz-cmn:~# uname -v
 #1 SMP PREEMPT_RT Thu Nov  6 09:54:14 UTC 2025
 ```
 
+#### 4.1.12. OP-TEE Trusted Execution Environment
+
+OP-TEE (Open Portable Trusted Execution Environment) provides a secure world environment running alongside Linux in the Normal World. The RZ CMN BSP supports open-source OP-TEE built from [Renesas-SST/rz_optee_os](https://github.com/Renesas-SST/rz_optee_os).
+
+Two firmware binaries are built per Yocto build run and packed into the FIP by `firmware_compile.py`:
+
+| Binary | SoC Family | Platform Flavor |
+| ------ | ---------- | --------------- |
+| `tee-rz-cmn-g2l.bin` | RZ/G2L, RZ/V2L | `g2l_smarc_2` — NS DTB injected via U-Boot (`CFG_DT=y`) |
+| `tee-rz-cmn-v2h.bin` | RZ/V2H | `v2h_evk_1` — static DT node in kernel (`CFG_DT=n`) |
+
+**Enable OP-TEE**
+
+1. Open `build/conf/local.conf` in the Yocto build environment.
+
+2. Uncomment (or add) the following line:
+
+    ```
+    # OP-TEE: Build open-source OP-TEE OS and include tee-supplicant in the image
+    ENABLE_SPD_OPTEE = "1"
+    ```
+
+3. Rebuild the image:
+
+    ```shell
+    bitbake core-image-minimal
+    ```
+
+    This will:
+    - Build both `tee-rz-cmn-g2l.bin` and `tee-rz-cmn-v2h.bin` from source.
+    - Pass `SPD=opteed` to TF-A so BL2 loads OP-TEE (BL32) from the FIP at boot.
+    - Include `optee-client` (`tee-supplicant`) in the root filesystem.
+
+4. Flash the new firmware using `firmware_compile.py`. The script automatically detects the correct `tee-*.bin` for each board from `flash_images.json` and packs it as `--tos-fw` in the FIP.
+
+After a successful boot, verify OP-TEE is running:
+
+```shell
+root@rz-cmn:~# ls /dev/tee*
+/dev/tee0  /dev/teepriv0
+```
+
+**Disable OP-TEE**
+
+1. Open `build/conf/local.conf`.
+
+2. Comment out or remove the `ENABLE_SPD_OPTEE` line:
+
+    ```
+    # ENABLE_SPD_OPTEE = "1"
+    ```
+
+3. Rebuild and reflash the image. BL2 will boot directly to BL33 (U-Boot) without loading a secure OS.
+
+**Optional: Enable Hardware Crypto (SCE)**
+
+For RZ/G2L and RZ/V2L boards, OP-TEE can use the hardware SCE (Secure Crypto Engine) driver. To enable:
+
+```
+ENABLE_SPD_OPTEE = "1"
+ENABLE_RZ_SCE    = "1"
+```
+
+> **Note:** `ENABLE_RZ_SCE` has no effect when `ENABLE_SPD_OPTEE = "0"`.
+
+---
+
 ### 4.2. RZ/G2L-SBC Yocto Features
 #### 4.2.1. 40-Pin IO Expansion Interface
 

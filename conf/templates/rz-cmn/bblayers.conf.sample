@@ -15,6 +15,7 @@ QT6_LAYER = "${@'True' if d.getVar('QT6_SUPPORT') == '1' else 'False'}"
 QT5_LAYER = "${@'True' if d.getVar('QT6_SUPPORT') == '0' else 'False'}"
 
 RZ_FEATURE_CODEC = "${@os.path.isdir("##OEROOT##/../meta-rz-features/meta-rz-codecs")}"
+RZ_FEATURE_GRAPHICS = "${@os.path.isdir("##OEROOT##/../meta-rz-features/meta-rz-graphics")}"
 
 BBLAYERS ?= " \
   ##OEROOT##/meta \
@@ -29,4 +30,5 @@ BBLAYERS ?= " \
   ${@'##OEROOT##/../meta-qt5' if '${QT5_LAYER}' == 'True' else ''} \
   ${@'##OEROOT##/../meta-qt6' if '${QT6_LAYER}' == 'True' else ''} \
   ${@'##OEROOT##/../meta-rz-features/meta-rz-codecs' if '${RZ_FEATURE_CODEC}' == 'True' else ''} \
+  ${@'##OEROOT##/../meta-rz-features/meta-rz-graphics' if '${RZ_FEATURE_GRAPHICS}' == 'True' else ''} \
   "

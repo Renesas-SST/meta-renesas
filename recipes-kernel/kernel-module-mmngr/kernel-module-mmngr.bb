@@ -26,6 +26,7 @@ SRC_URI:append = " \
     file://0013-mmngr-lock-mm-read-before-finding-VMA.patch \
     file://0014-rz-cmn-mmngr-supports-linux-6.10.patch \
     file://0015-Handle-MM_OMXBUF_SIZE-dynamically.patch \
+    file://0016-mmngr-support-Linux-6.18-kernel-APIs.patch \
 "
 
 MMNGR_CFG ?= "MMNGR_SALVATORX"
@@ -36,6 +37,14 @@ SSTATE_ALLOW_OVERLAP_FILES += "${STAGING_INCDIR}"
 
 # Build Memory Manager kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
+
+MMNGR_PATHMAP_FLAGS = " \
+    -ffile-prefix-map=${STAGING_KERNEL_DIR}=/kernel-source \
+"
+
+EXTRA_OEMAKE:append = " \
+    KCFLAGS='${MMNGR_PATHMAP_FLAGS}' \
+"
 
 do_compile:prepend() {
     export MMNGR_CONFIG=${MMNGR_CFG}

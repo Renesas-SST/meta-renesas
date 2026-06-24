@@ -2,14 +2,14 @@ require recipes-bsp/u-boot/u-boot-common.inc
 require recipes-bsp/u-boot/u-boot.inc
 
 PROVIDES += "u-boot"
-DEPENDS += "bc-native dtc-native"
+DEPENDS += "lzop-native srecord-native bc-native dtc-native python3-pyelftools-native gnutls-native"
 
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
 # u-boot source code repository
 UBOOT_URL = "git://github.com/Renesas-SST/u-boot.git"
-BRANCH = "styhead/rz-cmn"
+BRANCH = "styhead/rz-cmn-3.3"
 SRC_URI = "${UBOOT_URL};name=machine;protocol=https;branch=${BRANCH}"
 SRCREV_machine = "${AUTOREV}"
 
@@ -35,7 +35,7 @@ do_install() {
 
     install -m 644 ${KCONFIG_CONFIG_ROOTDIR}/u-boot-nodtb.bin ${D}/boot/
     for dtb_name in ${DEVICETREE_NAME}; do
-        install -m 644 ${KCONFIG_CONFIG_ROOTDIR}/arch/arm/dts/${dtb_name}.dtb ${D}/boot/dtbs
+        install -m 644 ${KCONFIG_CONFIG_ROOTDIR}/dts/upstream/src/arm64/renesas/${dtb_name}.dtb ${D}/boot/dtbs
     done
 }
 
