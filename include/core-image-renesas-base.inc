@@ -48,6 +48,7 @@ IMAGE_BOOT_FILES:rz-cmn = " \
     target/env/uEnv.txt;uEnv.txt \
     Readme.md;Readme.md \
     target/images/*.bin;uload-bootloader/ \
+    *rpmsg*;./ \
 "
 
 DEPENDS += " linux-yocto uenv platform-gen "
@@ -69,6 +70,7 @@ do_release_clean() {
     rm -f ${DEPLOY_DIR_IMAGE}/modules*
     rm -f ${DEPLOY_DIR_IMAGE}/${IMAGE_BASENAME}*
     rm -f ${DEPLOY_DIR_IMAGE}/Readme.md
+    rm -f ${DEPLOY_DIR_IMAGE}/*rpmsg*
 }
 
 addtask release_clean after do_image_complete before do_populate_lic_deploy
