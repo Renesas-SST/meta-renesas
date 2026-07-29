@@ -18,9 +18,15 @@ do_install:append() {
     # Install NXP Connectivity IW416 firmware
     install -d ${D}${nonarch_base_libdir}/firmware/nxp
     install -m 0644 ${UNPACKDIR}/sdiouartiw416_combo_v0.bin.lf-5.10.72_2.2.0 ${D}${nonarch_base_libdir}/firmware/nxp/sdiouartiw416_combo_v0.bin
+
+    # In-tree mwifiex rnd out of tree moal equests the IW416 combo blob sdiouartiw416_combo_v0.bin".
+    # NXP's out-of-tree moal uses nxp/ and in tree uses mrvl/.
+    # Symlink mrvl/ -> nxp/ so images that run mwifiex instead of moal can still find the onboard WiFi firmware.
+    install -d ${D}${nonarch_base_libdir}/firmware/mrvl
+    ln -sf ../nxp/sdiouartiw416_combo_v0.bin ${D}${nonarch_base_libdir}/firmware/mrvl/sdiouartiw416_combo_v0.bin
 }
 
 PACKAGES =+ "${PN}-ap1302 ${PN}-sdiouartiw416"
 
 FILES:${PN}-ap1302 = "${nonarch_base_libdir}/firmware/ap1302_ar1335_single_fw.bin"
-FILES:${PN}-sdiouartiw416 = "${nonarch_base_libdir}/firmware/nxp/sdiouartiw416_combo_v0.bin"
+FILES:${PN}-sdiouartiw416 = "${nonarch_base_libdir}/firmware/nxp/sdiouartiw416_combo_v0.bin ${nonarch_base_libdir}/firmware/mrvl/sdiouartiw416_combo_v0.bin"
