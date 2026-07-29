@@ -27,6 +27,20 @@ IMAGE_INSTALL:append = " \
     firmwared \
 "
 
+# WiFi firmware / regulatory DB for the M.2 Key-E slot.
+# - linux-firmware-iwlwifi-misc carries the Intel AX210 blobs
+#   (iwlwifi-ty-a0-gf-a0-*.ucode + .pnvm).
+# - wireless-regdb-static provides /lib/firmware/regulatory.db (the kernel
+#   loads it directly), fixing the "regulatory.db failed -2" at runtime.
+# Hard IMAGE_INSTALL (not MACHINE_EXTRA_RRECOMMENDS): RRECOMMENDS was observed
+# to land inconsistently across images. This reaches every product image
+# (core-image-bsp, the renesas-* images, core-image-weston via its bbappend)
+# and the Ubuntu images via renesas-ubuntu -> rootfs_qt copy_firmware.
+IMAGE_INSTALL:append = " \
+    linux-firmware-iwlwifi-misc \
+    wireless-regdb-static \
+"
+
 IMAGE_INSTALL:append:rz-cmn = " uenv"
 IMAGE_INSTALL:append:rz-cmn = " ${@oe.utils.conditional('ENABLE_SPD_OPTEE', '1', 'optee-client', '', d)}"
 
