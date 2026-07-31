@@ -55,6 +55,18 @@ do_compile() {
         PLATFORM_FLAVOR=v2h_evk_1 \
         CFG_DT=n \
         O=${S}/out-v2h
+
+    if [ "${ENABLE_V4H_DIRECT_OPTEE}" = "1" ]; then
+        # R-Car V4H uses the board-verified 4.10 rcar_gen4 port. CFG_DT remains
+        # off because Linux supplies the OP-TEE firmware node for Sparrow Hawk.
+        oe_runmake -C ${S} \
+            PLATFORM=rcar_gen4 \
+            LSI=V4H \
+            CFG_ARM64_core=y \
+            CFG_DT=n \
+            CROSS_COMPILE64=${TARGET_PREFIX} \
+            O=${S}/out-v4h
+    fi
 }
 
 do_install() {
@@ -62,6 +74,9 @@ do_install() {
 
     install -m 0644 ${S}/out-g2l/core/tee-raw.bin  ${D}/boot/tee-${MACHINE}-g2l.bin
     install -m 0644 ${S}/out-v2h/core/tee-raw.bin  ${D}/boot/tee-${MACHINE}-v2h.bin
+    if [ "${ENABLE_V4H_DIRECT_OPTEE}" = "1" ]; then
+        install -m 0644 ${S}/out-v4h/core/tee-raw.bin ${D}/boot/tee-raw-sparrow-hawk.bin
+    fi
 
     install -d ${D}${includedir}/optee/export-user_ta
     cp -aR ${S}/out-g2l/export-ta_arm64/* ${D}${includedir}/optee/export-user_ta/
