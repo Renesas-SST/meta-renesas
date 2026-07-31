@@ -6,7 +6,7 @@ inherit kernel
 inherit kernel-devicetree
 inherit renesas-kernel-variants
 
-KBRANCH  = "styhead/rz-cmn"
+KBRANCH = "styhead/rz-cmn"
 KBRANCH_RT = "styhead/rz-cmn-rt"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}:"
@@ -95,6 +95,20 @@ do_compile_nonpreempt() {
 addtask compile_preempt_rt after do_compile before do_install
 addtask compile_nonpreempt after do_compile before do_install
 
+# The generic kernel class stages generated headers but leaves auto.conf for
+# make-mod-scripts to recreate. Keep it with the other build artifacts so
+# external DDKs remain buildable when the multi-variant tasks refresh the
+# shared work directory.
+do_shared_workdir:append:rz-cmn() {
+	install -d ${STAGING_KERNEL_BUILDDIR}/include/config
+	install -m 0644 ${B}/include/config/auto.conf \
+		${STAGING_KERNEL_BUILDDIR}/include/config/auto.conf
+	if [ -f ${B}/include/config/auto.conf.cmd ]; then
+		install -m 0644 ${B}/include/config/auto.conf.cmd \
+			${STAGING_KERNEL_BUILDDIR}/include/config/auto.conf.cmd
+	fi
+}
+
 KCONFIG_MODE:rz-cmn = "alldefconfig"
 #KMACHINE:rz-cmn ?= "renesas_defconfig"
 KBUILD_DEFCONFIG:rz-cmn ?= "renesas_defconfig"
@@ -108,6 +122,7 @@ DEVICETREE_NAME:rz-cmn = " \
 	rzv2h-rdk-ver1 \
 	rs-g2l100 \
 	imdt-v2h-sbc \
+	sparrow-hawk \
 "
 
 # Supported device tree and device tree overlays
@@ -127,6 +142,8 @@ KERNEL_DEVICETREE:append:rz-cmn = " \
 	renesas/overlays/imdt-v2h-sbc-1.0-dsi.dtbo \
 	renesas/overlays/imdt-v2h-sbc-1.0-cru-csi22-ar1335.dtbo \
 	renesas/overlays/imdt-v2h-sbc-1.0-cru-csi23-ar1335.dtbo \
+	renesas/overlays/sparrow-hawk-1.0-cru-csi-j1-imx219.dtbo \
+	renesas/overlays/sparrow-hawk-1.0-cru-csi-j2-imx219.dtbo \
 "
 
 # Override the dtc flags to support dtbo build in kernel-devicetree.bbclass
