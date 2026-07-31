@@ -12,6 +12,13 @@ do_install:append() {
             -i ${D}/${systemd_system_unitdir}/weston.service
     fi
 
+    if [ -f ${D}/${systemd_system_unitdir}/weston.service ]; then
+        sed -i \
+            -e '/^After=systemd-user-sessions.service/a Wants=pvr-gfx-select.service\nAfter=pvr-gfx-select.service' \
+            -e '/^EnvironmentFile=\/etc\/default\/weston/a EnvironmentFile=-/run/pvr-gfx.env' \
+            ${D}/${systemd_system_unitdir}/weston.service
+    fi
+
     # Use own weston.ini file
     install -d ${D}/${sysconfdir}/xdg/weston
     install -m 0755 ${S}/weston.ini ${D}/${sysconfdir}/xdg/weston/weston.ini

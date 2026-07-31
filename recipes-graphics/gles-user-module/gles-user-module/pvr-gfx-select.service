@@ -1,0 +1,13 @@
+[Unit]
+Description=Select runtime graphics provider for rz-cmn
+DefaultDependencies=no
+After=local-fs.target systemd-udev-settle.service
+Before=weston.service
+Wants=systemd-udev-settle.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/pvr-gfx-select
+
+[Install]
+WantedBy=multi-user.target
