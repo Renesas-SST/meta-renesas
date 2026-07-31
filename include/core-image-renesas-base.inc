@@ -45,6 +45,7 @@ IMAGE_INSTALL:append = " \
 
 IMAGE_INSTALL:append:rz-cmn = " uenv"
 IMAGE_INSTALL:append:rz-cmn = " ${@oe.utils.conditional('ENABLE_SPD_OPTEE', '1', 'optee-client', '', d)}"
+IMAGE_INSTALL:append:rz-cmn = " ${@oe.utils.conditional('ENABLE_V4H_DIRECT_OPTEE', '1', 'v4h-direct-optee-firmware optee-client optee-test', '', d)}"
 
 WKS_FILE = "rz-cmn-image-bootpart-mmc0.wks"
 
@@ -66,8 +67,8 @@ IMAGE_BOOT_FILES:rz-cmn = " \
     target/images/*.bin;uload-bootloader/ \
     *rpmsg*;./ \
 "
-
 DEPENDS += " linux-yocto uenv platform-gen "
+EXTRA_IMAGEDEPENDS:append:rz-cmn = " ${@oe.utils.conditional('ENABLE_V4H_DIRECT_OPTEE', '1', 'rcar-pcie-firmware:do_deploy', '', d)}"
 
 add_bootloader_rootfs() {
     install -d ${IMAGE_ROOTFS}/boot/uload-bootloader
