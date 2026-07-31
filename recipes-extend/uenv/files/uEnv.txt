@@ -8,5 +8,7 @@
             #enable_overlay_csi_ov5645=1
             #enable_overlay_csi22_ar1335=1
             #enable_overlay_csi23_ar1335=1
+            #enable_overlay_csi_j1_imx219=1
+            #enable_overlay_csi_j2_imx219=1
 
             prodsdboot=run mmc_do_boot
