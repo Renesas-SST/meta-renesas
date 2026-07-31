@@ -1,20 +1,22 @@
-DESCRIPTION = "Trusted Firmware-A for Renesas RZ"
+DESCRIPTION = "Trusted Firmware-A for Renesas RZ, including BL31 for the Sparrow-Hawk (V4H) companion SoC built alongside rz-cmn"
 
 require include/rz-optee-config.inc
 inherit deploy
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-LICENSE = "MIT"
-LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302 \
+LICENSE = "MIT & BSD-3-Clause"
+LIC_FILES_CHKSUM = " \
+    file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302 \
+    file://${WORKDIR}/git/sparrowhawk/license.rst;md5=1dd070c98a281d18d9eefd938729b031 \
 "
 # Set S variable to folder that includes Makefile
-S = "${WORKDIR}/git"
+S = "${WORKDIR}/git/cmn"
 DEPENDS:append = " dtc-native xxd-native"
 
 # Trusted Firmware-A source code repository
 SRC_URI:rz-cmn = " \
-    git://github.com/Renesas-SST/rz-atf.git;name=machine;branch=${BRANCH};protocol=https \
+    git://github.com/Renesas-SST/rz-atf.git;name=machine;branch=${BRANCH};protocol=https;destsuffix=git/cmn \
 "
 BRANCH:rz-cmn = "styhead/rz-cmn"
 SRCREV_machine:rz-cmn = "${AUTOREV}"
@@ -67,12 +69,22 @@ do_install() {
     done
     install -m 644 ${S}/build/${PLATFORM}/release/bl31.bin ${D}/boot/bl31-${MACHINE}.bin
     install -m 644 ${S}/build/${PLATFORM}/release/fdts/*.dtb ${D}/boot/fdts
+    if [ "${ENABLE_V4H_DIRECT_OPTEE}" = "1" ]; then
+        install -m 0644 \
+            ${SPARROWHAWK_S}/build/${SPARROWHAWK_PLATFORM}/release/bl31.bin \
+            ${D}/boot/bl31-sparrow-hawk.bin
+    fi
 }
 
 # Deploy bin file to deploy dir
 do_deploy() {
     # Create deploy folder
     install -d ${DEPLOYDIR}/target/images/atf/fdts
+
+    rm -f \
+        ${DEPLOYDIR}/target/images/atf/bl31-sparrowhawk.bin \
+        ${DEPLOYDIR}/target/images/atf/bl31-sparrowhawk.elf \
+        ${DEPLOYDIR}/target/images/atf/bl31-sparrowhawk.srec
 
     # Copy bl2, bl31 and fdts to deploy folder
     for method in ${BL2_METHODS}; do
@@ -85,3 +97,31 @@ do_deploy() {
 addtask deploy after do_install
 
 COMPATIBLE_MACHINE = "rz-cmn"
+
+#==============================================================================
+# Sparrow-Hawk (V4H) companion SoC support
+# BL31 is built from a second checkout of upstream ARM Trusted Firmware-A
+# (v2.14 release) and staged through /boot for the rootfs payload package.
+#==============================================================================
+SRC_URI:append:rz-cmn = " \
+    git://github.com/ARM-software/arm-trusted-firmware.git;name=sparrowhawk;branch=${SPARROWHAWK_BRANCH};protocol=https;destsuffix=git/sparrowhawk \
+    file://0001-rcar4-fix-opteed-runtime-setup-build.patch;patchdir=../sparrowhawk \
+"
+SPARROWHAWK_BRANCH = "master"
+SRCREV_sparrowhawk = "${AUTOREV}"
+SRCREV_FORMAT = "machine_sparrowhawk"
+
+SPARROWHAWK_S = "${WORKDIR}/git/sparrowhawk"
+SPARROWHAWK_PLATFORM = "rcar_gen4"
+SPARROWHAWK_OPT = "LSI=V4H CTX_INCLUDE_AARCH32_REGS=0 MBEDTLS_COMMON_MK=1 PTP_NONSECURE_ACCESS=1 LOG_LEVEL=20 DEBUG=0 ENABLE_ASSERTIONS=0 E=0"
+SPARROWHAWK_SPD = "${@oe.utils.conditional('ENABLE_V4H_DIRECT_OPTEE', '1', 'opteed', 'none', d)}"
+
+# Build BL31 for the Sparrow-Hawk (V4H) companion SoC after the main build.
+# Uses ${MAKE} directly (not oe_runmake) since oe_runmake always injects
+# EXTRA_OEMAKE, which is set above for the cmn platform's PLAT/targets
+# and would conflict with the sparrowhawk platform/targets here.
+do_compile:append() {
+    cd ${SPARROWHAWK_S}
+    ${MAKE} distclean
+    ${MAKE} bl31 PLAT=${SPARROWHAWK_PLATFORM} SPD=${SPARROWHAWK_SPD} MBEDTLS_COMMON_MK=1 ${SPARROWHAWK_OPT}
+}

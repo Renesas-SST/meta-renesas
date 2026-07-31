@@ -1,0 +1,53 @@
+From 9cfe6b0b88de433aff1cd5406c53ecafdc6632a2 Mon Sep 17 00:00:00 2001
+From: Quoc Trinh <quoc.trinh.fz@renesas.com>
+Date: Tue, 28 Jul 2026 12:00:00 +0000
+Subject: [PATCH] fix(rcar4): keep a single runtime setup callback with OP-TEE
+
+Commit 178c5cf77952 ("fix(rcar4): change the migrate information for
+OPTEE-OS") added an OP-TEE-specific bl31_plat_runtime_setup() without
+removing the existing platform callback. This causes a duplicate symbol
+and leaves rcar_pm unavailable when SPD=opteed.
+
+Select the appropriate PM hook inside the existing callback so the
+runtime console setup remains common to both configurations.
+
+Upstream-Status: Pending
+Signed-off-by: Quoc Trinh <quoc.trinh.fz@renesas.com>
+---
+ plat/renesas/rcar_gen4/bl31_plat_setup.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/plat/renesas/rcar_gen4/bl31_plat_setup.c b/plat/renesas/rcar_gen4/bl31_plat_setup.c
+index 81ac8c502..d10d66dc1 100644
+--- a/plat/renesas/rcar_gen4/bl31_plat_setup.c
++++ b/plat/renesas/rcar_gen4/bl31_plat_setup.c
+@@ -130,12 +130,6 @@ void bl31_platform_setup(void)
+ extern const spd_pm_ops_t opteed_pm;
+ static spd_pm_ops_t rcar_opteed_pm;
+ 
+-void bl31_plat_runtime_setup(void)
+-{
+-	memcpy(&rcar_opteed_pm, &opteed_pm, sizeof(rcar_opteed_pm));
+-	rcar_opteed_pm.svc_migrate_info = rcar_pwrc_cpu_migrate_info;
+-	psci_register_spd_pm_hook(&rcar_opteed_pm);
+-}
+ #else
+ const spd_pm_ops_t rcar_pm = {
+ 	.svc_migrate_info = rcar_pwrc_cpu_migrate_info,
+@@ -144,7 +138,13 @@ const spd_pm_ops_t rcar_pm = {
+ 
+ void bl31_plat_runtime_setup(void)
+ {
++#ifdef SPD_opteed
++	memcpy(&rcar_opteed_pm, &opteed_pm, sizeof(rcar_opteed_pm));
++	rcar_opteed_pm.svc_migrate_info = rcar_pwrc_cpu_migrate_info;
++	psci_register_spd_pm_hook(&rcar_opteed_pm);
++#else
+ 	psci_register_spd_pm_hook(&rcar_pm);
++#endif
+ 
+ 	rcar_console_runtime_init();
+ 	console_switch_state(CONSOLE_FLAG_RUNTIME);
+-- 
+2.43.0
+
