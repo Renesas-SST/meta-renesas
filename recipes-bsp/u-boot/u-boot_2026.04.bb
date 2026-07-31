@@ -1,5 +1,6 @@
 require recipes-bsp/u-boot/u-boot-common.inc
 require recipes-bsp/u-boot/u-boot.inc
+require include/rz-optee-config.inc
 
 PROVIDES += "u-boot"
 DEPENDS += "lzop-native srecord-native bc-native dtc-native python3-pyelftools-native gnutls-native"
@@ -26,6 +27,7 @@ DEVICETREE_NAME:rz-cmn = " \
     rzv2h-rdk-ver1 \
     rs-g2l100 \
     imdt-v2h-sbc \
+    sparrow-hawk \
 "
 
 # Install u-boot-nodtb.bin and u-boot device tree to temp location
@@ -35,7 +37,20 @@ do_install() {
 
     install -m 644 ${KCONFIG_CONFIG_ROOTDIR}/u-boot-nodtb.bin ${D}/boot/
     for dtb_name in ${DEVICETREE_NAME}; do
-        install -m 644 ${KCONFIG_CONFIG_ROOTDIR}/dts/upstream/src/arm64/renesas/${dtb_name}.dtb ${D}/boot/dtbs
+        dtb_path=""
+        for dtb_dir in \
+            ${KCONFIG_CONFIG_ROOTDIR}/dts/upstream/src/arm64/renesas \
+            ${KCONFIG_CONFIG_ROOTDIR}/arch/arm/dts; do
+            if [ -f "${dtb_dir}/${dtb_name}.dtb" ]; then
+                dtb_path="${dtb_dir}/${dtb_name}.dtb"
+                break
+            fi
+        done
+
+        if [ -z "${dtb_path}" ]; then
+            bbfatal "U-Boot DTB ${dtb_name}.dtb was not built"
+        fi
+        install -m 644 "${dtb_path}" ${D}/boot/dtbs/
     done
 }
 
@@ -47,6 +62,14 @@ do_deploy() {
     for dtb_name in ${DEVICETREE_NAME}; do
         install -m 644 ${D}/boot/dtbs/${dtb_name}.dtb ${DEPLOYDIR}/target/images/u-boot/dtbs
     done
+
+    if [ "${ENABLE_V4H_DIRECT_OPTEE}" = "1" ]; then
+        if [ ! -s "${KCONFIG_CONFIG_ROOTDIR}/sa0.bin" ]; then
+            bbfatal "V4H SA0+SPL image was not built"
+        fi
+        install -m 0644 ${KCONFIG_CONFIG_ROOTDIR}/sa0.bin \
+            ${DEPLOYDIR}/target/images/u-boot/sa0.bin
+    fi
 }
 
 addtask deploy after do_install
