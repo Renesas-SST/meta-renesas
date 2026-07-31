@@ -12,7 +12,9 @@ ENABLE_RZ_SCE		?= '0'
 # flash-writer source code repository
 FLASH_WRITER_URL = "git://github.com/Renesas-SST/flash-writer.git"
 BRANCH = "styhead/rz-cmn"
-SRC_URI = "${FLASH_WRITER_URL};protocol=https;branch=${BRANCH}"
+SRC_URI = "${FLASH_WRITER_URL};protocol=https;branch=${BRANCH} \
+    file://Flash_writer_sparrow_hawk_CR52.mot \
+"
 SRCREV = "${AUTOREV}"
 
 inherit deploy
@@ -24,6 +26,12 @@ UNPACKDIR = "${S}"
 
 do_prepare_src() {
 	for target in ${SUPPORT_TARGETS}; do
+		# Sparrow-Hawk (V4H, CR52 core) is not supported by this Makefile;
+		# a pre-built binary is deployed instead, see do_deploy.
+		if [ "${target}" = "sparrow-hawk" ]; then
+			continue
+		fi
+
 		mkdir -p ${B}/${target}
 		cp -r ${S}/git/* ${B}/${target}
 	done
@@ -31,6 +39,11 @@ do_prepare_src() {
 
 do_compile() {
 	for target in ${SUPPORT_TARGETS}; do
+		# Sparrow-Hawk uses a pre-built binary, see do_deploy.
+		if [ "${target}" = "sparrow-hawk" ]; then
+			continue
+		fi
+
 		# Need to reset every iteration
 		PMIC_BOARD=""
 		PMIC_BUILD_DIR="${B}/${target}/build_pmic"
@@ -71,6 +84,13 @@ do_install[noexec] = "1"
 do_deploy() {
 	install -d "${DEPLOYDIR}/target/images"
 	for target in ${SUPPORT_TARGETS}; do
+		if [ "${target}" = "sparrow-hawk" ]; then
+			# Pre-built binary for the Sparrow-Hawk (V4H) CR52 core
+			install -m 0644 "${UNPACKDIR}/Flash_writer_sparrow_hawk_CR52.mot" \
+				"${DEPLOYDIR}/target/images/Flash_Writer_SCIF_sparrow-hawk.mot"
+			continue
+		fi
+
 		PMIC_BUILD_DIR="${B}/${target}/build_pmic"
 
 		base_out="${B}/${target}/AArch64_output/Flash_Writer_SCIF_${target}.mot"
