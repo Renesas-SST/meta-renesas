@@ -27,17 +27,19 @@ IMAGE_INSTALL:append = " \
     firmwared \
 "
 
-# WiFi firmware / regulatory DB for the M.2 Key-E slot.
-# - linux-firmware-iwlwifi-misc carries the Intel AX210 blobs
-#   (iwlwifi-ty-a0-gf-a0-*.ucode + .pnvm).
-# - wireless-regdb-static provides /lib/firmware/regulatory.db (the kernel
-#   loads it directly), fixing the "regulatory.db failed -2" at runtime.
-# Hard IMAGE_INSTALL (not MACHINE_EXTRA_RRECOMMENDS): RRECOMMENDS was observed
-# to land inconsistently across images. This reaches every product image
-# (core-image-bsp, the renesas-* images, core-image-weston via its bbappend)
-# and the Ubuntu images via renesas-ubuntu -> rootfs_qt copy_firmware.
+# WiFi/BT firmware + regulatory DB for boards with the M.2 Key-E slot.
+# - linux-firmware-iwlwifi-misc : Intel AX210 WiFi blobs (iwlwifi-ty-a0-gf-a0-*.ucode + .pnvm).
+# - linux-firmware-ibt-misc     : Intel AX210 Bluetooth blobs for the AX210 - intel/ibt-0041-0041.sfi/.ddc
+# - wireless-regdb-static       : /lib/firmware/regulatory.db
+# Hard IMAGE_INSTALL (not MACHINE_EXTRA_RRECOMMENDS): RRECOMMENDS was observed to land inconsistently across images.
+#                                                     This reaches every product image
+#                                                     core-image-bsp, the renesas-* images, core-image-weston via its bbappend)
+#                                                     and the Ubuntu images via renesas-ubuntu -> rootfs_qt copy_firmware.
+#
+
 IMAGE_INSTALL:append = " \
-    linux-firmware-iwlwifi-misc \
+    linux-firmware-iwlwifi-ax210 \
+    linux-firmware-ibt-ax210 \
     wireless-regdb-static \
 "
 
