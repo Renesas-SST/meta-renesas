@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# Generate the environment consumed by Weston on Sparrow-Hawk/V4H only.
+# Mesa owns the generic graphics libraries for every rz-cmn image; this keeps
+# the proprietary PowerVR libraries private until a PowerVR board is detected.
+set -eu
+
+ENV_FILE=/run/pvr-gfx.env
+PVR_LIBDIR=/usr/lib/pvr
+PVR_VK_ICD=/usr/share/pvr/vulkan/icd.d/powervr_icd.json
+PVR_OCL_VENDORS=/usr/share/pvr/OpenCL/vendors
+
+is_pvr_board()
+{
+    if [ -r /proc/device-tree/model ] && tr '\0' '\n' < /proc/device-tree/model | grep -Eiq 'sparrow|v4h|r8a779g'; then
+        return 0
+    fi
+
+    if [ -r /proc/device-tree/compatible ] && tr '\0' '\n' < /proc/device-tree/compatible | grep -Eq 'renesas,r8a779g|renesas,r8a779g0'; then
+        return 0
+    fi
+
+    for compat in $(find /proc/device-tree -name compatible -type f 2>/dev/null); do
+        if tr '\0' '\n' < "$compat" | grep -qx 'renesas,gsx'; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+if is_pvr_board && [ -r "${PVR_LIBDIR}/libEGL.so.1" ]; then
+    mkdir -p /run
+    {
+        echo "LD_LIBRARY_PATH=${PVR_LIBDIR}"
+        [ -r "${PVR_VK_ICD}" ] && echo "VK_ICD_FILENAMES=${PVR_VK_ICD}"
+        [ -d "${PVR_OCL_VENDORS}" ] && echo "OCL_ICD_VENDORS=${PVR_OCL_VENDORS}"
+    } > "${ENV_FILE}"
+else
+    rm -f "${ENV_FILE}"
+fi
