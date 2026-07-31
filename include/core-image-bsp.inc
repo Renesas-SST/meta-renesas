@@ -33,3 +33,10 @@ IMAGE_INSTALL:append = " \
     connman-wait-online \
     tcf-agent \
 "
+
+# QoS stack: qos.ko driver, libqos library and qos_tp test tool
+IMAGE_INSTALL:append = " \
+    kernel-module-qos \
+    qosif-user-module \
+    qosif-tp-user-module \
+"
