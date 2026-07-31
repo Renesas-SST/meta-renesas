@@ -25,6 +25,7 @@ IMAGE_INSTALL:append = " \
     linux-firmware-ap1302 \
     linux-firmware-sdiouartiw416 \
     firmwared \
+    linux-firmware-rcar-gen4-pcie \
 "
 
 # WiFi/BT firmware + regulatory DB for boards with the M.2 Key-E slot.
@@ -68,7 +69,6 @@ IMAGE_BOOT_FILES:rz-cmn = " \
     *rpmsg*;./ \
 "
 DEPENDS += " linux-yocto uenv platform-gen "
-EXTRA_IMAGEDEPENDS:append:rz-cmn = " ${@oe.utils.conditional('ENABLE_V4H_DIRECT_OPTEE', '1', 'rcar-pcie-firmware:do_deploy', '', d)}"
 
 add_bootloader_rootfs() {
     install -d ${IMAGE_ROOTFS}/boot/uload-bootloader
