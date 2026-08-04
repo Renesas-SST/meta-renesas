@@ -62,7 +62,7 @@
         "revision_minor": 0,
         "revision_major": 1,
         "model_string": "rs-g2l100",
-        "mfg_name": "Renesas",
+        "mfg_name": "Geniatech",
 
         "bl2_loc": 0,
         "bl2_dtb_loc": 0,
@@ -207,7 +207,7 @@
         "revision_minor": 0,
         "revision_major": 1,
         "model_string": "imdt-v2h-sbc",
-        "mfg_name": "Renesas",
+        "mfg_name": "IMDT",
 
         "bl2_loc": 0,
         "bl2_dtb_loc": 0,
@@ -236,7 +236,7 @@
         "revision_minor": 0,
         "revision_major": 1,
         "model_string": "sparrow-hawk",
-        "mfg_name": "Renesas",
+        "mfg_name": "Retronix",
 
         "bl2_loc": 0,
         "bl2_dtb_loc": 0,
