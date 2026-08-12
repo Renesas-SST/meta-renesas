@@ -11,12 +11,14 @@ KBRANCH_RT = "styhead/rz-cmn-rt"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}:"
 
-# Default: use the Renesas-SST Git repository.
-# Comment out the following entries to use the Yocto Git repositories instead.
-# This may conflict with the current setup.
+# Default: Use the Renesas-SST Git repository. Hard overrride base recipe value.
+#       1. hard repoint kernel source to Renesas SST linux-rz repo
+#       2. Add back the source for KMETA from main linux-yocto_6.18.bb file SRC_URI
+# KMETA is new Kconfig fragment repo.
 SRC_URI:rz-cmn = " \
   git://github.com/Renesas-SST/linux-rz.git;name=nonrt;branch=${KBRANCH};protocol=https;destsuffix=git-nonrt \
   git://github.com/Renesas-SST/linux-rz.git;name=rt;branch=${KBRANCH_RT};protocol=https;destsuffix=git-rt \
+  git://git.yoctoproject.org/yocto-kernel-cache;type=kmeta;name=meta;branch=yocto-6.18;destsuffix=${KMETA};protocol=https \
 "
 
 # Common config fragments and patches
@@ -153,7 +155,9 @@ do_deploy:append:rz-cmn(){
 SRCREV_machine:rz-cmn ?= "${AUTOREV}"
 SRCREV_nonrt:rz-cmn ?= "${AUTOREV}"
 SRCREV_rt:rz-cmn ?= "${AUTOREV}"
-SRCREV_FORMAT = "nonrt_rt"
+# meta must appear here now that the kmeta fetch is back in SRC_URI, otherwise the kernel-cache revision is left out of the combined source revision and a
+# cache update would not invalidate sstate. SRCREV_meta itself is pinned in linux-yocto_6.18.bb.
+SRCREV_FORMAT = "nonrt_rt_meta"
 
 LINUX_VERSION:rz-cmn ?= "6.18.20"
 
