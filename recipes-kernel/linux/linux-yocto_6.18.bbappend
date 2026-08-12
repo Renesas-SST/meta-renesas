@@ -99,6 +99,10 @@ KCONFIG_MODE:rz-cmn = "alldefconfig"
 #KMACHINE:rz-cmn ?= "renesas_defconfig"
 KBUILD_DEFCONFIG:rz-cmn ?= "renesas_defconfig"
 
+# Level 2 reports every symbol that renesas_defconfig or one of our .cfg fragments asks
+# for but does not survive into the final .config.
+KCONF_AUDIT_LEVEL:rz-cmn = "2"
+
 # List of device tree names for rz-cmn
 DEVICETREE_NAME:rz-cmn = " \
 	rzg2l-sbc \
