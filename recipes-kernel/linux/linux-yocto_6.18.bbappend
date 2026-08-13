@@ -6,8 +6,10 @@ inherit kernel
 inherit kernel-devicetree
 inherit renesas-kernel-variants
 
+# One branch feeds all three kernel variants. PREEMPT_RT has been in mainline since 6.12,
+# so the real-time kernel no longer needs a separate tree carrying an out-of-tree patch series.
+# It is reached with CONFIG_PREEMPT_RT from preempt-rt.cfg, like any other config option.
 KBRANCH  = "styhead/rz-cmn"
-KBRANCH_RT = "styhead/rz-cmn-rt"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}:"
 
@@ -17,7 +19,6 @@ FILESEXTRAPATHS:prepend := "${THISDIR}:"
 # KMETA is new Kconfig fragment repo.
 SRC_URI:rz-cmn = " \
   git://github.com/Renesas-SST/linux-rz.git;name=nonrt;branch=${KBRANCH};protocol=https;destsuffix=git-nonrt \
-  git://github.com/Renesas-SST/linux-rz.git;name=rt;branch=${KBRANCH_RT};protocol=https;destsuffix=git-rt \
   git://git.yoctoproject.org/yocto-kernel-cache;type=kmeta;name=meta;branch=yocto-6.18;destsuffix=${KMETA};protocol=https \
 "
 
@@ -56,8 +57,8 @@ RENESAS_KERNEL_VARIANT_nonpreempt_IMAGE:rz-cmn    = "Image-nonpreempt-${KERNEL_A
 RENESAS_KERNEL_VARIANT_nonpreempt_SYMLINK:rz-cmn  = "Image-nonpreempt"
 RENESAS_KERNEL_VARIANT_nonpreempt_MODULES:rz-cmn  = "${PN}-modules-nonpreempt"
 
-# PREEMPT_RT variant: from RT branch
-RENESAS_KERNEL_VARIANT_preempt_rt_SRCTREE:rz-cmn  = "${UNPACKDIR}/git-rt"
+# PREEMPT_RT variant: same tree as the other two, differing only by config
+RENESAS_KERNEL_VARIANT_preempt_rt_SRCTREE:rz-cmn  = "${UNPACKDIR}/git-nonrt"
 # Let TREE default to ${WORKDIR}/git-preempt_rt
 RENESAS_KERNEL_VARIANT_preempt_rt_PRETTY:rz-cmn   = "PREEMPT_RT"
 RENESAS_KERNEL_VARIANT_preempt_rt_CONFIG:rz-cmn = "${THISDIR}/rz-cmn/common/preempt-rt.cfg"
@@ -154,10 +155,9 @@ do_deploy:append:rz-cmn(){
 
 SRCREV_machine:rz-cmn ?= "${AUTOREV}"
 SRCREV_nonrt:rz-cmn ?= "${AUTOREV}"
-SRCREV_rt:rz-cmn ?= "${AUTOREV}"
 # meta must appear here now that the kmeta fetch is back in SRC_URI, otherwise the kernel-cache revision is left out of the combined source revision and a
 # cache update would not invalidate sstate. SRCREV_meta itself is pinned in linux-yocto_6.18.bb.
-SRCREV_FORMAT = "nonrt_rt_meta"
+SRCREV_FORMAT = "nonrt_meta"
 
 LINUX_VERSION:rz-cmn ?= "6.18.20"
 
