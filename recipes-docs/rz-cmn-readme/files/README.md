@@ -108,16 +108,16 @@ $ MACHINE<target_machine> IMAGE=<target_image> ./rz_builder.sh build
 - <target_image>: the target Yocto build image. It can be one from the following list of supported images
 - <machine_name>: the target machine name (e.g., rz-cmn, rzg2l-sbc, etc.)
 
-| Target Image               | Description                                                                                 |
-|----------------------------|---------------------------------------------------------------------------------------------|
-| core-image-minimal         |  A basic image that contains the minimal set of components required to boot the device. It focuses on essential system functions without extra tools or features. |
-| core-image-bsp             | Extends core-image-minimal with additional utilities and tools, providing a lightweight environment for system validation, hardware diagnostics, and basic development|
-| core-image-weston          | A standard graphical image with Wayland and Weston support for embedded GUI applications.|
-| renesas-core-image-cli     | Based on core-image-bsp, this image offers a CLI environment for Renesas hardware development without graphical interfaces.Besides the useful tools inherited from the core-image-bsp, this image also containsnew packages for SBC (Single Board Computer) development. For example,package managers (apt, dpgk), network utilities for Bluetooth, Wi-Fi. |
-| renesas-core-image-weston  | Renesas customized core image based on the core-image-weston, with Qt5 framework support (no QT demo apps included). This image offers a full graphical environment for Renesas hardware development and all the useful tools from the renesas-core-image-cli.      |
-| renesas-quickboot-cli      | This image has the same system functionality as the renesas-core-image-cli but with Quickboot enabled, allowing for faster boot times and efficient system validation on a CLI environment.|
-| renesas-quickboot-wayland  | This image has the same system functionality as the renesas-core-image-weston but with Quickboot enabled, allowing for faster boot times and efficient system validation on a graphical environment              |
-| renesas-ubuntu | Ubuntu-based image built on top of the ubuntu-tiny Yocto distro, ideal for embedded development. It includes core support for Wayland, X11, OpenGL, and Qt5, but does not include full development tools or environments. This image is not meant to be used as a Yocto rootfs, but rather as a foundation for pure Ubuntu-based systems that depend on Yocto-generated artifacts.|
+| Target Image              | Description                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| core-image-minimal        | A basic image that contains the minimal set of components required to boot the device. It focuses on essential system functions without extra tools or features.                                                                                                                                                                                                                   |
+| core-image-bsp            | Extends core-image-minimal with additional utilities and tools, providing a lightweight environment for system validation, hardware diagnostics, and basic development                                                                                                                                                                                                             |
+| core-image-weston         | A standard graphical image with Wayland and Weston support for embedded GUI applications.                                                                                                                                                                                                                                                                                          |
+| renesas-core-image-cli    | Based on core-image-bsp, this image offers a CLI environment for Renesas hardware development without graphical interfaces.Besides the useful tools inherited from the core-image-bsp, this image also containsnew packages for SBC (Single Board Computer) development. For example,package managers (apt, dpgk), network utilities for Bluetooth, Wi-Fi.                         |
+| renesas-core-image-weston | Renesas customized core image based on the core-image-weston, with Qt5 framework support (no QT demo apps included). This image offers a full graphical environment for Renesas hardware development and all the useful tools from the renesas-core-image-cli.                                                                                                                     |
+| renesas-quickboot-cli     | This image has the same system functionality as the renesas-core-image-cli but with Quickboot enabled, allowing for faster boot times and efficient system validation on a CLI environment.                                                                                                                                                                                        |
+| renesas-quickboot-wayland | This image has the same system functionality as the renesas-core-image-weston but with Quickboot enabled, allowing for faster boot times and efficient system validation on a graphical environment                                                                                                                                                                                |
+| renesas-ubuntu            | Ubuntu-based image built on top of the ubuntu-tiny Yocto distro, ideal for embedded development. It includes core support for Wayland, X11, OpenGL, and Qt5, but does not include full development tools or environments. This image is not meant to be used as a Yocto rootfs, but rather as a foundation for pure Ubuntu-based systems that depend on Yocto-generated artifacts. |
 
 **Note:**
 
@@ -685,13 +685,13 @@ This package contains the following firmware components.
 
 ### 3.1. Firmware Description
 
-| Module                     | Binary / Files                                   | Stack Layer | Description |
-|---------------------------|--------------------------------------------------|-------------|-------------|
-| ROM code                  | N/A                                              | BL1         | Internal ROM executed by the SoC's primary core at power‑on reset (POR). |
-| Flash Writer              | `Flash_Writer_SCIF_<board>.mot`                  | BL2         | Factory serial loader: BL1 (ROM) loads it into SRAM via UART **SCIF0**; it then receives another image over SCIF0 and flashes to **xSPI/QSPI** or **eMMC** boot sectors. Provides a command‑based UI. |
-| Arm Trusted Firmware‑A    | `bl2-rz-cmn.bin`, `bl31-rz-cmn.bin`, `<board>.dtb` | BL2 & BL31  | Minimal TF‑A (without DTB embedded). The flashing script dynamically combines `bl2-rz-cmn.bin` with the device tree during flashing. Distributed in **.bin** format only (raw in‑system flashing). |
-| U‑Boot (BL33)             | `u-boot-nodtb-rz-cmn.bin`, `<board>.dtb`         | BL33        | U‑Boot (nodtb) binary and matching device tree; the flashing script packages these into the FIP. |
-| Board Identification      | `<board>-platform-settings.bin`                  | —           | Stores platform settings (model IDs, revisions, memory locations, image sizes) so firmware/bootloaders can identify hardware and locate boot components efficiently during startup or flashing. |
+| Module                 | Binary / Files                                     | Stack Layer | Description                                                                                                                                                                                           |
+| ---------------------- | -------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ROM code               | N/A                                                | BL1         | Internal ROM executed by the SoC's primary core at power‑on reset (POR).                                                                                                                              |
+| Flash Writer           | `Flash_Writer_SCIF_<board>.mot`                    | BL2         | Factory serial loader: BL1 (ROM) loads it into SRAM via UART **SCIF0**; it then receives another image over SCIF0 and flashes to **xSPI/QSPI** or **eMMC** boot sectors. Provides a command‑based UI. |
+| Arm Trusted Firmware‑A | `bl2-rz-cmn.bin`, `bl31-rz-cmn.bin`, `<board>.dtb` | BL2 & BL31  | Minimal TF‑A (without DTB embedded). The flashing script dynamically combines `bl2-rz-cmn.bin` with the device tree during flashing. Distributed in **.bin** format only (raw in‑system flashing).    |
+| U‑Boot (BL33)          | `u-boot-nodtb-rz-cmn.bin`, `<board>.dtb`           | BL33        | U‑Boot (nodtb) binary and matching device tree; the flashing script packages these into the FIP.                                                                                                      |
+| Board Identification   | `<board>-platform-settings.bin`                    | —           | Stores platform settings (model IDs, revisions, memory locations, image sizes) so firmware/bootloaders can identify hardware and locate boot components efficiently during startup or flashing.       |
 
 > **Note**: A prebuilt FIP is **not** shipped. The flashing script builds a valid FIP at flash time from `bl31-rz-cmn.bin`, `u-boot-nodtb-rz-cmn.bin`, and `<board>.dtb`. It also merges `bl2-rz-cmn.bin` with `<board>.dtb` to create the BL2 image flashed to the boot sector.
 
@@ -889,18 +889,18 @@ host/tools/
 
 ##### JSON Structure (Schema)
 
-| Key                   | Description                                                                 | Allowed / Example Values                  |
-|-----------------------|-----------------------------------------------------------------------------|-------------------------------------------|
-| `soc`                 | SoC/MPU family identifier                                                   | `g2l`, `v2l`, `v2h`                       |
-| `bl2`                 | BL2 (stage 2) image containing FCONF device tree                            | `bl2_bp_<board>.srec`                     |
-| `board_identification`| Board‑info binary from `binmake` (not the JSON source)                      | `<board>-platform-settings.bin`           |
-| `fip`                 | FIP image containing BL31 and U‑Boot nodtb+DTB                              | `fip_<board>.srec`                        |
-| `atf_fdts`            | FCONF DTB(s) for BL2                                                         | `<board>.dtb`                             |
-| `uboot_dtb`           | U‑Boot device tree blob                                                      | `<board>.dtb`                             |
-| `flash_writer`        | Flash Writer binary for low‑level programming                                | `Flash_Writer_SCIF_<board>.mot`           |
-| `ipl_flash_method`    | IPL media used for flashing                                                  | `xspi`, `emmc`, `esd`                            |
-| `rootfs`              | Root filesystem image                                                        | `core-image-minimal.wic`                  |
-| `rootfs_flash_method` | Method to flash rootfs                                                       | `udp`, `otg`                              |
+| Key                    | Description                                            | Allowed / Example Values        |
+| ---------------------- | ------------------------------------------------------ | ------------------------------- |
+| `soc`                  | SoC/MPU family identifier                              | `g2l`, `v2l`, `v2h`             |
+| `bl2`                  | BL2 (stage 2) image containing FCONF device tree       | `bl2_bp_<board>.srec`           |
+| `board_identification` | Board‑info binary from `binmake` (not the JSON source) | `<board>-platform-settings.bin` |
+| `fip`                  | FIP image containing BL31 and U‑Boot nodtb+DTB         | `fip_<board>.srec`              |
+| `atf_fdts`             | FCONF DTB(s) for BL2                                   | `<board>.dtb`                   |
+| `uboot_dtb`            | U‑Boot device tree blob                                | `<board>.dtb`                   |
+| `flash_writer`         | Flash Writer binary for low‑level programming          | `Flash_Writer_SCIF_<board>.mot` |
+| `ipl_flash_method`     | IPL media used for flashing                            | `xspi`, `emmc`, `esd`           |
+| `rootfs`               | Root filesystem image                                  | `core-image-minimal.wic`        |
+| `rootfs_flash_method`  | Method to flash rootfs                                 | `udp`, `otg`                    |
 
 ##### JSON Configuration for a New Board
 
@@ -938,15 +938,15 @@ Example of a sample board configuration in JSON:
 
 This table below lists the available options (and sensible defaults) for `ipl_flash_method` and `rootfs_flash_method` per board.
 
-| Board                 | SoC | `ipl_flash_method` (options) | Default | `rootfs_flash_method` (options)  | Default |
-|-----------------------|-----|------------------------------|---------|----------------------------------|---------|
-| **rzg2l-sbc**         | g2l | `xspi`                       | `xspi`  | `udp`                            | `udp`   |
-| **rzg2l-evk**         | g2l | `xspi`, `emmc`, `esd`        | `xspi`  | `udp`, `otg`                     | `otg`   |
-| **rs-g2l100**         | g2l | `xspi`                       | `xspi`  | `udp`, `otg`                     | `otg`   |
-| **rzv2l-evk**         | v2l | `xspi`, `emmc`, `esd`        | `xspi`  | `udp`, `otg`                     | `otg`   |
-| **rzv2h-evk**         | v2h | `xspi`, `esd`                | `xspi`  | `udp`, `otg`                     | `otg`   |
-| **rzv2h-rdk**         | v2h | `xspi`                       | `xspi`  | `udp`                            | `udp`   |
-| **imdt-v2h-sbc**      | v2h | `xspi`                       | `xspi`  | `udp`, `otg`                     | `otg`   |
+| Board            | SoC | `ipl_flash_method` (options) | Default | `rootfs_flash_method` (options) | Default |
+| ---------------- | --- | ---------------------------- | ------- | ------------------------------- | ------- |
+| **rzg2l-sbc**    | g2l | `xspi`                       | `xspi`  | `udp`                           | `udp`   |
+| **rzg2l-evk**    | g2l | `xspi`, `emmc`, `esd`        | `xspi`  | `udp`, `otg`                    | `otg`   |
+| **rs-g2l100**    | g2l | `xspi`                       | `xspi`  | `udp`, `otg`                    | `otg`   |
+| **rzv2l-evk**    | v2l | `xspi`, `emmc`, `esd`        | `xspi`  | `udp`, `otg`                    | `otg`   |
+| **rzv2h-evk**    | v2h | `xspi`, `esd`                | `xspi`  | `udp`, `otg`                    | `otg`   |
+| **rzv2h-rdk**    | v2h | `xspi`                       | `xspi`  | `udp`                           | `udp`   |
+| **imdt-v2h-sbc** | v2h | `xspi`                       | `xspi`  | `udp`, `otg`                    | `otg`   |
 
 **Notes:**
 - *IPL flash method*: `emmc` for `rzv2h-evk` is **not supported yet**.
@@ -1056,28 +1056,28 @@ Refer to the [Basic Usage](#basic-usage) section for commands to run the tool.
     This board provides a **RESET** button. You can reset the board without removing power, and the USB connection and serial port typically remain available.
 - Rootfs flash (UDP Fastboot): U-Boot fastboot-udp uses a single active Ethernet MAC per board. If multiple RJ45/PHY ports exist, only one is active (depending on board support). The script automatically selects the appropriate Ethernet port based on board configuration in `boards_flash_config.toml`. For boards with multiple available ports, the script will prompt you to select which port to use.
 
-  | Board         | Ethernet port(s) used |
-  |-------------|----------------------|
-  | rzg2l-sbc    | 1                    |
-  | rs-g2l100    | 0, 1                 |
-  | rzv2l-evk    | 0                    |
-  | rzg2l-evk    | 0                    |
-  | rzv2h-evk    | 0, 1                 |
-  | rzv2h-rdk    | 0                    |
-  | imdt-v2h-sbc | 0, 1                 |
+  | Board        | Ethernet port(s) used |
+  | ------------ | --------------------- |
+  | rzg2l-sbc    | 1                     |
+  | rs-g2l100    | 0, 1                  |
+  | rzv2l-evk    | 0                     |
+  | rzg2l-evk    | 0                     |
+  | rzv2h-evk    | 0, 1                  |
+  | rzv2h-rdk    | 0                     |
+  | imdt-v2h-sbc | 0, 1                  |
 
 Both fastboot-otg and fastboot-udp write to U-Boot's current MMC device (typically mmc0). Depending on board and revision, mmc0 may point to the SD card or eMMC.
 
-| Board/Rev                                   | Fastboot Method | Typical mmc0 target                                  | How to change target           |
-|---------------------------------------------|-----------------|------------------------------------------------------|-------------------------------|
-| RZ/G2L-SBC                                  | UDP             | Carrier SD (board default)                            | N/A (single device)           |
-| RS-G2L100                                   | UDP, OTG        | eMMC                                                | N/A (single device)           |
-| RZ/V2L-EVK                                  | UDP, OTG        | SD (CN3 on SOM or eMMC device depending on SW1)      | Set SW1-2 ON to SD and OFF to eMMC |
-| RZ/G2L-EVK                                  | UDP, OTG        | SD (CN3 on SOM or eMMC device depending on SW1)      | Set SW1-2 ON to SD and OFF to eMMC |
-| RZ/V2H-EVK (Rev 1 – 2 SD cards)             | UDP, OTG        | SD card slot 0                                       | N/A (single device)           |
-| RZ/V2H-EVK (Rev 2 – SD & eMMC)              | UDP, OTG        | eMMC                                                | N/A (single device)           |
-| RZ/V2H-RDK                                  | UDP             | SD card                                             | N/A (single device)           |
-| IMDT V2H-SBC                                | UDP, OTG        | eMMC                                                | N/A (single device)           |
+| Board/Rev                       | Fastboot Method | Typical mmc0 target                             | How to change target               |
+| ------------------------------- | --------------- | ----------------------------------------------- | ---------------------------------- |
+| RZ/G2L-SBC                      | UDP             | Carrier SD (board default)                      | N/A (single device)                |
+| RS-G2L100                       | UDP, OTG        | eMMC                                            | N/A (single device)                |
+| RZ/V2L-EVK                      | UDP, OTG        | SD (CN3 on SOM or eMMC device depending on SW1) | Set SW1-2 ON to SD and OFF to eMMC |
+| RZ/G2L-EVK                      | UDP, OTG        | SD (CN3 on SOM or eMMC device depending on SW1) | Set SW1-2 ON to SD and OFF to eMMC |
+| RZ/V2H-EVK (Rev 1 – 2 SD cards) | UDP, OTG        | SD card slot 0                                  | N/A (single device)                |
+| RZ/V2H-EVK (Rev 2 – SD & eMMC)  | UDP, OTG        | eMMC                                            | N/A (single device)                |
+| RZ/V2H-RDK                      | UDP             | SD card                                         | N/A (single device)                |
+| IMDT V2H-SBC                    | UDP, OTG        | eMMC                                            | N/A (single device)                |
 
 ---
 
@@ -1156,17 +1156,17 @@ Sample `rzg2l-sbc` device tree overlay list:
 - `rzg2l-sbc-1.0-dsi.dtbo`
 - `rzg2l-sbc-1.0-ov5640.dtbo`
 
-| Config                        | Description                                         | Value if set | To be loading                                                               | Board supported          |
-| ----------------------------  | -------------------------------------------         | ------------ | -----------------------------------------------------------------------     | ----------------------   |
-| `enable_overlay_i2c`          | Enable external I2C bus on expansion header         | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-ext-i2c.dtbo            | RZ/G2L-SBC               |
-| `enable_overlay_spi`          | Enable external SPI bus on expansion header         | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-ext-spi.dtbo            | RZ/G2L-SBC, RZ/V2H-RDK   |
-| `enable_overlay_can`          | Enable CAN controller and pin mux                   | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-can.dtbo                | RZ/G2L-SBC, RZ/V2H-RDK   |
-| `enable_overlay_dsi`          | Enable MIPI-DSI display interface                   | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-dsi.dtbo                | RZ/G2L-SBC, IMDT-V2H-SBC |
-| `enable_overlay_audio_codec`  | Enable on-board analog audio codec                  | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-audio_codec.dtbo        | RZ/V2H-RDK               |
-| `enable_overlay_csi_ov5640`   | Enable MIPI-CSI camera module OV5640                | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-ov5640.dtbo             | RZ/G2L-SBC               |
-| `enable_overlay_csi_ov5645`   | Enable MIPI-CSI camera module OV5645                | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-cru-csi-ov5645.dtbo     | RZ/G2L-EVK, RZ/V2L-EVK   |
-| `enable_overlay_csi22_ar1335` | Enable MIPI-CSI2 AR1335 camera on slot 3 (CSI2-2)   | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-cru-csi22-ar1335.dtbo   | IMDT-V2H-SBC             |
-| `enable_overlay_csi23_ar1335` | Enable MIPI-CSI2 AR1335 camera on slot 4 (CSI2-3)   | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-cru-csi23-ar1335.dtbo   | IMDT-V2H-SBC             |
+| Config                        | Description                                       | Value if set | To be loading                                                             | Board supported          |
+| ----------------------------- | ------------------------------------------------- | ------------ | ------------------------------------------------------------------------- | ------------------------ |
+| `enable_overlay_i2c`          | Enable external I2C bus on expansion header       | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-ext-i2c.dtbo          | RZ/G2L-SBC               |
+| `enable_overlay_spi`          | Enable external SPI bus on expansion header       | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-ext-spi.dtbo          | RZ/G2L-SBC, RZ/V2H-RDK   |
+| `enable_overlay_can`          | Enable CAN controller and pin mux                 | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-can.dtbo              | RZ/G2L-SBC, RZ/V2H-RDK   |
+| `enable_overlay_dsi`          | Enable MIPI-DSI display interface                 | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-dsi.dtbo              | RZ/G2L-SBC, IMDT-V2H-SBC |
+| `enable_overlay_audio_codec`  | Enable on-board analog audio codec                | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-audio_codec.dtbo      | RZ/V2H-RDK               |
+| `enable_overlay_csi_ov5640`   | Enable MIPI-CSI camera module OV5640              | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-ov5640.dtbo           | RZ/G2L-SBC               |
+| `enable_overlay_csi_ov5645`   | Enable MIPI-CSI camera module OV5645              | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-cru-csi-ov5645.dtbo   | RZ/G2L-EVK, RZ/V2L-EVK   |
+| `enable_overlay_csi22_ar1335` | Enable MIPI-CSI2 AR1335 camera on slot 3 (CSI2-2) | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-cru-csi22-ar1335.dtbo | IMDT-V2H-SBC             |
+| `enable_overlay_csi23_ar1335` | Enable MIPI-CSI2 AR1335 camera on slot 4 (CSI2-3) | '1' or 'yes' | ${model_string}-${revision_major}.${revision_minor}-cru-csi23-ar1335.dtbo | IMDT-V2H-SBC             |
 ---
 
 ```
@@ -1380,14 +1380,14 @@ Audio capability is board-dependent. Some RZ boards provide an onboard audio cod
 
  **1. Board Capability Summary**
 
-| Board|Analog audio on board|Digital audio on header|HDMI Audio|Notes|
-|------|----------------------|-----------------------|---------|-----|
-|RZ/G2L-SBC|3.5mm jack|Not provided|Not supported|If jack is TRRS, a TRRS headset or TRRS-to-dual-TRS Y-adapter may be required for microphone use.|
-|RZ/G2L-EVK & RZ/V2L-EVK|3.5mm jack|Not provided|Supported|If jack is TRRS, a TRRS headset or TRRS-to-dual-TRS Y-adapter may be required for microphone use.|
-|RS-G2L100|Not supported|Not supported|Supported|<div align="center">-</div>|
-|RZ/V2H-EVK|3.5mm jack|Not provided|Supported|If jack is TRRS, a TRRS headset or TRRS-to-dual-TRS Y-adapter may be required for microphone use.|
-|RZ/V2H-RDK|Not provided|I2S/PCM (SSI0 & SSI9) + I2C (codec control)|Supported (default). Disabled when codec overlay is enabled|External codec/breakout required for headphone/mic.|
-|IMDT-V2H-SBC|3.5mm jack|Not provided|Supported|If jack is TRRS, a TRRS headset or TRRS-to-dual-TRS Y-adapter may be required for microphone use.|
+| Board                   | Analog audio on board | Digital audio on header                     | HDMI Audio                                                  | Notes                                                                                             |
+| ----------------------- | --------------------- | ------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| RZ/G2L-SBC              | 3.5mm jack            | Not provided                                | Not supported                                               | If jack is TRRS, a TRRS headset or TRRS-to-dual-TRS Y-adapter may be required for microphone use. |
+| RZ/G2L-EVK & RZ/V2L-EVK | 3.5mm jack            | Not provided                                | Supported                                                   | If jack is TRRS, a TRRS headset or TRRS-to-dual-TRS Y-adapter may be required for microphone use. |
+| RS-G2L100               | Not supported         | Not supported                               | Supported                                                   | <div align="center">-</div>                                                                       |
+| RZ/V2H-EVK              | 3.5mm jack            | Not provided                                | Supported                                                   | If jack is TRRS, a TRRS headset or TRRS-to-dual-TRS Y-adapter may be required for microphone use. |
+| RZ/V2H-RDK              | Not provided          | I2S/PCM (SSI0 & SSI9) + I2C (codec control) | Supported (default). Disabled when codec overlay is enabled | External codec/breakout required for headphone/mic.                                               |
+| IMDT-V2H-SBC            | 3.5mm jack            | Not provided                                | Supported                                                   | If jack is TRRS, a TRRS headset or TRRS-to-dual-TRS Y-adapter may be required for microphone use. |
 
 **2. Analog connection**  
 
@@ -1672,14 +1672,14 @@ Reboot, then initialize and stream using the same steps as for RZ/G2L-SBC (adjus
 ##### IMDT V2H-SBC
 The following cameras are supported based on the available drivers and device tree entries:
 
-|**Camera Sensor**|**Support Status**|
-|------|------|
-|AR1335|Supported|
-|AR0521|Not verified|
-|IMX135|Not verified|
-|IMX219|Not verified|
-|IMX462|Not verified|
-|IMX274| Not verified|
+| **Camera Sensor** | **Support Status** |
+| ----------------- | ------------------ |
+| AR1335            | Supported          |
+| AR0521            | Not verified       |
+| IMX135            | Not verified       |
+| IMX219            | Not verified       |
+| IMX462            | Not verified       |
+| IMX274            | Not verified       |
 
 ---
 
@@ -2345,10 +2345,10 @@ OP-TEE (Open Portable Trusted Execution Environment) provides a secure world env
 
 Two firmware binaries are built per Yocto build run and packed into the FIP by `firmware_compile.py`:
 
-| Binary | SoC Family | Platform Flavor |
-| ------ | ---------- | --------------- |
+| Binary               | SoC Family     | Platform Flavor                                         |
+| -------------------- | -------------- | ------------------------------------------------------- |
 | `tee-rz-cmn-g2l.bin` | RZ/G2L, RZ/V2L | `g2l_smarc_2` — NS DTB injected via U-Boot (`CFG_DT=y`) |
-| `tee-rz-cmn-v2h.bin` | RZ/V2H | `v2h_evk_1` — static DT node in kernel (`CFG_DT=n`) |
+| `tee-rz-cmn-v2h.bin` | RZ/V2H         | `v2h_evk_1` — static DT node in kernel (`CFG_DT=n`)     |
 
 **Enable OP-TEE**
 
@@ -2405,6 +2405,247 @@ ENABLE_RZ_SCE    = "1"
 > **Note:** `ENABLE_RZ_SCE` has no effect when `ENABLE_SPD_OPTEE = "0"`.
 
 ---
+
+#### 4.1.15. M.2 Key-E Wi-Fi/Bluetooth modules over PCIe
+
+Boards with a PCIe interface support M.2 Key-E combo Wi-Fi/Bluetooth modules either on routed M.2 E-key port or through an adapter.
+
+| Device          | PCIe   | Port                          | Description                                              |
+| --------------- | ------ | ----------------------------- | -------------------------------------------------------- |
+| RZ/V2H EVK      | PCIe 0 | Standard Full size x1 port    | x1 port similar to PC motherboard.                       |
+| RZ/V2H RDK      | PCIe 0 | Raspberry pi 5 type connector | Requires adapter E-Key HAT - same one as on raspberry pi |
+| IMDT RZ/V2H SBC | PCIe 0 | PCIe M.2 E-key port           | Ready to use port on bottom of board                     |
+
+On the RZ/V2H RDK the module is fitted to a HAT connected to CN4.
+The IMDT RZ/V2H SBC does have PCIe 1 routed to an B-Key port but its not verified. It is deliberately disabled in device tree to ensure the E-Key port is controlling the power sequencing.
+The WiFi/BT goes onto the on-board M.2 Key-E slot.
+
+> [!IMPORTANT]
+> The Intel AX210 (AX1675, GF radio) is our official reference card that is validated in our images.
+> Its driver and firmware are included in the images making them plug and play.
+
+
+> [!IMPORTANT]
+> A combo module is technically two different modules packaged into a single module.
+> Each module presents itself on **two different buses**
+>
+>   - Wi-Fi on PCIe and
+>   - Bluetooth on USB.
+>
+> Bluetooth therefore never appears in `lspci`. By the same logic `lsusb` will not be showing the module's WiFi part.
+> On a HAT the Bluetooth signals are broken out on a separate USB cable which must be connected to a free USB
+> Type-A port on the board.
+
+---
+The following explains how to bring up the WiFi/BT module on PCIe M.2 E-key slots.
+
+##### Step 1: Verify the module is enumerated on PCIe
+
+```shell
+root@rz-cmn:~# lspci -k
+00:00.0 PCI bridge: Renesas Technology Corp. Device 003b
+        Kernel driver in use: pcieport
+01:00.0 Network controller: Intel Corporation Wi-Fi 6E(802.11ax) AX210/AX1675* 2x2 [Typhoon Peak] (rev 1a)
+        Subsystem: Intel Corporation Wi-Fi 6 AX210 160MHz
+        Kernel driver in use: iwlwifi
+        Kernel modules: iwlwifi
+```
+
+`Kernel driver in use` must be populated. If the endpoint is listed with no driver, the matching driver is not present in the image. If nothing is listed at all it means the PCIe link did not train. Check that the module is fully seated and its retaining screw is fitted.
+
+---
+
+##### Step 2: Verify firmware loading
+
+```shell
+root@rz-cmn:~# dmesg | grep -i iwlwifi
+iwlwifi 0000:01:00.0: Detected crf-id 0x400410, cnv-id 0x400410 wfpm id 0x80000000
+iwlwifi 0000:01:00.0: PCI dev 2725/0024, rev=0x420, rfid=0x10d000
+iwlwifi 0000:01:00.0: Detected Intel(R) Wi-Fi 6E AX210 160MHz
+iwlwifi 0000:01:00.0: loaded firmware version 89.202a2f7b.0 ty-a0-gf-a0-89.ucode op_mode iwlmvm
+iwlwifi 0000:01:00.0: Detected RF GF, rfid=0x10d000
+iwlwifi 0000:01:00.0: base HW address: 28:0c:50:69:67:b6
+iwlwifi 0000:01:00.0 wlp1s0: renamed from wlan0
+```
+
+**Note the interface name.** : It is renamed from `wlan0` to a PCI-topology name such as `wlp1s0`, and all later commands must use that name. Confirm the interface name with `ip link` command on target.
+
+If the lof contains `Direct firmware load ... failed with error -2` line, it means the firmware is absent from `/lib/firmware`. The AX210 firmware ships in the images; if it is missing, the required files are listed below:
+
+- /lib/firmware/iwlwifi-ty-a0-gf-a0-<api>.ucode
+- /lib/firmware/iwlwifi-ty-a0-gf-a0.pnvm
+
+The driver accepts only the firmware API revisions it was built against, so use the file matching the running kernel rather than the newest available.
+
+---
+
+##### Step 3: Unblock the radios
+
+On a freshly flashed image both radios are soft-blocked by default:
+
+```shell
+root@rz-cmn:~# rfkill list
+0: hci0: Bluetooth
+        Soft blocked: yes
+        Hard blocked: no
+1: phy0: Wireless LAN
+        Soft blocked: yes
+        Hard blocked: no
+
+root@rz-cmn:~# rfkill unblock all
+root@rz-cmn:~# ip link set wlp1s0 up
+```
+
+> [!Note]
+> The `rfkill` identifier is `bluetooth` or `wifi` in lower case - `Bluetooth`,`BT` and `hci0` are all rejected as invalid identifiers.
+
+---
+
+##### Step 4: Connect to a Wi-Fi network
+
+On images that include ConnMan, follow the `connmanctl` procedure in section 4.1.10.
+ConnMan claims the interface, so stop it before driving the supplicant by hand.
+
+To connect directly with `wpa_supplicant`:
+
+```shell
+root@rz-cmn:~# cat > /etc/wpa_supplicant.conf <<'EOF'
+ctrl_interface=/var/run/wpa_supplicant
+ctrl_interface_group=0
+update_config=1
+EOF
+root@rz-cmn:~# wpa_passphrase 'YOUR_SSID' 'YOUR_PASSPHRASE' >> /etc/wpa_supplicant.conf
+```
+
+**The append matters**: `wpa_passphrase` emits only the `network={...}` block. Written with `>` instead of `>>` causes the file to have no `ctrl_interface` line and `wpa_cli` cannot reach the supplicant at all. Basically the file is overrriden.
+Omit the append entirely and the supplicant runs but has no network to join, reporting `DISCONNECTED` while it scans.
+
+Before starting, confirm that the wpa_supplicant.conf file contains both a `ctrl_interface=` line and a `network={` block.
+> [!NOTE]
+> A network block is not required to bring up the interface. Once can scan the network using the wpa_cli and then add the network.
+> The network changes can be saved to conf back using `wpa_cli save_config` command.
+> Advanced network configuration is beyond the scope of this readme.
+
+Below is how you next bring up the wpa supplicant manually. This is wspecially useful in images such as core-image-bsp that have no service file for supplicant.
+
+```shell
+root@rz-cmn:~# wpa_supplicant -B -i wlp1s0 -c /etc/wpa_supplicant.conf
+Successfully initialized wpa_supplicant
+root@rz-cmn:~# wpa_cli -i wlp1s0 scan
+root@rz-cmn:~# wpa_cli -i wlp1s0 scan_results
+bssid / frequency / signal level / flags / ssid
+ae:17:d8:06:0c:ed       5180    -87     [WPA2-EAP-CCMP][ESS]    EXAMPLE-CORP
+92:17:d8:06:0c:ed       5180    -87     [WPA2-PSK-CCMP][ESS]    EXAMPLE-PSK
+root@rz-cmn:~# wpa_cli -i wlp1s0 status
+wpa_state=COMPLETED
+```
+
+`wpa_state=COMPLETED` indicates association and key exchange succeeded. Obtain an address
+and confirm connectivity:
+
+```shell
+root@rz-cmn:~# udhcpc -i wlp1s0
+root@rz-cmn:~# ping -c3 8.8.8.8
+```
+On images that do have a systemd service file for wpa supplicant, it needs to be started using the service command:
+```bash
+systemctl start wpa_supplicant
+```
+
+> [!Note]
+> - There is no `wpa_supplicant` systemd service; run the binary directly.
+>
+>    If `wpa_supplicant` reports `ctrl_iface exists and seems to be in use`, an earlier
+>    instance is still running. Removing the socket file is not enough - terminate the
+>    process first with `pkill -x wpa_supplicant`, then delete
+>    `/var/run/wpa_supplicant/<interface>`.
+> - Ethernet may take routing priority over Wi-Fi. See the note at the end of section 4.1.10.
+
+---
+
+##### Step 5: Bluetooth
+
+Bluetooth connects over USB.
+
+Confirm the module has enumerated:
+
+```shell
+root@rz-cmn:~# lsusb
+Bus 001 Device 002: ID 8087:0032 Intel Corp. AX210 Bluetooth
+```
+
+If no `8087:*` device is listed, Bluetooth is not powered or not connected.
+
+On RZ/V2H RDK SBC using a HAT, check that the separate Bluetooth USB cable is properly installed.
+
+Run `hciconfig -a`.
+If its reporting no HCI device, it is a symptom of the same issue and not a Bluetooth fault.
+
+Check the enumeration in the boot log as follows:
+
+```shell
+root@rz-cmn:~# dmesg | grep -i bluetooth
+Bluetooth: hci0: Found device firmware: intel/ibt-0041-0041.sfi
+Bluetooth: hci0: Firmware Version: 120-18.24
+Bluetooth: hci0: Firmware loaded in 3156033 usecs
+Bluetooth: hci0: Found Intel DDC parameters: intel/ibt-0041-0041.ddc
+Bluetooth: hci0: Applying Intel DDC parameters completed
+Bluetooth: hci0: Fseq status: Success (0x00)
+```
+
+The driver builds the firmware filename from the controller's CNVi/CNVr identifiers, so the
+exact name varies by module.
+In the logs, a `No support for BT device in ACPI firmware` line is expected on a device-tree platform and is not an error.
+
+Bring the controller up and pair:
+
+```shell
+root@rz-cmn:~# rfkill unblock bluetooth
+root@rz-cmn:~# hciconfig hci0 up
+root@rz-cmn:~# bluetoothctl
+[bluetooth]# power on
+[bluetooth]# agent on
+[bluetooth]# default-agent
+[bluetooth]# pairable on
+[bluetooth]# scan on
+[NEW] Device AA:BB:CC:DD:EE:FF Example Phone
+[bluetooth]# scan off
+[bluetooth]# pair AA:BB:CC:DD:EE:FF
+[agent] Confirm passkey 121564 (yes/no): yes
+[bluetooth]# trust AA:BB:CC:DD:EE:FF
+[bluetooth]# info AA:BB:CC:DD:EE:FF
+        Paired: yes
+        Bonded: yes
+        Trusted: yes
+```
+
+> [!Note]
+> **Turn discovery off before pairing:**
+> 
+> While `scan on` is active, `bluetoothctl` prints the discovery state changes every few seconds and these interleave with the
+> `[agent] Confirm passkey ...` prompt, making it easy to miss.
+> Confirming too late fails the log with `org.bluez.Error.AuthenticationTimeout`, which is a missed prompt rather than a link problem.
+> The passkey must be confirmed on **both** the board and the remote device.
+>
+> `agent on` followed by `default-agent` is required.
+> Without a registered agent, pairing that needs passkey confirmation fails without a useful message.
+>
+> - `connect` may report that no service is available even after successful pairing.
+> Audio profiles need a sound server such as PulseAudio or PipeWire in the image.
+> Pairing and bonding are independent of this.
+> - Bonds are stored under `/var/lib/bluetooth/<controller-address>/` and persist across reboots.
+> - Weak signal on both radios - a scan finding few networks or devices at around -90 dBm or worse -
+> usually means the module's antennas are not connected. A combo module needs both antenna leads fitted.
+> Bluetooth shares one of them.
+
+---
+
+##### Board-specific notes
+
+On the IMDT RZ/V2H SBC the M.2 Key-E slot has separate enable signals for the Wi-Fi and Bluetooth functions.
+Both are routed through the on-board GPIO expander and asserted from the device tree.
+If Wi-Fi works but no `8087:*` USB device appears, the Bluetooth enable is not being driven.
+We also do not know the USB switch implementation on the carrier to enable the M.2 E-Key port's USB interface.
 
 ### 4.2. RZ/G2L-SBC Yocto Features
 #### 4.2.1. 40-Pin IO Expansion Interface
@@ -3924,16 +4165,16 @@ These EVKs include onboard DIP switches for boot mode selection and SCIF Downloa
 **Table — SCIF Download Mode (RZ/G2L‑EVK & RZ/V2L‑EVK, SW11)**
 
 | Switch | SCIF Download Mode |
-|--------|---------------------|
-| SW11‑1 | OFF                 |
-| SW11‑2 | ON                  |
-| SW11‑3 | OFF                 |
-| SW11‑4 | ON                  |
+| ------ | ------------------ |
+| SW11‑1 | OFF                |
+| SW11‑2 | ON                 |
+| SW11‑3 | OFF                |
+| SW11‑4 | ON                 |
 
 **Table — Select eMMC as Boot Device (SW1)**
 
 | Switch | Select eMMC |
-|--------|-------------|
+| ------ | ----------- |
 | SW1‑1  | ON          |
 | SW1‑2  | OFF         |
 
@@ -3945,15 +4186,15 @@ Use DIP switch **DSW1** to configure boot mode.
 
 **Table — SCIF Download Mode (RZ/V2H‑EVK, DSW1)**
 
-| Switch | Status | Function |
-|--------|--------|----------|
-| DSW1‑1 | ON     | Select the cold boot CPU — OFF: CM33, ON: CA55 (default) |
-| DSW1‑2 | OFF    | Input CA55 frequency at cold boot — [OFF:OFF] 1.6 GHz; [OFF:ON] 1.7 GHz (default); [ON:OFF] 1.1 GHz; [ON:ON] 1.5 GHz |
-| DSW1‑3 | ON     | — |
-| DSW1-4/5 | OFF / ON  | **Boot source:** SCIF  
-| DSW1‑6 | OFF     | — |
-| DSW1‑7 | OFF    | SSCG — OFF: SSCG ON (default); ON: SSCG OFF |
-| DSW1‑8 | OFF    | Fixed to OFF  |
+| Switch   | Status   | Function                                                                                                             |
+| -------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
+| DSW1‑1   | ON       | Select the cold boot CPU — OFF: CM33, ON: CA55 (default)                                                             |
+| DSW1‑2   | OFF      | Input CA55 frequency at cold boot — [OFF:OFF] 1.6 GHz; [OFF:ON] 1.7 GHz (default); [ON:OFF] 1.1 GHz; [ON:ON] 1.5 GHz |
+| DSW1‑3   | ON       | —                                                                                                                    |
+| DSW1-4/5 | OFF / ON | **Boot source:** SCIF                                                                                                |
+| DSW1‑6   | OFF      | —                                                                                                                    |
+| DSW1‑7   | OFF      | SSCG — OFF: SSCG ON (default); ON: SSCG OFF                                                                          |
+| DSW1‑8   | OFF      | Fixed to OFF                                                                                                         |
 
 **Note**: DSW1 on **RZ/V2H-RDK** has only 6 switches, with functions equivalent to the first 6 switches of **RZ/V2H-EVK**.
 
@@ -3964,21 +4205,21 @@ To enable **SCIF Download Mode**, set **DSW1‑4** and **DSW1‑5** according to
 Use the DIP switch SW1 to configure the SCIF download mode.
 
 | Switch | SCIF Download Mode |
-|--------|------------------|
-| SW1-1  | OFF              |
-| SW1-2  | ON               |
-| SW1-3  | OFF              |
-| SW1-4  | OFF              |
+| ------ | ------------------ |
+| SW1-1  | OFF                |
+| SW1-2  | ON                 |
+| SW1-3  | OFF                |
+| SW1-4  | OFF                |
 
 #### 8.1.5. IMDT RZ/V2H-SBC
 
 Use the DIP switch DSW1 to configure the boot mode:
 
 | Switch | SCIF Download Mode |
-|--------|------------------|
-| DSW1-1  | OFF              |
-| DSW1-2  | ON               |
-| DSW1-3  | OFF              |
+| ------ | ------------------ |
+| DSW1-1 | OFF                |
+| DSW1-2 | ON                 |
+| DSW1-3 | OFF                |
 
 In this configuration, the board is placed in SCIF Download mode. This mode is used for programming the bootloader into the xSPI Flash, or the onboard eMMC, over USB Serial.
 
@@ -3992,45 +4233,45 @@ Summary of switch/strap settings for **normal boot** and **boot‑device** selec
 
 **Table — SW11: Boot Device Selection (Normal Boot)**
 
-| Boot device | SW11‑1 | SW11‑2 | SW11‑3 | SW11‑4 | Description |
-|-------------|--------|--------|--------|--------|-------------|
+| Boot device | SW11‑1 | SW11‑2 | SW11‑3 | SW11‑4 | Description                                                             |
+| ----------- | ------ | ------ | ------ | ------ | ----------------------------------------------------------------------- |
 | eMMC        | ON     | OFF    | OFF    | ON     | Boot from on‑board eMMC (BootROM loads BL2/BL2+BP from eMMC, then FIP). |
-| QSPI        | OFF    | OFF    | OFF    | ON     | Boot from QSPI NOR flash. |
-| SD / eSD    | ON     | ON     | OFF    | ON     | Boot from SD/eSD card (slot media). |
+| QSPI        | OFF    | OFF    | OFF    | ON     | Boot from QSPI NOR flash.                                               |
+| SD / eSD    | ON     | ON     | OFF    | ON     | Boot from SD/eSD card (slot media).                                     |
 
 **Table — SW1: SOM Module Switch Mode**
 
-| Switch | ON                  | OFF                                        |
-|--------|---------------------|--------------------------------------------|
-| SW1‑1  | Normal Operation    | JTAG debug mode                            |
-| SW1‑2  | Select microSD slot | Select eMMC (on RTK9744L23C01000BE)        |
+| Switch | ON                  | OFF                                 |
+| ------ | ------------------- | ----------------------------------- |
+| SW1‑1  | Normal Operation    | JTAG debug mode                     |
+| SW1‑2  | Select microSD slot | Select eMMC (on RTK9744L23C01000BE) |
 
 #### 8.2.2. RZ/V2H‑EVK
 
 **Table — DSW1: Boot Device Selection (Normal Boot)**
 
 | Boot device | DSW1‑1 | DSW1‑2 | DSW1‑3 | DSW1‑4 | DSW1‑5 | DSW1‑6 | DSW1‑7 | DSW1‑8 |
-|-------------|--------|--------|--------|--------|--------|--------|--------|--------|
+| ----------- | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
 | eMMC        | ON     | OFF    | ON     | ON     | ON     | OFF    | OFF    | OFF    |
 | xSPI        | ON     | OFF    | ON     | OFF    | OFF    | OFF    | OFF    | OFF    |
 | SD / eSD    | ON     | OFF    | ON     | ON     | OFF    | OFF    | OFF    | OFF    |
 
 **DSW2 — Audio Clock / Utility DIP**
 
-| Switch | Signal         | OFF (default)                             | ON                               |
-|--------|----------------|-------------------------------------------|-----------------------------------|
-| 1      | Audio_CLKB_OE  | Disables 5P35023B Audio_CLKB output       | Enables Audio_CLKB output         |
-| 2      | Audio_CLKB     | Audio_CLKB not supplied                   | Audio_CLKB is driven              |
-| 3      | Audio_CLKC_OE  | Disables 5P35023B Audio_CLKC output       | Enables Audio_CLKC output         |
-| 4      | Audio_CLKC     | Audio_CLKC not supplied                   | Audio_CLKC is driven              |
-| 5      | NEN_VPROG      | **Must remain OFF**                       | **Prohibited — do not set ON**    |
-| 6      | —              | —                                         | —                                 |
+| Switch | Signal        | OFF (default)                       | ON                             |
+| ------ | ------------- | ----------------------------------- | ------------------------------ |
+| 1      | Audio_CLKB_OE | Disables 5P35023B Audio_CLKB output | Enables Audio_CLKB output      |
+| 2      | Audio_CLKB    | Audio_CLKB not supplied             | Audio_CLKB is driven           |
+| 3      | Audio_CLKC_OE | Disables 5P35023B Audio_CLKC output | Enables Audio_CLKC output      |
+| 4      | Audio_CLKC    | Audio_CLKC not supplied             | Audio_CLKC is driven           |
+| 5      | NEN_VPROG     | **Must remain OFF**                 | **Prohibited — do not set ON** |
+| 6      | —             | —                                   | —                              |
 
 **JSW1 — Camera Interface Voltage (Secure EVB)**
 
-| Switch | Function                                  |
-|--------|-------------------------------------------|
-| 1–2    | MIPI CSI‑2 camera interface voltage: 1.8 V |
+| Switch | Function                                               |
+| ------ | ------------------------------------------------------ |
+| 1–2    | MIPI CSI‑2 camera interface voltage: 1.8 V             |
 | 2–3    | MIPI CSI‑2 camera interface voltage: 3.3 V *(default)* |
 
 > Set according to the camera module interface voltage.
@@ -4040,7 +4281,7 @@ Summary of switch/strap settings for **normal boot** and **boot‑device** selec
 **Table — DSW1: Boot Device Selection (Normal Boot)**
 
 | Boot device | DSW1‑1 | DSW1‑2 | DSW1‑3 | DSW1‑4 | DSW1‑5 | DSW1‑6 |
-|-------------|--------|--------|--------|--------|--------|--------|
+| ----------- | ------ | ------ | ------ | ------ | ------ | ------ |
 | eMMC        | ON     | OFF    | ON     | ON     | ON     | OFF    |
 | xSPI        | ON     | OFF    | ON     | OFF    | OFF    | OFF    |
 | SD / eSD    | ON     | OFF    | ON     | ON     | OFF    | OFF    |
@@ -4051,10 +4292,10 @@ Summary of switch/strap settings for **normal boot** and **boot‑device** selec
 
 Use the DIP switch SW1 to configure the boot mode.
 
-| Boot Mode / Device            | SW1-1 | SW1-2 | SW1-3 | SW1-4 | Description |
-|-------------------------------|-------|-------|-------|-------|-------------|
-| eMMC                          | OFF   | ON    | ON    | OFF   | Boot from on-board eMMC (BootROM loads BL2/BL2+BP from eMMC, then FIP) |
-| QSPI                          | OFF   | OFF   | ON    | OFF   | Boot from QSPI NOR flash |
+| Boot Mode / Device | SW1-1 | SW1-2 | SW1-3 | SW1-4 | Description                                                            |
+| ------------------ | ----- | ----- | ----- | ----- | ---------------------------------------------------------------------- |
+| eMMC               | OFF   | ON    | ON    | OFF   | Boot from on-board eMMC (BootROM loads BL2/BL2+BP from eMMC, then FIP) |
+| QSPI               | OFF   | OFF   | ON    | OFF   | Boot from QSPI NOR flash                                               |
 
 #### 8.2.5. IMDT V2H-SBC
 
@@ -4062,10 +4303,10 @@ Use the DIP switch SW1 to configure the boot mode.
 
 The IDMT-V2H-SBC also provide on-board DIP switches for boot mode and boot device selection.
 
-| Boot Mode / Device            | DSW1-1 | DSW1-2 | DSW1-3 | Description |
-|-------------------------------|-------|-------|-------|-------------|
-| xSPI Flash                    | OFF   | ON    | ON    | bootROM attempts to load bootloader from xSPI Flash, if fails enter SCIF Download mode |
-| eMMC                          | OFF   | OFF   | OFF   | bootROM attempts to load bootloader from eMMC, if fails enter SCIF Download mode |
+| Boot Mode / Device | DSW1-1 | DSW1-2 | DSW1-3 | Description                                                                            |
+| ------------------ | ------ | ------ | ------ | -------------------------------------------------------------------------------------- |
+| xSPI Flash         | OFF    | ON     | ON     | bootROM attempts to load bootloader from xSPI Flash, if fails enter SCIF Download mode |
+| eMMC               | OFF    | OFF    | OFF    | bootROM attempts to load bootloader from eMMC, if fails enter SCIF Download mode       |
 
 ## 9. BSP Interface
 
