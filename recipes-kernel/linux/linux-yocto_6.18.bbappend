@@ -26,10 +26,7 @@ SRC_URI:rz-cmn = " \
 SRC_URI:append:rz-cmn = " \
 	file://common/kernel-common.cfg \
 	file://common/panfrost.cfg \
-	file://common/usb-serial.cfg \
-	file://common/usb-can.cfg \
 	file://common/firmware-edid.cfg \
-	file://common/nvme.cfg \
 	${@bb.utils.contains('DOCKER_SUPPORT', '1', 'file://common/docker.cfg', '', d)} \
 	${@bb.utils.contains('DISTRO', 'ubuntu-tiny', 'file://common/docker.cfg', '', d)} \
 	${@oe.utils.conditional("OPTIMIZE_KERN", "1", "file://common/optimize.cfg", "", d)} \
