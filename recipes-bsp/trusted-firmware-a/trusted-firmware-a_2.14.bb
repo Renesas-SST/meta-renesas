@@ -60,7 +60,9 @@ LD[unexport] = "1"
 #   - FCONF device trees (dtbs)
 EXTRA_OEMAKE = "PLAT=${PLATFORM} ${EXTRA_FLAGS} LD=${TARGET_PREFIX}ld.bfd bl2-all bl31 dtbs"
 
-# Install bl2.bin and bl31.bin to boot folder and rename
+# Install bl2.bin and bl31.bin to boot folder and rename.
+# The Sparrow-Hawk BL31 is always installed, independent of ENABLE_V4H_DIRECT_OPTEE.
+# Its SPD flavor (none vs opteed) matches whichever one do_compile:append built.
 do_install() {
     install -d ${D}/boot/fdts
 
@@ -69,22 +71,16 @@ do_install() {
     done
     install -m 644 ${S}/build/${PLATFORM}/release/bl31.bin ${D}/boot/bl31-${MACHINE}.bin
     install -m 644 ${S}/build/${PLATFORM}/release/fdts/*.dtb ${D}/boot/fdts
-    if [ "${ENABLE_V4H_DIRECT_OPTEE}" = "1" ]; then
-        install -m 0644 \
-            ${SPARROWHAWK_S}/build/${SPARROWHAWK_PLATFORM}/release/bl31.bin \
-            ${D}/boot/bl31-sparrow-hawk.bin
-    fi
+    install -m 0644 \
+        ${SPARROWHAWK_S}/build/${SPARROWHAWK_PLATFORM}/release/bl31.bin \
+        ${D}/boot/bl31-sparrow-hawk.bin
 }
 
 # Deploy bin file to deploy dir
 do_deploy() {
     # Create deploy folder
     install -d ${DEPLOYDIR}/target/images/atf/fdts
-
-    rm -f \
-        ${DEPLOYDIR}/target/images/atf/bl31-sparrowhawk.bin \
-        ${DEPLOYDIR}/target/images/atf/bl31-sparrowhawk.elf \
-        ${DEPLOYDIR}/target/images/atf/bl31-sparrowhawk.srec
+    install -d ${DEPLOYDIR}/target/boot
 
     # Copy bl2, bl31 and fdts to deploy folder
     for method in ${BL2_METHODS}; do
@@ -92,6 +88,8 @@ do_deploy() {
     done
     install -m 0644 ${D}/boot/bl31-${MACHINE}.bin ${DEPLOYDIR}/target/images/atf/bl31-${MACHINE}.bin
     install -m 0644 ${D}/boot/fdts/*.dtb ${DEPLOYDIR}/target/images/atf/fdts
+    install -m 0644 ${D}/boot/bl31-sparrow-hawk.bin \
+        ${DEPLOYDIR}/target/boot/bl31-sparrow-hawk.bin
 }
 
 addtask deploy after do_install
@@ -114,6 +112,11 @@ SRCREV_FORMAT = "machine_sparrowhawk"
 SPARROWHAWK_S = "${WORKDIR}/git/sparrowhawk"
 SPARROWHAWK_PLATFORM = "rcar_gen4"
 SPARROWHAWK_OPT = "LSI=V4H CTX_INCLUDE_AARCH32_REGS=0 MBEDTLS_COMMON_MK=1 PTP_NONSECURE_ACCESS=1 LOG_LEVEL=20 DEBUG=0 ENABLE_ASSERTIONS=0 E=0"
+
+# Same pattern as SEC_FLAGS/ENABLE_SPD_OPTEE above for the cmn platform:
+# one build, SPD picked by the enable flag. BL31 for Sparrow-Hawk is always
+# built and installed either way (do_install/do_deploy are unconditional);
+# only the SPD flavor of that single binary changes.
 SPARROWHAWK_SPD = "${@oe.utils.conditional('ENABLE_V4H_DIRECT_OPTEE', '1', 'opteed', 'none', d)}"
 
 # Build BL31 for the Sparrow-Hawk (V4H) companion SoC after the main build.

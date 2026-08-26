@@ -60,6 +60,16 @@ IMAGE_INSTALL:append = " packagegroup-qt6 packagegroup-qt6-modules"
 # Add weston to rootfs
 CORE_IMAGE_BASE_INSTALL += "weston"
 
+# Camera stack: libcamera with R-Car Gen4 ISP / rkisp1 pipelines.
+# Available since core-image-bsp.inc added these recipes but never
+# pulled them into the Ubuntu image.
+IMAGE_INSTALL:append = " \
+    libpisp \
+    libcamera \
+    libcamera-gst \
+    libcamera-pycamera \
+"
+
 # compatible machine comes with linux-yocto but not available in this build
 # so bring back these parameters
 COMPATIBLE_MACHINE = "^(aarch64|rz-cmn)$"
