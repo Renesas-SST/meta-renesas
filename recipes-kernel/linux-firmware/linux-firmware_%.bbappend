@@ -36,6 +36,27 @@ do_install:append:rz-cmn() {
     install -m 0644 ${UNPACKDIR}/LICENCE.r8a779g_pcie_phy ${D}${nonarch_base_libdir}/firmware/LICENCE.r8a779g_pcie_phy
 }
 
+# universal_flash.py's V4H flow flashes rcar_gen4_pcie.bin directly from
+# target/images/ (see rz-utils' flashing README) -- it is a standalone
+# firmware blob written to the board, not something read out of the
+# rootfs at runtime. The base recipe has no do_deploy task, so add one
+# to stage a copy there alongside the SA0/SPL and U-Boot FIT artifacts
+# so the flashing tool can find it. rcar_gen4_pcie.bin only exists on
+# rz-cmn (see SRC_URI:append:rz-cmn above), so guard the copy itself
+# rather than the task definition -- a per-machine :rz-cmn override on
+# a task that has no unversioned do_deploy() base isn't picked up by
+# bitbake as a shell function.
+inherit deploy
+
+do_deploy() {
+    if [ -f "${UNPACKDIR}/rcar_gen4_pcie.bin" ]; then
+        install -d ${DEPLOYDIR}/target/images
+        install -m 0644 ${UNPACKDIR}/rcar_gen4_pcie.bin ${DEPLOYDIR}/target/images/rcar_gen4_pcie.bin
+    fi
+}
+
+addtask deploy after do_install before do_build
+
 PACKAGES =+ "${PN}-ap1302 ${PN}-sdiouartiw416 ${PN}-rcar-gen4-pcie"
 
 FILES:${PN}-ap1302 = "${nonarch_base_libdir}/firmware/ap1302_ar1335_single_fw.bin"
