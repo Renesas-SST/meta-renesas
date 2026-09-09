@@ -52,6 +52,15 @@ do_install() {
         fi
         install -m 644 "${dtb_path}" ${D}/boot/dtbs/
     done
+
+    # V4H's SA0+SPL header (sa0.bin) is produced unconditionally by binman
+    # for the sparrow-hawk board (see arch/arm/dts/r8a779g0-u-boot.dtsi's
+    # renesas-rcar4-sa0 node) -- it is the board's base bootloader/SPL
+    # stage, unrelated to OP-TEE. Install it whenever it was built so
+    # do_deploy can stage it the same way as u-boot-nodtb.bin/dtbs.
+    if [ -s "${KCONFIG_CONFIG_ROOTDIR}/sa0.bin" ]; then
+        install -m 644 ${KCONFIG_CONFIG_ROOTDIR}/sa0.bin ${D}/boot/
+    fi
 }
 
 do_deploy() {
@@ -63,12 +72,12 @@ do_deploy() {
         install -m 644 ${D}/boot/dtbs/${dtb_name}.dtb ${DEPLOYDIR}/target/images/u-boot/dtbs
     done
 
-    if [ "${ENABLE_V4H_DIRECT_OPTEE}" = "1" ]; then
-        if [ ! -s "${KCONFIG_CONFIG_ROOTDIR}/sa0.bin" ]; then
-            bbfatal "V4H SA0+SPL image was not built"
-        fi
-        install -m 0644 ${KCONFIG_CONFIG_ROOTDIR}/sa0.bin \
-            ${DEPLOYDIR}/target/images/u-boot/sa0.bin
+    # SA0+SPL is Sparrow-Hawk's base bootloader stage (equivalent to BL2 on
+    # the other RZ boards) -- always deploy it, independent of
+    # ENABLE_V4H_DIRECT_OPTEE. universal_flash.py's V4H flow requires it
+    # unconditionally: there is no BL2/FIP fallback for this board.
+    if [ -f "${D}/boot/sa0.bin" ]; then
+        install -m 0644 ${D}/boot/sa0.bin ${DEPLOYDIR}/target/images/u-boot/sa0.bin
     fi
 }
 
