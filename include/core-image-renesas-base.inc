@@ -30,9 +30,13 @@ IMAGE_INSTALL:append = " \
 
 IMAGE_INSTALL:append:rz-cmn = " uenv"
 IMAGE_INSTALL:append:rz-cmn = " ${@oe.utils.conditional('ENABLE_SPD_OPTEE', '1', 'optee-client', '', d)}"
-# V4H secure payloads are packaged by their producing recipes. Keep the
-# manual handoff optional without introducing an aggregate firmware package.
-IMAGE_INSTALL:append:rz-cmn = " ${@oe.utils.conditional('ENABLE_V4H_DIRECT_OPTEE', '1', 'trusted-firmware-a optee-os optee-client optee-test', '', d)}"
+# trusted-firmware-a packages /boot/bl31-sparrow-hawk.bin (FILES:${PN} =
+# "/boot"), which U-Boot's v4h_bl31_prepare loads unconditionally on every
+# V4H boot -- it is not an OP-TEE feature, so install it regardless of
+# ENABLE_V4H_DIRECT_OPTEE. Only the direct OP-TEE payload/client/test
+# packages stay behind that flag.
+IMAGE_INSTALL:append:rz-cmn = " trusted-firmware-a"
+IMAGE_INSTALL:append:rz-cmn = " ${@oe.utils.conditional('ENABLE_V4H_DIRECT_OPTEE', '1', 'optee-os optee-client optee-test', '', d)}"
 
 WKS_FILE = "rz-cmn-image-bootpart-mmc0.wks"
 
@@ -52,6 +56,8 @@ IMAGE_BOOT_FILES:rz-cmn = " \
     target/env/uEnv.txt;uEnv.txt \
     Readme.md;Readme.md \
     target/images/*.bin;uload-bootloader/ \
+    target/boot/bl31-sparrow-hawk.bin;bl31-sparrow-hawk.bin \
+    ${@oe.utils.conditional('ENABLE_V4H_DIRECT_OPTEE', '1', 'target/boot/tee-raw-sparrow-hawk.bin;tee-raw-sparrow-hawk.bin', '', d)} \
 "
 DEPENDS += " linux-yocto uenv platform-gen "
 
@@ -61,9 +67,9 @@ add_bootloader_rootfs() {
 }
 
 # Clean the output directory after the build
-do_release_clean() {   
+do_release_clean() {
     rm -f ${DEPLOY_DIR_IMAGE}/bl31*
-    rm -f ${DEPLOY_DIR_IMAGE}/bl2*    
+    rm -f ${DEPLOY_DIR_IMAGE}/bl2*
     rm -f ${DEPLOY_DIR_IMAGE}/u-boot*
     rm -f ${DEPLOY_DIR_IMAGE}/*initramfs*
     rm -f ${DEPLOY_DIR_IMAGE}/Image*
@@ -72,6 +78,11 @@ do_release_clean() {
     rm -f ${DEPLOY_DIR_IMAGE}/modules*
     rm -f ${DEPLOY_DIR_IMAGE}/${IMAGE_BASENAME}*
     rm -f ${DEPLOY_DIR_IMAGE}/Readme.md
+    # target/boot is only a staging dir consumed by IMAGE_BOOT_FILES while
+    # the WIC is being assembled; nothing reads it after do_image_complete.
+    # If a later image build in the same session needs it again, bitbake
+    # reruns the producing recipe's do_deploy to recreate it.
+    rm -rf ${DEPLOY_DIR_IMAGE}/target/boot
 }
 
 addtask release_clean after do_image_complete before do_populate_lic_deploy
