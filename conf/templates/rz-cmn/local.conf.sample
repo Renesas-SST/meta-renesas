@@ -389,3 +389,15 @@ PREFERRED_VERSION_libgpiod = "1.6.5"
 # The recipe builds both G2L/V2L (g2l_smarc_2, CFG_DT=y) and V2H (v2h_evk_1,
 # CFG_DT=n) binaries in a single build run.
 # ENABLE_SPD_OPTEE = "1"
+
+# Selects the driver that binds the onboard NXP IW416 on the IMDT RZ/V2H SBC.
+# Both the in-tree mwifiex and the out-of-tree moal/mlan are installed in
+# every image. This selects which one binds and blacklists the other.
+# Default is mwifiex. Uncomment this to switch to moal/mlan.
+# RZ_WLAN_DRIVER = "moal"
+
+# Selects which WiFi modules calibration and TX power tables are linked
+# flat under /lib/firmware/nxp. All files from repo are present in image.
+# Default is 1XK, the module on the IMDT V2H SBC.
+# Uncomment and change to a different module if needed.
+# MURATA_MODULE = "1XL"
