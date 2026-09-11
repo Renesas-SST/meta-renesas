@@ -1,6 +1,8 @@
 inherit systemd
 FILESEXTRAPATHS:prepend := "${THISDIR}/${BPN}:"
-SYSTEMD_AUTO_ENABLE:${PN} = "enable"
+
+# Enable the moal service units conditionally so they dont override the blacklistis. Use the variable.
+SYSTEMD_AUTO_ENABLE:${PN} = "${@'enable' if d.getVar('RZ_WLAN_DRIVER') == 'moal' else 'disable'}"
 SYSTEMD_SERVICE:${PN} = "mlanconf.service disable-virtual-interface.service"
 
 FILES:${PN}:append = " \
