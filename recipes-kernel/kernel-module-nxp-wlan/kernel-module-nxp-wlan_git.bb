@@ -27,7 +27,6 @@ EXTRA_OEMAKE:append = " \
 "
 
 SRC_URI += " \
-    file://moal.modprobe.conf \
     file://0001-moal-assign-per-instance-lockdep-class-to-moal_lock.patch \
     file://0002-moal-fix-cfg80211-scan-result-reporting-from-atomic-.patch \
 "
@@ -38,11 +37,22 @@ EXTRA_OEMAKE = "KERNELDIR=${STAGING_KERNEL_BUILDDIR} -C ${STAGING_KERNEL_BUILDDI
 
 do_install:append() {
     install -dm 0755 ${D}${libdir}/modules-load.d
-    echo "moal" > ${D}${libdir}/modules-load.d/10moal.conf
     echo "btnxpuart" > ${D}${libdir}/modules-load.d/20btnxpuart.conf
 
     install -dm 0755 ${D}${sysconfdir}/modprobe.d
-    install -m 0644 ${UNPACKDIR}/moal.modprobe.conf ${D}${sysconfdir}/modprobe.d/moal.conf
+    echo "options moal mod_para=nxp/wifi_mod_para.conf" \
+        > ${D}${sysconfdir}/modprobe.d/moal.conf
+
+    # Both drivers match SDIO 02df:9159; blacklist the one not selected.
+    if [ "${RZ_WLAN_DRIVER}" = "moal" ]; then
+        echo "moal" > ${D}${libdir}/modules-load.d/10moal.conf
+        printf 'blacklist mwifiex_sdio\nblacklist mwifiex\n' \
+            >> ${D}${sysconfdir}/modprobe.d/moal.conf
+    else
+        printf 'blacklist moal\nblacklist mlan\n' \
+            >> ${D}${sysconfdir}/modprobe.d/moal.conf
+    fi
+    chmod 0644 ${D}${sysconfdir}/modprobe.d/moal.conf
 }
 
 FILES:${PN} += " \

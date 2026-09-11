@@ -1,4 +1,8 @@
 SUMMARY = "Murata Binaries"
+
+# Murata module fitted on the board; selects the power-table source directory.
+MURATA_MODULE ?= "1XK"
+
 LICENSE = "BSD-2-Clause"
 
 LIC_FILES_CHKSUM = "file://${S}/nxp-linux-calibration/LICENSE;md5=ffa10f40b98be2c2bc9608f56827ed23"
@@ -41,34 +45,38 @@ do_install () {
     install -d ${D}/usr/sbin
     install -d ${D}/etc/udev/rules.d
 
-    # Install /lib/firmware/nxp folder
-    install -d ${D}${nonarch_base_libdir}/firmware/nxp
+    # Install the calibration tree as published with every module.
+    # Adding a board or module needs no change here.
     install -d ${D}${nonarch_base_libdir}/firmware/nxp/murata
-    install -d ${D}${nonarch_base_libdir}/firmware/nxp/murata/files
-    install -d ${D}${nonarch_base_libdir}/firmware/nxp/murata/files/1XK
-    install -d ${D}${nonarch_base_libdir}/firmware/nxp/murata/files/1ZM
-    install -d ${D}${nonarch_base_libdir}/firmware/nxp/murata/files/1YM
-    install -d ${D}${nonarch_base_libdir}/firmware/nxp/murata/files/2DS
-    install -d ${D}${nonarch_base_libdir}/firmware/nxp/murata/files/2DL
-    install -d ${D}${nonarch_base_libdir}/firmware/nxp/murata/files/2EL
-    install -d ${D}${nonarch_base_libdir}/firmware/nxp/murata/files/32_bit
-    install -d ${D}${nonarch_base_libdir}/firmware/nxp/murata/files/64_bit
+    cp -R --no-dereference --preserve=links \
+        ${S}/nxp-linux-calibration/murata/files ${D}${nonarch_base_libdir}/firmware/nxp/murata/
+    find ${D}${nonarch_base_libdir}/firmware/nxp/murata/files -type d -exec chmod 0755 {} +
+    find ${D}${nonarch_base_libdir}/firmware/nxp/murata/files -type f -exec chmod 0444 {} +
 
-    # Based on MACHINE type
     install -m 755 ${S}/switch_module.sh ${D}/usr/sbin/switch_module.sh
-
-    # Install nxp linux calibration files
-    install -m 444 ${S}/nxp-linux-calibration/murata/files/1XK/* ${D}${nonarch_base_libdir}/firmware/nxp/murata/files/1XK
-    install -m 444 ${S}/nxp-linux-calibration/murata/files/1YM/* ${D}${nonarch_base_libdir}/firmware/nxp/murata/files/1YM
-    install -m 444 ${S}/nxp-linux-calibration/murata/files/1ZM/* ${D}${nonarch_base_libdir}/firmware/nxp/murata/files/1ZM
-    install -m 444 ${S}/nxp-linux-calibration/murata/files/2DS/* ${D}${nonarch_base_libdir}/firmware/nxp/murata/files/2DS
-    install -m 444 ${S}/nxp-linux-calibration/murata/files/2DL/* ${D}${nonarch_base_libdir}/firmware/nxp/murata/files/2DL
-    install -m 444 ${S}/nxp-linux-calibration/murata/files/2EL/* ${D}${nonarch_base_libdir}/firmware/nxp/murata/files/2EL
-
-    install -m 444 ${S}/nxp-linux-calibration/murata/files/bt_power_config_1.sh ${D}${nonarch_base_libdir}/firmware/nxp/murata/files
-    install -m 777 ${S}/nxp-linux-calibration/murata/files/wifi_mod_para_murata.conf ${D}${nonarch_base_libdir}/firmware/nxp/murata/files
     install -m 755 ${S}/nxp-linux-calibration/murata/switch_regions.sh ${D}/usr/sbin/switch_regions.sh
     install -m 444 ${S}/nxp-linux-calibration/murata/README.txt ${D}${nonarch_base_libdir}/firmware/nxp/murata/README.txt
+
+    # wifi_mod_para.conf and request_firmware both take these as is under nxp/.
+    # Link the fitted module's binaries there.
+    # MURATA_MODULE controls which module files are sourced.
+    # rgpower_<CC> is the mwifiex name for the table files that moal reads as txpower_<CC>.
+    for _rzsrc in ${D}${nonarch_base_libdir}/firmware/nxp/murata/files/${MURATA_MODULE}/*.bin; do
+        _rzf=$(basename $_rzsrc)
+        ln -sf murata/files/${MURATA_MODULE}/$_rzf ${D}${nonarch_base_libdir}/firmware/nxp/$_rzf
+        case $_rzf in
+        txpower_*)
+            _rzrg=$(echo $_rzf | sed 's/^txpower_/rgpower_/')
+            ln -sf murata/files/${MURATA_MODULE}/$_rzf ${D}${nonarch_base_libdir}/firmware/nxp/$_rzrg
+            ;;
+        esac
+    done
+
+    # README: TW uses the JP table on modules that dont have a txpower_TW.bin.
+    if [ ! -e ${D}${nonarch_base_libdir}/firmware/nxp/txpower_TW.bin ]; then
+        ln -sf murata/files/${MURATA_MODULE}/txpower_JP.bin ${D}${nonarch_base_libdir}/firmware/nxp/txpower_TW.bin
+        ln -sf murata/files/${MURATA_MODULE}/txpower_JP.bin ${D}${nonarch_base_libdir}/firmware/nxp/rgpower_TW.bin
+    fi
 }
 
 FILES:${PN} += "${nonarch_base_libdir}/firmware"
