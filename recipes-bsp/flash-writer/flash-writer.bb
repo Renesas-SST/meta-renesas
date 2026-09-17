@@ -11,7 +11,7 @@ ENABLE_RZ_SCE		?= '0'
 
 # flash-writer source code repository
 FLASH_WRITER_URL = "git://github.com/Renesas-SST/flash-writer.git"
-BRANCH = "styhead/rz-cmn"
+BRANCH = "styhead/rz-cmn-pre-3.3"
 SRC_URI = "${FLASH_WRITER_URL};protocol=https;branch=${BRANCH}"
 SRCREV = "${AUTOREV}"
 
