@@ -1,18 +1,43 @@
 #!/bin/bash
 #===============================================================================
 # title           : v4l2-init.sh
-# description     : Initialise media pipeline for cameras for RZ Common System
+# description     : Initialise and test camera pipelines for RZ Common System
 # usage           : bash v4l2-init.sh --device 0 --width 1280 --height 720
+#                   bash v4l2-init.sh --camera imx219 --stream --sink wayland
+#
+# Two kinds of camera graphs are handled:
+#
+#   * RZ/G2L style (CRU): sensor -> CSI2 -> CRU.  The media links and formats
+#     are configured here with media-ctl (ov5640, ov5645, ap1302, ar1335).
+#
+#   * R-Car Gen4 (Sparrow-Hawk / V4H): sensor -> CSI2 -> ISP -> VIN.  The
+#     CSI2 -> ISP links are immutable and libcamera owns the whole pipeline
+#     (imx219 = Raspberry Pi Camera V2, imx708 = Raspberry Pi Camera V3), so
+#     media-ctl is not used (never run `media-ctl -r` on this hardware).  The
+#     camera is selected by name with `cam -l` and streamed with libcamerasrc.
 #===============================================================================
-set -e
+set -eE
 
-# Supported camera models
+# Supported camera models (CRU boards)
 SUPPORTED_MODELS=("ov5640" "ov5645" "ap1302" "ar1335")
+
+# Supported camera models (R-Car Gen4 boards, handled by libcamera)
+V4H_CAMERAS="imx219 imx708"
 
 # Default values
 DEFAULT_DEVICE_ID=0
 DEFAULT_CAPTURE_WIDTH="1920"
 DEFAULT_CAPTURE_HEIGHT="1080"
+
+# Options (set by parse_shell_args)
+DEVICE_ID=${DEFAULT_DEVICE_ID}
+CAMERA_REQUEST=auto
+WIDTH=""
+HEIGHT=""
+STREAM=0
+PRINT_GST=0
+SINK=wayland
+FRAMES=0
 
 # Valid resolutions per camera model
 declare -A CAMERA_VALID_RESOLUTIONS
@@ -61,6 +86,15 @@ default_csi2=${csi2[0]:-"<none>"}
 default_cru=${cru[0]:-"<none>"}
 cru_output="CRU output"
 
+die() {
+    echo "ERROR: $*" >&2
+    exit 1
+}
+
+have() {
+    command -v "$1" >/dev/null 2>&1
+}
+
 # Usage
 function print_usage {
     local -A seen_models
@@ -69,7 +103,7 @@ function print_usage {
     for cam in "${cameras[@]}"; do
         local model=$(get_cam_model "$cam")
         # Only add if not already processed
-        if [[ -z "${seen_models[$model]}" ]]; then
+        if [[ -z "${seen_models[$model]:-}" ]]; then
             seen_models[$model]=1
             resolution_info+="  ${model}: ${CAMERA_VALID_RESOLUTIONS[$model]}"$'\n'
         fi
@@ -83,13 +117,31 @@ Options:
   --width WIDTH             Width of capture image
   --height HEIGHT           Height of capture image
 
+R-Car Gen4 (Sparrow-Hawk / V4H) options, camera handled by libcamera:
+  --camera NAME             auto, imx219 (Pi Camera V2, J1) or imx708 (Pi Camera V3, J2)
+                            (default: auto)
+  --stream                  run the GStreamer pipeline
+  --sink NAME               fakesink, wayland or autovideosink (default: wayland)
+  --frames N                stop after N frames (default 5 with --sink fakesink)
+  --print-gst               print the GStreamer command and exit
+
+  The default size is 1920x1080 for imx219 and 2304x1296 (native) for imx708.
+  Another size is applied to imx708 with videoscale after capture.
+
 Detected cameras: ${cameras[*]}
 
 Available resolutions:
 ${resolution_info}
-Example: $0 --device 0 --width 1920 --height 1080
+Examples:
+  $0 --device 0 --width 1920 --height 1080
+  $0 --camera imx219 --stream --sink wayland
+  $0 --camera imx708 --stream --sink fakesink --frames 5
 EOF
 }
+
+#===============================================================================
+# CRU boards (RZ/G2L): media-ctl based pipeline
+#===============================================================================
 
 # Validate resolution against camera model
 check_resolution() {
@@ -110,7 +162,7 @@ check_resolution() {
     echo "$fallback"
 }
 
-# Validate requested media device exists and contains a supported camera.
+# Validate requested media device exists.
 validate_device_index() {
     local device_id="$1"
 
@@ -130,8 +182,12 @@ validate_device_index() {
         done
         exit 2
     fi
+}
 
-    # Ensure this media device has at least one supported camera entity
+# Ensure the media device has at least one supported CRU camera entity
+validate_cru_camera() {
+    local device_id="$1"
+
     if ! media-ctl -d "/dev/media${device_id}" -p 2>/dev/null | grep -E -q "$(printf '%s|' "${SUPPORTED_MODELS[@]}" | sed 's/|$//')"; then
         echo "ERROR: /dev/media${device_id} does not appear to contain any supported cameras (${SUPPORTED_MODELS[*]})."
         echo "Inspect topology with:"
@@ -139,7 +195,6 @@ validate_device_index() {
         exit 3
     fi
 }
-
 
 # Create media pipeline
 create_pipeline() {
@@ -151,6 +206,9 @@ create_pipeline() {
     # Find which camera is actually on this media device
     local selected_camera=""
     for cam in "${cameras[@]}"; do
+        if [[ "$CAMERA_REQUEST" != auto && "$(get_cam_model "$cam")" != "$CAMERA_REQUEST" ]]; then
+            continue
+        fi
         if media-ctl -d "$media_device" -p 2>/dev/null | grep -q "$cam"; then
             selected_camera="$cam"
             break
@@ -166,7 +224,7 @@ create_pipeline() {
     local device_csi2=$(media-ctl -d "$media_device" -p | grep -E "^- entity.*csi" | sed 's/.*: \([^ ]*\) .*/\1/')
     local device_cru=$(media-ctl -d "$media_device" -p | grep -E "^- entity.*cru-ip" | sed 's/.*: \([^ ]*\) .*/\1/')
     local cru_output="CRU output"
-    
+
     echo "Using camera: $selected_camera"
     echo "Using CSI2: $device_csi2"
     echo "Using CRU: $device_cru"
@@ -211,12 +269,137 @@ create_pipeline() {
     echo "Pipeline successfully configured for ${width}x${height}"
 }
 
+#===============================================================================
+# R-Car Gen4 boards (Sparrow-Hawk / V4H): libcamera based pipeline
+#===============================================================================
+
+# True when the media graph is sensor -> rcar_csi2 -> rcar_isp -> VIN
+is_v4h_topology() {
+    local topology="$1"
+    [[ "$topology" == *rcar_csi2* && "$topology" == *rcar_isp* ]]
+}
+
+camera_model_from_line() {
+    local line="$1"
+    if [[ "$line" =~ (imx219|imx708) ]]; then
+        echo "${BASH_REMATCH[1]}"
+    fi
+}
+
+# Pick the camera by name from `cam -l`: sets CAMERA_MODEL and CAMERA_NAME
+# (the device tree path, e.g. /base/soc/i2c@e6508000/cam@10).  It does not
+# depend on the /dev/video* numbering.
+discover_libcamera() {
+    have cam || die "cam is not installed (libcamera tools are required)"
+
+    local listing
+    listing="$(cam -l 2>&1 || true)"
+    [[ -n "$listing" ]] || die "libcamera did not report any camera"
+
+    local line model path
+    while IFS= read -r line; do
+        model="$(camera_model_from_line "$line" || true)"
+        [[ -n "$model" ]] || continue
+        if [[ "$CAMERA_REQUEST" != auto && "$model" != "$CAMERA_REQUEST" ]]; then
+            continue
+        fi
+        path="$(sed -nE 's/.*\(([^()]*\/(sensor|cam)@[0-9a-fx]+)\).*/\1/p' <<<"$line" | head -n1)"
+        [[ -n "$path" ]] || continue
+        CAMERA_MODEL="$model"
+        CAMERA_NAME="$path"
+        return 0
+    done <<<"$listing"
+
+    if [[ "$CAMERA_REQUEST" == auto ]]; then
+        die "no supported libcamera camera found (expected: ${V4H_CAMERAS})"
+    fi
+    printf 'ERROR: requested camera %q was not found; cam -l output:\n%s\n' \
+        "$CAMERA_REQUEST" "$listing" >&2
+    exit 1
+}
+
+set_default_size() {
+    # imx708 is reliably exposed by the V4H pipeline at 2304x1296.  A
+    # requested display size is applied after capture with videoscale; asking
+    # libcamerasrc for an arbitrary 1920x1080 mode causes not-negotiated on
+    # this pipeline.  imx219's tested native viewfinder mode is 1920x1080.
+    if [[ "$CAMERA_MODEL" == imx708 ]]; then
+        SOURCE_WIDTH=2304
+        SOURCE_HEIGHT=1296
+    else
+        SOURCE_WIDTH=1920
+        SOURCE_HEIGHT=1080
+    fi
+
+    WIDTH="${WIDTH:-$SOURCE_WIDTH}"
+    HEIGHT="${HEIGHT:-$SOURCE_HEIGHT}"
+    [[ "$WIDTH" =~ ^[0-9]+$ && "$HEIGHT" =~ ^[0-9]+$ ]] || die "width and height must be positive integers"
+    (( WIDTH > 0 && HEIGHT > 0 )) || die "width and height must be greater than zero"
+}
+
+# An SSH shell does not inherit the Weston socket: look for it like the
+# board's own session does when WAYLAND_DISPLAY is not set.
+setup_wayland_env() {
+    [[ -n "${WAYLAND_DISPLAY:-}" && -n "${XDG_RUNTIME_DIR:-}" ]] && return 0
+    if [[ -S /run/user/1000/wayland-1 ]]; then
+        export XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1
+    elif [[ -S /run/wayland-0 ]]; then
+        export XDG_RUNTIME_DIR=/run WAYLAND_DISPLAY=wayland-0
+    else
+        echo "WARNING: no Wayland socket found, set XDG_RUNTIME_DIR and WAYLAND_DISPLAY" >&2
+    fi
+}
+
+# Build the GStreamer pipeline in the array "pipeline"
+build_gst_pipeline() {
+    pipeline=(gst-launch-1.0 -e -v
+        libcamerasrc "camera-name=${CAMERA_NAME}" '!'
+        "video/x-raw,format=BGRx,width=${SOURCE_WIDTH},height=${SOURCE_HEIGHT},framerate=30/1" '!'
+        videoconvert)
+    if [[ "$WIDTH" != "$SOURCE_WIDTH" || "$HEIGHT" != "$SOURCE_HEIGHT" ]]; then
+        pipeline+=('!' videoscale '!'
+            "video/x-raw,format=BGRx,width=${WIDTH},height=${HEIGHT}")
+    fi
+    pipeline+=('!')
+    case "$SINK" in
+        fakesink)
+            (( FRAMES > 0 )) || FRAMES=5
+            pipeline+=(fakesink "num-buffers=${FRAMES}" sync=false)
+            ;;
+        wayland) pipeline+=(waylandsink sync=false) ;;
+        autovideosink) pipeline+=(autovideosink sync=false) ;;
+        *) die "unsupported sink '$SINK' (use fakesink, wayland, or autovideosink)" ;;
+    esac
+}
+
+run_v4h() {
+    local topology="$1"
+
+    discover_libcamera
+    set_default_size
+    echo "R-Car Gen4 camera: ${CAMERA_MODEL} (${CAMERA_NAME})"
+    echo "Media graph: CSI2 -> ISP -> VIN (configured by libcamera; links left intact)"
+    echo "Sensor stream: ${SOURCE_WIDTH}x${SOURCE_HEIGHT} BGRx @ 30 fps"
+    echo "Requested stream: ${WIDTH}x${HEIGHT} BGRx @ 30 fps"
+
+    if (( PRINT_GST == 1 || STREAM == 1 )); then
+        local -a pipeline
+        build_gst_pipeline
+        echo "GStreamer pipeline: ${pipeline[*]}"
+        if (( STREAM == 1 )); then
+            have gst-launch-1.0 || die "gst-launch-1.0 is not installed"
+            [[ "$SINK" == fakesink ]] || setup_wayland_env
+            "${pipeline[@]}"
+        fi
+    fi
+}
+
+#===============================================================================
+# Arguments and main
+#===============================================================================
+
 # Parse arguments
 parse_shell_args() {
-    local device_id=${DEFAULT_DEVICE_ID}
-    local capture_width=${DEFAULT_CAPTURE_WIDTH}
-    local capture_height=${DEFAULT_CAPTURE_HEIGHT}
-
     while [[ "$#" -gt 0 ]]; do
         case "$1" in
             --device)
@@ -225,7 +408,7 @@ parse_shell_args() {
                     print_usage
                     exit 1
                 fi
-                device_id="$2"
+                DEVICE_ID="$2"
                 shift 2
                 ;;
             --width)
@@ -234,7 +417,7 @@ parse_shell_args() {
                     print_usage
                     exit 1
                 fi
-                capture_width="$2"
+                WIDTH="$2"
                 shift 2
                 ;;
             --height)
@@ -243,17 +426,54 @@ parse_shell_args() {
                     print_usage
                     exit 1
                 fi
-                capture_height="$2"
+                HEIGHT="$2"
                 shift 2
                 ;;
-            --help)    print_usage; exit 0;;
-            *)         echo "ERROR: Unknown parameter: $1"; print_usage; exit 1;;
+            --camera)
+                [[ -n "${2:-}" ]] || die "--camera requires a value"
+                CAMERA_REQUEST="$2"
+                shift 2
+                ;;
+            --sink)
+                [[ -n "${2:-}" ]] || die "--sink requires a value"
+                SINK="$2"
+                shift 2
+                ;;
+            --frames)
+                [[ -n "${2:-}" ]] || die "--frames requires a value"
+                FRAMES="$2"
+                shift 2
+                ;;
+            --stream)    STREAM=1; shift ;;
+            --print-gst) PRINT_GST=1; shift ;;
+            --help|-h)   print_usage; exit 0;;
+            *)           echo "ERROR: Unknown parameter: $1"; print_usage; exit 1;;
         esac
     done
 
-    validate_device_index "$device_id"
-    create_pipeline "$device_id" "$capture_width" "$capture_height"
+    [[ "$FRAMES" =~ ^[0-9]+$ ]] || die "--frames must be a non-negative integer"
+}
+
+main() {
+    parse_shell_args "$@"
+
+    validate_device_index "$DEVICE_ID"
+    have media-ctl || die "media-ctl is not installed"
+
+    local topology
+    topology="$(media-ctl -d "/dev/media${DEVICE_ID}" -p 2>/dev/null || true)"
+
+    if is_v4h_topology "$topology"; then
+        set -u -o pipefail
+        run_v4h "$topology"
+    else
+        if (( STREAM == 1 || PRINT_GST == 1 )); then
+            die "--stream and --print-gst are only available on the R-Car Gen4 (V4H) topology"
+        fi
+        validate_cru_camera "$DEVICE_ID"
+        create_pipeline "$DEVICE_ID" "${WIDTH:-$DEFAULT_CAPTURE_WIDTH}" "${HEIGHT:-$DEFAULT_CAPTURE_HEIGHT}"
+    fi
 }
 
 # Main
-parse_shell_args "$@"
+main "$@"
