@@ -19,6 +19,7 @@ rootfs/
 ├── renesas-ubuntu.tar.bz2
 ├── ubuntu-core-image.tar.bz2
 ├── ubuntu-lxde-image.tar.bz2
+├── ubuntu-gnome-image.tar.bz2
 └── Readme.md                                   <---- This document
 ```
 
