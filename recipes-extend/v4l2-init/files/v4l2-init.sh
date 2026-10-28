@@ -21,8 +21,53 @@ set -eE
 # Supported camera models (CRU boards)
 SUPPORTED_MODELS=("ov5640" "ov5645" "ap1302" "ar1335")
 
-# Supported camera models (R-Car Gen4 boards, handled by libcamera)
-V4H_CAMERAS="imx219 imx708"
+#-------------------------------------------------------------------------------
+# R-Car Gen4 (Sparrow-Hawk / V4H) settings, handled by libcamera.
+# Edit this block to add a camera or to change a value; the functions below do
+# not contain any camera specific value.
+#-------------------------------------------------------------------------------
+
+# Strings that must all appear in `media-ctl -p` to recognise the R-Car Gen4 graph
+V4H_TOPOLOGY_MARKERS=("rcar_csi2" "rcar_isp")
+
+# Camera models; the model name must appear in the matching `cam -l` line
+V4H_CAMERAS=("imx219" "imx708")
+
+# Description shown by --help
+declare -A V4H_CAMERA_DESC
+V4H_CAMERA_DESC["imx219"]="Raspberry Pi Camera V2 (connector J1)"
+V4H_CAMERA_DESC["imx708"]="Raspberry Pi Camera V3 (connector J2)"
+
+# Mode captured from the sensor by libcamera (WIDTHxHEIGHT). Another --width and
+# --height is applied with videoscale after the capture.
+# imx708: asking libcamerasrc for 1920x1080 directly fails with not-negotiated.
+declare -A V4H_CAMERA_SOURCE_SIZE
+V4H_CAMERA_SOURCE_SIZE["imx219"]="1920x1080"
+V4H_CAMERA_SOURCE_SIZE["imx708"]="2304x1296"
+
+# Pixel format and frame rate of the GStreamer pipeline. A camera can override
+# them, for example: V4H_CAMERA_FRAMERATE["imx708"]="15/1"
+V4H_DEFAULT_FORMAT="BGRx"
+V4H_DEFAULT_FRAMERATE="30/1"
+declare -A V4H_CAMERA_FORMAT
+declare -A V4H_CAMERA_FRAMERATE
+
+# GStreamer source element and its camera selection property
+V4H_SOURCE_ELEMENT="libcamerasrc"
+V4H_SOURCE_PROPERTY="camera-name"
+
+# Output sinks (name -> GStreamer sink with its properties). @FRAMES@ is replaced
+# by --frames, or by V4H_DEFAULT_FRAMES when --frames is not given.
+V4H_DEFAULT_SINK="wayland"
+V4H_DEFAULT_FRAMES=5
+declare -A V4H_SINKS
+V4H_SINKS["fakesink"]="fakesink num-buffers=@FRAMES@ sync=false"
+V4H_SINKS["wayland"]="waylandsink sync=false"
+V4H_SINKS["autovideosink"]="autovideosink sync=false"
+
+# Weston sockets tried in order when WAYLAND_DISPLAY is not set (an SSH shell does
+# not inherit it): "XDG_RUNTIME_DIR:WAYLAND_DISPLAY"
+V4H_WAYLAND_SOCKETS=("/run/user/1000:wayland-1" "/run:wayland-0")
 
 # Default values
 DEFAULT_DEVICE_ID=0
@@ -36,7 +81,7 @@ WIDTH=""
 HEIGHT=""
 STREAM=0
 PRINT_GST=0
-SINK=wayland
+SINK="${V4H_DEFAULT_SINK}"
 FRAMES=0
 
 # Valid resolutions per camera model
@@ -99,6 +144,11 @@ have() {
 function print_usage {
     local -A seen_models
     local resolution_info=""
+    local v4h_cam_info="" v4h_sinks="" name
+    for name in "${V4H_CAMERAS[@]}"; do
+        v4h_cam_info+="                            ${name}: ${V4H_CAMERA_DESC[$name]:-no description}, source ${V4H_CAMERA_SOURCE_SIZE[$name]:-not set}"$'\n'
+    done
+    v4h_sinks="$(v4h_sink_names) "
 
     for cam in "${cameras[@]}"; do
         local model=$(get_cam_model "$cam")
@@ -118,15 +168,15 @@ Options:
   --height HEIGHT           Height of capture image
 
 R-Car Gen4 (Sparrow-Hawk / V4H) options, camera handled by libcamera:
-  --camera NAME             auto, imx219 (Pi Camera V2, J1) or imx708 (Pi Camera V3, J2)
-                            (default: auto)
-  --stream                  run the GStreamer pipeline
-  --sink NAME               fakesink, wayland or autovideosink (default: wayland)
-  --frames N                stop after N frames (default 5 with --sink fakesink)
+  --camera NAME             auto or one of the models below (default: auto)
+${v4h_cam_info}  --stream                  run the GStreamer pipeline
+  --sink NAME               one of: ${v4h_sinks}(default: ${V4H_DEFAULT_SINK})
+  --frames N                frames for a sink that uses @FRAMES@ (default ${V4H_DEFAULT_FRAMES})
   --print-gst               print the GStreamer command and exit
 
-  The default size is 1920x1080 for imx219 and 2304x1296 (native) for imx708.
-  Another size is applied to imx708 with videoscale after capture.
+  Without --width/--height the source size above is used; another size is
+  applied with videoscale after capture. The values are listed at the top of
+  this script (V4H_* settings).
 
 Detected cameras: ${cameras[*]}
 
@@ -134,8 +184,8 @@ Available resolutions:
 ${resolution_info}
 Examples:
   $0 --device 0 --width 1920 --height 1080
-  $0 --camera imx219 --stream --sink wayland
-  $0 --camera imx708 --stream --sink fakesink --frames 5
+  $0 --camera ${V4H_CAMERAS[0]} --stream --sink ${V4H_DEFAULT_SINK}
+  $0 --camera ${V4H_CAMERAS[${#V4H_CAMERAS[@]}-1]} --stream --sink fakesink --frames ${V4H_DEFAULT_FRAMES}
 EOF
 }
 
@@ -273,22 +323,36 @@ create_pipeline() {
 # R-Car Gen4 boards (Sparrow-Hawk / V4H): libcamera based pipeline
 #===============================================================================
 
-# True when the media graph is sensor -> rcar_csi2 -> rcar_isp -> VIN
+# True when every marker of V4H_TOPOLOGY_MARKERS is present in the media graph
 is_v4h_topology() {
-    local topology="$1"
-    [[ "$topology" == *rcar_csi2* && "$topology" == *rcar_isp* ]]
+    local topology="$1" marker
+    for marker in "${V4H_TOPOLOGY_MARKERS[@]}"; do
+        [[ "$topology" == *"$marker"* ]] || return 1
+    done
+    return 0
 }
 
+# Names of the sinks of V4H_SINKS, sorted, separated by spaces
+v4h_sink_names() {
+    printf '%s\n' "${!V4H_SINKS[@]}" | sort | tr '\n' ' ' | sed 's/ $//'
+}
+
+# Print the model of V4H_CAMERAS found in a `cam -l` line
 camera_model_from_line() {
-    local line="$1"
-    if [[ "$line" =~ (imx219|imx708) ]]; then
-        echo "${BASH_REMATCH[1]}"
-    fi
+    local line="$1" model
+    for model in "${V4H_CAMERAS[@]}"; do
+        if [[ "$line" == *"$model"* ]]; then
+            echo "$model"
+            return 0
+        fi
+    done
+    return 1
 }
 
 # Pick the camera by name from `cam -l`: sets CAMERA_MODEL and CAMERA_NAME
-# (the device tree path, e.g. /base/soc/i2c@e6508000/cam@10).  It does not
-# depend on the /dev/video* numbering.
+# (the identifier between the last parentheses of the line, for example the
+# device tree path of the sensor). It does not depend on the /dev/video*
+# numbering.
 discover_libcamera() {
     have cam || die "cam is not installed (libcamera tools are required)"
 
@@ -303,7 +367,7 @@ discover_libcamera() {
         if [[ "$CAMERA_REQUEST" != auto && "$model" != "$CAMERA_REQUEST" ]]; then
             continue
         fi
-        path="$(sed -nE 's/.*\(([^()]*\/(sensor|cam)@[0-9a-fx]+)\).*/\1/p' <<<"$line" | head -n1)"
+        path="$(sed -nE 's/.*\(([^()]*)\)[[:space:]]*$/\1/p' <<<"$line" | head -n1)"
         [[ -n "$path" ]] || continue
         CAMERA_MODEL="$model"
         CAMERA_NAME="$path"
@@ -311,25 +375,22 @@ discover_libcamera() {
     done <<<"$listing"
 
     if [[ "$CAMERA_REQUEST" == auto ]]; then
-        die "no supported libcamera camera found (expected: ${V4H_CAMERAS})"
+        die "no supported libcamera camera found (expected: ${V4H_CAMERAS[*]})"
     fi
     printf 'ERROR: requested camera %q was not found; cam -l output:\n%s\n' \
         "$CAMERA_REQUEST" "$listing" >&2
     exit 1
 }
 
+# Take the source mode, pixel format and frame rate of the camera from the
+# V4H_* tables and set the output size (default: the source size)
 set_default_size() {
-    # imx708 is reliably exposed by the V4H pipeline at 2304x1296.  A
-    # requested display size is applied after capture with videoscale; asking
-    # libcamerasrc for an arbitrary 1920x1080 mode causes not-negotiated on
-    # this pipeline.  imx219's tested native viewfinder mode is 1920x1080.
-    if [[ "$CAMERA_MODEL" == imx708 ]]; then
-        SOURCE_WIDTH=2304
-        SOURCE_HEIGHT=1296
-    else
-        SOURCE_WIDTH=1920
-        SOURCE_HEIGHT=1080
-    fi
+    local size="${V4H_CAMERA_SOURCE_SIZE[$CAMERA_MODEL]:-}"
+    [[ "$size" =~ ^[0-9]+x[0-9]+$ ]] || die "V4H_CAMERA_SOURCE_SIZE[$CAMERA_MODEL] must be WIDTHxHEIGHT (is '$size')"
+    SOURCE_WIDTH="${size%x*}"
+    SOURCE_HEIGHT="${size#*x}"
+    PIXEL_FORMAT="${V4H_CAMERA_FORMAT[$CAMERA_MODEL]:-$V4H_DEFAULT_FORMAT}"
+    FRAMERATE="${V4H_CAMERA_FRAMERATE[$CAMERA_MODEL]:-$V4H_DEFAULT_FRAMERATE}"
 
     WIDTH="${WIDTH:-$SOURCE_WIDTH}"
     HEIGHT="${HEIGHT:-$SOURCE_HEIGHT}"
@@ -337,39 +398,43 @@ set_default_size() {
     (( WIDTH > 0 && HEIGHT > 0 )) || die "width and height must be greater than zero"
 }
 
-# An SSH shell does not inherit the Weston socket: look for it like the
-# board's own session does when WAYLAND_DISPLAY is not set.
+# An SSH shell does not inherit the Weston socket: try V4H_WAYLAND_SOCKETS when
+# WAYLAND_DISPLAY is not set.
 setup_wayland_env() {
     [[ -n "${WAYLAND_DISPLAY:-}" && -n "${XDG_RUNTIME_DIR:-}" ]] && return 0
-    if [[ -S /run/user/1000/wayland-1 ]]; then
-        export XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1
-    elif [[ -S /run/wayland-0 ]]; then
-        export XDG_RUNTIME_DIR=/run WAYLAND_DISPLAY=wayland-0
-    else
-        echo "WARNING: no Wayland socket found, set XDG_RUNTIME_DIR and WAYLAND_DISPLAY" >&2
-    fi
+    local entry dir display
+    for entry in "${V4H_WAYLAND_SOCKETS[@]}"; do
+        dir="${entry%%:*}"
+        display="${entry#*:}"
+        if [[ -S "$dir/$display" ]]; then
+            export XDG_RUNTIME_DIR="$dir" WAYLAND_DISPLAY="$display"
+            return 0
+        fi
+    done
+    echo "WARNING: no Wayland socket found, set XDG_RUNTIME_DIR and WAYLAND_DISPLAY" >&2
 }
 
 # Build the GStreamer pipeline in the array "pipeline"
 build_gst_pipeline() {
+    local sink_def="${V4H_SINKS[$SINK]:-}"
+    [[ -n "$sink_def" ]] || die "unsupported sink '$SINK' (use: $(v4h_sink_names))"
+
+    local frames="$FRAMES"
+    (( frames > 0 )) || frames="$V4H_DEFAULT_FRAMES"
+    sink_def="${sink_def//@FRAMES@/$frames}"
+    local -a sink_words
+    read -r -a sink_words <<<"$sink_def"
+
+    local caps="video/x-raw,format=${PIXEL_FORMAT},width=${SOURCE_WIDTH},height=${SOURCE_HEIGHT},framerate=${FRAMERATE}"
     pipeline=(gst-launch-1.0 -e -v
-        libcamerasrc "camera-name=${CAMERA_NAME}" '!'
-        "video/x-raw,format=BGRx,width=${SOURCE_WIDTH},height=${SOURCE_HEIGHT},framerate=30/1" '!'
+        "$V4H_SOURCE_ELEMENT" "${V4H_SOURCE_PROPERTY}=${CAMERA_NAME}" '!'
+        "$caps" '!'
         videoconvert)
     if [[ "$WIDTH" != "$SOURCE_WIDTH" || "$HEIGHT" != "$SOURCE_HEIGHT" ]]; then
         pipeline+=('!' videoscale '!'
-            "video/x-raw,format=BGRx,width=${WIDTH},height=${HEIGHT}")
+            "video/x-raw,format=${PIXEL_FORMAT},width=${WIDTH},height=${HEIGHT}")
     fi
-    pipeline+=('!')
-    case "$SINK" in
-        fakesink)
-            (( FRAMES > 0 )) || FRAMES=5
-            pipeline+=(fakesink "num-buffers=${FRAMES}" sync=false)
-            ;;
-        wayland) pipeline+=(waylandsink sync=false) ;;
-        autovideosink) pipeline+=(autovideosink sync=false) ;;
-        *) die "unsupported sink '$SINK' (use fakesink, wayland, or autovideosink)" ;;
-    esac
+    pipeline+=('!' "${sink_words[@]}")
 }
 
 run_v4h() {
@@ -379,8 +444,8 @@ run_v4h() {
     set_default_size
     echo "R-Car Gen4 camera: ${CAMERA_MODEL} (${CAMERA_NAME})"
     echo "Media graph: CSI2 -> ISP -> VIN (configured by libcamera; links left intact)"
-    echo "Sensor stream: ${SOURCE_WIDTH}x${SOURCE_HEIGHT} BGRx @ 30 fps"
-    echo "Requested stream: ${WIDTH}x${HEIGHT} BGRx @ 30 fps"
+    echo "Sensor stream: ${SOURCE_WIDTH}x${SOURCE_HEIGHT} ${PIXEL_FORMAT}, framerate ${FRAMERATE}"
+    echo "Requested stream: ${WIDTH}x${HEIGHT} ${PIXEL_FORMAT}, framerate ${FRAMERATE}"
 
     if (( PRINT_GST == 1 || STREAM == 1 )); then
         local -a pipeline
@@ -388,7 +453,7 @@ run_v4h() {
         echo "GStreamer pipeline: ${pipeline[*]}"
         if (( STREAM == 1 )); then
             have gst-launch-1.0 || die "gst-launch-1.0 is not installed"
-            [[ "$SINK" == fakesink ]] || setup_wayland_env
+            [[ "${V4H_SINKS[$SINK]}" != *wayland* ]] || setup_wayland_env
             "${pipeline[@]}"
         fi
     fi
