@@ -185,56 +185,63 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
 │   │           │   │   ├── audio-init-core.sh
 │   │           │   │   ├── network_interfaces.conf
 │   │           │   │   └── NetworkManager.conf
-│   │           │   └── ubuntu_lxde
-│   │           │       ├── audio-init-lxde.sh
-│   │           │       ├── connman-gtk.desktop
-│   │           │       ├── force-display-xorg.sh
-│   │           │       ├── force-xorg-display.service
-│   │           │       ├── interfaces
-│   │           │       ├── lightdm.conf
-│   │           │       ├── NetworkManager.conf
-│   │           │       ├── panel
-│   │           │       ├── rsyslog
-│   │           │       ├── ttyS0.conf
-│   │           │       ├── v4l2-init.service
-│   │           │       └── v4l2-init.sh
+│   │           │   ├── ubuntu_lxde
+│   │           │   │   ├── audio-init-lxde.sh
+│   │           │   │   ├── connman-gtk.desktop
+│   │           │   │   ├── force-display-xorg.sh
+│   │           │   │   ├── force-xorg-display.service
+│   │           │   │   ├── interfaces
+│   │           │   │   ├── lightdm.conf
+│   │           │   │   ├── NetworkManager.conf
+│   │           │   │   ├── panel
+│   │           │   │   ├── rsyslog
+│   │           │   │   ├── ttyS0.conf
+│   │           │   │   ├── v4l2-init.service
+│   │           │   │   └── v4l2-init.sh
+│   │           │   └── ubuntu_gnome
+│   │           │       └── audio-init-core.sh
 │   │           ├── config.ini
+│   │           ├── files_to_add
+│   │           │   ├── pvr
+│   │           │   └── pvr-gnome
 │   │           ├── docs
 │   │           │   ├── ubuntu_core
 │   │           │   │   └── README.md
-│   │           │   └── ubuntu_lxde
-│   │           │       ├── Pictures
-│   │           │       │   ├── audacity.png
-│   │           │       │   ├── audio_settings.png
-│   │           │       │   ├── bluetooth_0.png
-│   │           │       │   ├── bluetooth_1.png
-│   │           │       │   ├── bluetooth_2.png
-│   │           │       │   ├── bluetooth_3.png
-│   │           │       │   ├── bluetooth_4.png
-│   │           │       │   ├── csi_0.png
-│   │           │       │   ├── csi_1.png
-│   │           │       │   ├── csi_2.png
-│   │           │       │   ├── eth_1.png
-│   │           │       │   ├── eth_2.png
-│   │           │       │   ├── eth_3.png
-│   │           │       │   ├── eth_4.png
-│   │           │       │   ├── eth_5.png
-│   │           │       │   ├── eth.png
-│   │           │       │   ├── save_audio_0.png
-│   │           │       │   ├── save_audio_1.png
-│   │           │       │   ├── save_audio_2.png
-│   │           │       │   ├── vlc_open_0.png
-│   │           │       │   ├── vlc_open_1.png
-│   │           │       │   ├── vlc_open_2.png
-│   │           │       │   ├── vlc.png
-│   │           │       │   ├── vlc_video_1.png
-│   │           │       │   ├── vlc_video.png
-│   │           │       │   ├── web_1.png
-│   │           │       │   ├── web_2.png
-│   │           │       │   ├── web_lxterm_htop.png
-│   │           │       │   ├── web.png
-│   │           │       │   └── wifi_0.png
-│   │           │       └── README.md
+│   │           │   ├── ubuntu_lxde
+│   │           │   │   ├── Pictures
+│   │           │   │   │   ├── audacity.png
+│   │           │   │   │   ├── audio_settings.png
+│   │           │   │   │   ├── bluetooth_0.png
+│   │           │   │   │   ├── bluetooth_1.png
+│   │           │   │   │   ├── bluetooth_2.png
+│   │           │   │   │   ├── bluetooth_3.png
+│   │           │   │   │   ├── bluetooth_4.png
+│   │           │   │   │   ├── csi_0.png
+│   │           │   │   │   ├── csi_1.png
+│   │           │   │   │   ├── csi_2.png
+│   │           │   │   │   ├── eth_1.png
+│   │           │   │   │   ├── eth_2.png
+│   │           │   │   │   ├── eth_3.png
+│   │           │   │   │   ├── eth_4.png
+│   │           │   │   │   ├── eth_5.png
+│   │           │   │   │   ├── eth.png
+│   │           │   │   │   ├── save_audio_0.png
+│   │           │   │   │   ├── save_audio_1.png
+│   │           │   │   │   ├── save_audio_2.png
+│   │           │   │   │   ├── vlc_open_0.png
+│   │           │   │   │   ├── vlc_open_1.png
+│   │           │   │   │   ├── vlc_open_2.png
+│   │           │   │   │   ├── vlc.png
+│   │           │   │   │   ├── vlc_video_1.png
+│   │           │   │   │   ├── vlc_video.png
+│   │           │   │   │   ├── web_1.png
+│   │           │   │   │   ├── web_2.png
+│   │           │   │   │   ├── web_lxterm_htop.png
+│   │           │   │   │   ├── web.png
+│   │           │   │   │   └── wifi_0.png
+│   │           │   │   └── README.md
+│   │           │   └── ubuntu_gnome
+│   │               └── README.md
 │   │           ├── include
 │   │           │   ├── common
 │   │           │   │   ├── allow_empty_password.sh
@@ -247,36 +254,57 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
 │   │           │   │   ├── prepare_env.sh
 │   │           │   │   ├── prepare_ubuntu_base.sh
 │   │           │   │   ├── setup_conf.sh
+│   │           │   │   ├── install_gnome_pvr.sh
+│   │           │   │   ├── install_libcamera.sh
+│   │           │   │   ├── install_libpisp.sh
+│   │           │   │   ├── install_powervr_graphics.sh
+│   │           │   │   ├── install_qos_userspace.sh
+│   │           │   │   ├── install_renesas_library.sh
+│   │           │   │   ├── install_v4h_pcie_firmware.sh
+│   │           │   │   ├── setup_libdrm_pvr.sh
+│   │           │   │   ├── setup_wayland_pvr.sh
 │   │           │   │   └── yocto_working.sh
 │   │           │   ├── ubuntu_core
 │   │           │   │   ├── prepare_conf.sh
 │   │           │   │   ├── prepare_env.sh
 │   │           │   │   └── prepare_rootfs.sh
-│   │           │   └── ubuntu_lxde
-│   │           │       ├── create_swap.sh
-│   │           │       ├── prepare_conf.sh
-│   │           │       └── prepare_rootfs_qt.sh
+│   │           │   ├── ubuntu_lxde
+│   │           │   │   ├── create_swap.sh
+│   │           │   │   ├── prepare_conf.sh
+│   │           │   │   └── prepare_rootfs_qt.sh
+│   │           │   └── ubuntu_gnome
+│   │               ├── prepare_conf.sh
+│   │               ├── prepare_env.sh
+│   │               └── prepare_rootfs.sh
 │   │           ├── README.md
 │   │           ├── script
 │   │           │   ├── common
+│   │           │   │   ├── apt_common_install.sh
 │   │           │   │   ├── dpkg-install-lock-fix.sh
 │   │           │   │   ├── enable_ping.sh
-│   │           │   │   └── setup_dns_and_time.sh
+│   │           │   │   ├── install-opencva.sh
+│   │           │   │   ├── install_graphics_v4h.sh
+│   │           │   │   ├── setup_dns_and_time.sh
+│   │           │   │   └── setup_gnome_pvr_chroot.sh
 │   │           │   ├── ubuntu_core
 │   │           │   │   ├── apt_install_base.sh
 │   │           │   │   ├── link_to_leagcy_iptables.sh
 │   │           │   │   └── set_root_password.sh
-│   │           │   └── ubuntu_lxde
-│   │           │       ├── apt_audio_video.sh
-│   │           │       ├── apt_blueman.sh
-│   │           │       ├── apt_install_base.sh
-│   │           │       ├── apt_lxde_desktop.sh
-│   │           │       ├── apt_wifi_ble.sh
-│   │           │       ├── create_user.sh
-│   │           │       ├── enable_service.sh
-│   │           │       ├── set_root_password.sh
-│   │           │       ├── set_swap_enable.sh
-│   │           │       └── setup-set-permissions.sh
+│   │           │   ├── ubuntu_lxde
+│   │           │   │   ├── apt_audio_video.sh
+│   │           │   │   ├── apt_blueman.sh
+│   │           │   │   ├── apt_install_base.sh
+│   │           │   │   ├── apt_lxde_desktop.sh
+│   │           │   │   ├── apt_wifi_ble.sh
+│   │           │   │   ├── create_user.sh
+│   │           │   │   ├── enable_service.sh
+│   │           │   │   ├── set_root_password.sh
+│   │           │   │   ├── set_swap_enable.sh
+│   │           │   │   └── setup-set-permissions.sh
+│   │           │   └── ubuntu_gnome
+│   │               ├── apt_install_base.sh
+│   │               ├── link_to_leagcy_iptables.sh
+│   │               └── set_root_password.sh
 │   │           └── setup_ubuntu_environment.sh
 │   └── tools
 │       ├── bin
@@ -362,6 +390,7 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
     │   ├── renesas-quickboot-wayland.wic
     │   ├── ubuntu-core-image.wic.gz
     │   ├── ubuntu-lxde-image.wic.gz
+    │   ├── ubuntu-gnome-image.wic.gz
     │   ├── rootfs
     │   │   ├── core-image-bsp.tar.bz2
     │   │   ├── core-image-minimal.tar.bz2
@@ -372,6 +401,7 @@ renesas@builder-pc:~/renesas/rz-cmn-srp/yocto_rzcmn_board/build/tmp/deploy/image
     │   │   ├── renesas-quickboot-cli.tar.bz2
     │   │   ├── renesas-quickboot-wayland.tar.bz2
     │   │   ├── ubuntu-lxde-image.tar.bz2
+    │   │   ├── ubuntu-gnome-image.tar.bz2
     │   │   └── ubuntu-core-image.tar.bz2
     │   ├── <board>-<version>-platform-settings.bin
     │   ├── <board>-<version>-platform-settings.srec
@@ -621,7 +651,7 @@ For `linux-yocto`, examples:
   - In deploy (if deployed by recipe):  
     `~/poky_sdk/tmp/deploy/images/rz-cmn/target/images/linux`
 
-> **Note (Ubuntu-based rootfs):** If artifacts from `devtool build` (e.g., `Image`, DTBs, modules) are intended for Ubuntu-based images (`ubuntu-core-image`, `ubuntu-lxde-image`), build with `DISTRO=ubuntu-tiny`:
+> **Note (Ubuntu-based rootfs):** If artifacts from `devtool build` (e.g., `Image`, DTBs, modules) are intended for Ubuntu-based images (`ubuntu-core-image`, `ubuntu-lxde-image`, `ubuntu-gnome-image`), build with `DISTRO=ubuntu-tiny`:
 > ```bash
 > export DISTRO=ubuntu-tiny
 > devtool build <recipe>
@@ -3146,7 +3176,7 @@ Channel A is set to a duty cycle of 1,000,000 nanoseconds, while channel B is se
 500,000 nanoseconds. Adjust these values as needed for the desired PWM output
 
 ### 4.3. Supported Features in Ubuntu Images 
-Before accessing the features available in both the Ubuntu Core and Ubuntu LXDE images on the supported platforms, please log in using the default credentials:
+Before accessing the features available in the Ubuntu Core, Ubuntu LXDE, and Ubuntu GNOME images on the supported platforms, please log in using the default credentials:
 - Username: rz
 - Password: 1
 #### 4.3.1 Accessing Supported Features in Ubuntu LXDE
@@ -3308,6 +3338,48 @@ localhost.example.com
 
 root@localhost:/home/root#
 ```
+
+#### 4.3.3. Accessing Supported Features in Ubuntu GNOME
+Ubuntu GNOME provides a full GNOME desktop environment running on Wayland with hardware-accelerated graphics. It is intended for desktop-oriented evaluation, GUI application development, demonstrations, and visualization workloads.
+
+To build the Ubuntu GNOME image:
+
+```bash
+IMAGE=ubuntu-gnome ./rz_builder.sh build
+```
+
+Ubuntu GNOME uses runtime GPU detection to select the appropriate graphics driver stack (PowerVR or Panfrost/Mesa) depending on the board hardware. A single rootfs image works across all supported boards.
+
+##### 4.3.3.1. Graphics Performance by Board
+
+The following table summarizes measured `glmark2-es2-wayland` scores under standard test conditions (GNOME Wayland session, 1920x1080 HDMI, idle desktop).
+
+| Board | GPU / Driver | glmark2 Score | Notes |
+|-------|-------------|---------------|-------|
+| rcar-v4h-sbc | PowerVR GSX | ~800 | Highest measured graphics performance |
+| imdt-v2h-sbc | PowerVR GSX (Zink/Vulkan) | ~275 | Usable GNOME desktop performance |
+| rzv2h-evk | Mali G31 (Panfrost) | ~275 | Usable GNOME desktop performance |
+| rzv2h-rdk | Mali G31 (Panfrost) | ~275 | Similar to RZ/V2H EVK |
+| rzg2l-100 | Mali G31 (Panfrost) | ~67 | Functional but constrained |
+| rzg2l-evk | Mali G31 (Panfrost) | ~67 | Functional but constrained |
+| rzv2l-evk | Mali G31 (Panfrost) | ~67 | Functional but constrained |
+| rzg2l-sbc | Mali G31 (Panfrost) | ~55 | Swap recommended |
+
+##### 4.3.3.2. Image Selection Matrix
+
+| Board | Ubuntu GNOME | Ubuntu LXDE | Ubuntu Core |
+|-------|-------------|-------------|-------------|
+| rcar-v4h-sbc | Recommended | Suitable lighter alternative | Suitable for headless inference and service workloads |
+| imdt-v2h-sbc | Recommended | Suitable lighter alternative | Suitable for headless inference and service workloads |
+| rzv2h-evk | Recommended | Suitable lighter alternative | Suitable for headless workloads |
+| rzv2h-rdk | Recommended | Suitable lighter alternative | Suitable for headless workloads |
+| rzg2l-100 | Usable with limitations | Recommended for desktop use | Recommended for headless or production-focused use |
+| rzg2l-evk | Usable with limitations | Recommended for desktop use | Recommended for headless or production-focused use |
+| rzv2l-evk | Usable with limitations | Recommended for desktop use | Recommended for headless or production-focused use |
+| rzg2l-sbc | Usable with limitations; swap recommended | Recommended for desktop use | Recommended for headless or production-focused use |
+
+For detailed information including swap configuration and decision guidance, refer to the Ubuntu GNOME documentation.
+
 ## 5. Network Boot and TFTP
 
 This section outlines the process for network booting using TFTP (Trivial File Transfer Protocol). It includes configuration steps and commands necessary for a successful setup.

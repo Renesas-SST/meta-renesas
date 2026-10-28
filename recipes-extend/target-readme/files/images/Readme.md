@@ -52,7 +52,7 @@ BL2 and its device tree are intentionally kept as separate binaries. This enable
 
 ### Full-disk images and root filesystem
 
-- `.wic`, `.wic.gz`: Full disk images containing boot + rootfs partitions. These are used with tools like `dd` or Etcher to flash onto SD cards.
+- `.wic`, `.wic.gz`: Full disk images containing boot + rootfs partitions. These are used with tools like `dd` or Etcher to flash onto SD cards. Image variants include `core-image-weston`, `ubuntu-core-image`, `ubuntu-lxde-image`, and `ubuntu-gnome-image`.
 - `.tar.bz2`: Root filesystem archives. These can be extracted or mounted depending on the boot method.
 
 #### `rootfs/`
