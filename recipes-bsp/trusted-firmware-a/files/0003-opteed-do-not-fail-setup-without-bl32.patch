@@ -1,0 +1,70 @@
+From 7c39ba285aff3ec23d65404932e1417a730f6cb5 Mon Sep 17 00:00:00 2001
+From: Quoc Trinh <quoc.trinh.fz@renesas.com>
+Date: Wed, 21 Oct 2026 19:53:48 +0700
+Subject: [PATCH] fix(opteed): do not treat a missing BL32 as a service init
+ failure
+
+When the boot loader does not hand over a BL32 image, opteed_setup()
+returned 1. runtime_svc_init() logs that as an ERROR for opteed_fast
+even though booting without OP-TEE is a supported configuration.
+
+Return success when no BL32 entry point is provided and leave the
+service inert: no BL32 init is queued, optee_vector_table stays NULL,
+and the non-secure SMC handler returns SMC_UNK when SMC loading is not
+enabled, as the removed warning promised.
+
+Upstream-Status: Pending
+Signed-off-by: Quoc Trinh <quoc.trinh.fz@renesas.com>
+---
+ services/spd/opteed/opteed_main.c | 27 +++++++++++++--------------
+ 1 file changed, 13 insertions(+), 14 deletions(-)
+
+diff --git a/services/spd/opteed/opteed_main.c b/services/spd/opteed/opteed_main.c
+index 71a7b87da..42ab0fdbd 100644
+--- a/services/spd/opteed/opteed_main.c
++++ b/services/spd/opteed/opteed_main.c
+@@ -176,20 +176,15 @@ static int32_t opteed_setup(void)
+ 	 * conditionally include the SPD service
+ 	 */
+ 	optee_ep_info = bl31_plat_get_next_image_ep_info(SECURE);
+-	if (optee_ep_info == NULL) {
+-		WARN("No OPTEE provided by BL2 boot loader, Booting device"
+-			" without OPTEE initialization. SMC`s destined for OPTEE"
+-			" will return SMC_UNK\n");
+-		return 1;
+-	}
+-
+-	/*
+-	 * If there's no valid entry point for SP, we return a non-zero value
+-	 * signalling failure initializing the service. We bail out without
+-	 * registering any handlers
+-	 */
+-	if (optee_ep_info->pc == 0U) {
+-		return 1;
++	if ((optee_ep_info == NULL) || (optee_ep_info->pc == 0U)) {
++		/*
++		 * Running without OP-TEE is a supported configuration. Keep
++		 * the service registered but inert: no BL32 init is queued,
++		 * so optee_vector_table stays NULL and every SMC destined
++		 * for OP-TEE returns SMC_UNK (see opteed_smc_handler()).
++		 */
++		INFO("No OP-TEE provided by the boot loader, skipping setup\n");
++		return 0;
+ 	}
+ 
+ #if TRANSFER_LIST
+@@ -694,7 +689,11 @@ static uintptr_t opteed_smc_handler(uint32_t smc_fid,
+ 		 * already.
+ 		 */
+ 		if (optee_vector_table == NULL) {
++#if OPTEE_ALLOW_SMC_LOAD
+ 			SMC_RET1(handle, -EINVAL);
++#else
++			SMC_RET1(handle, SMC_UNK);
++#endif
+ 		}
+ 
+ 		if (get_optee_pstate(optee_ctx->state) ==
+-- 
+2.25.1
+
