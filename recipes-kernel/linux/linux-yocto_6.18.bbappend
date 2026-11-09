@@ -9,7 +9,7 @@ inherit renesas-kernel-variants
 # One branch feeds all three kernel variants. PREEMPT_RT has been in mainline since 6.12,
 # so the real-time kernel no longer needs a separate tree carrying an out-of-tree patch series.
 # It is reached with CONFIG_PREEMPT_RT from preempt-rt.cfg, like any other config option.
-KBRANCH  = "styhead/rz-cmn"
+KBRANCH  = "styhead/rz-cmn-3.4"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}:"
 
