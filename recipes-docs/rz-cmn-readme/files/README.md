@@ -1686,6 +1686,49 @@ The following cameras are supported based on the available drivers and device tr
 - Ensure the GStreamer pipeline’s `width` and `height` match the resolution configured by `v4l2-init.sh`.
 - If an invalid resolution is provided, `v4l2-init.sh` falls back to `1280x720`.
 
+---
+
+##### Sparrow-Hawk (R-Car V4H) — Raspberry Pi Camera V2 / V3 (GStreamer + libcamera)
+
+- The Raspberry Pi Camera V2 (**IMX219**) and V3 (**IMX708**) are supported on the CSI-2 connectors **J1** and **J2**.
+- The camera graph is `sensor -> CSI-2 -> ISP -> VIN`. The links are fixed and libcamera configures the whole pipeline, so `media-ctl` is not used to set up the camera and `media-ctl -r` must never be run on this board. Frames are read with the GStreamer element `libcamerasrc`.
+- Enable the overlay of the connector and sensor that you use in `uEnv.txt` (one line, then reboot):
+
+```ini
+#enable_overlay_csi_j1_imx219=1
+#enable_overlay_csi_j2_imx219=1
+#enable_overlay_csi_j1_imx708=1
+#enable_overlay_csi_j2_imx708=1
+```
+
+Remove the `#` of the line of your connector and sensor (or set it to `yes`); nothing is enabled by default. The overlay files are installed in `dtb/renesas/overlays/` of the boot partition (FAT, partition 1): `sparrow-hawk-1.0-cru-csi-j1-imx219.dtbo`, `sparrow-hawk-1.0-cru-csi-j2-imx219.dtbo`, `sparrow-hawk-1.0-cru-csi-j1-imx708.dtbo` and `sparrow-hawk-1.0-cru-csi-j2-imx708.dtbo`. U-Boot prints `WARN: missing overlay` if an overlay file is not found.
+
+> **Note:** Enable only the overlay of a connector that has a camera fitted. In a test with the J1 and J2 IMX708 overlays enabled and J2 empty, the IMX708 on J2 failed to probe (`failed to read chip id ... error -5`), the video input driver (`rcar-vin`) did not register, no `/dev/media*` device was created and `cam -l` was empty. With no overlay at all there is no camera either.
+
+- List the cameras. The name printed here is the one used by GStreamer:
+
+```bash
+cam -l
+# a line such as:  imx708 (/base/soc/i2c@e6508000/sensor@1a)
+```
+
+- Start streaming with `gst-launch-1.0`. Use the camera name from `cam -l`. The capture mode is 1920x1080 for the IMX219 and 2304x1296 for the IMX708 (example for the IMX708):
+
+```bash
+gst-launch-1.0 libcamerasrc camera-name="/base/soc/i2c@e6508000/sensor@1a" ! \
+    video/x-raw,format=BGRx,width=2304,height=1296,framerate=30/1 ! \
+    videoconvert ! waylandsink sync=false
+```
+
+For a test without a display, replace the last element with `fakesink num-buffers=5`.
+
+**Notes**
+- Do not ask `libcamerasrc` for 1920x1080 on the IMX708: the negotiation fails (`not-negotiated`). Capture at 2304x1296 and add `videoscale` if another size is needed.
+- The camera name depends on the connector and the sensor (for example `.../i2c@e6508000/sensor@1a` or `.../cam@10`). Take it from `cam -l` and do not copy it from another board.
+- Only one program can use a camera at a time. If `gst-launch-1.0`, `cam` or another application is still running, the next one fails with `Failed to acquire camera: Device or resource busy`. Stop the first one before you start the next.
+- The `/dev/video*` nodes of this graph cannot be used directly with `v4l2src` or a V4L2 player. The VIN node that carries the picture delivers raw Bayer data and the other VIN nodes deliver nothing, and the ISP and debayering are done by libcamera in user space. Always read the camera through libcamera (`libcamerasrc`, `cam`).
+- Over SSH, `WAYLAND_DISPLAY` is not set. Export `XDG_RUNTIME_DIR` and `WAYLAND_DISPLAY` of the Weston session before running `gst-launch-1.0` with `waylandsink`.
+
 
 #### 4.1.7. Package Management
 
