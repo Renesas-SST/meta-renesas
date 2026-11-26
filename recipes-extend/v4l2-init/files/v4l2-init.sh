@@ -1,18 +1,69 @@
 #!/bin/bash
 #===============================================================================
 # title           : v4l2-init.sh
-# description     : Initialise media pipeline for cameras for RZ Common System
+# description     : Initialise camera pipelines for RZ Common System
 # usage           : bash v4l2-init.sh --device 0 --width 1280 --height 720
+#                   bash v4l2-init.sh --camera imx219
+#
+# Two kinds of camera graphs are handled:
+#
+#   * RZ/G2L style (CRU): sensor -> CSI2 -> CRU.  The media links and formats
+#     are configured here with media-ctl (ov5640, ov5645, ap1302, ar1335).
+#
+#   * R-Car Gen4 (Sparrow-Hawk / V4H): sensor -> CSI2 -> ISP -> VIN.  The
+#     CSI2 -> ISP links are immutable and libcamera owns the whole pipeline
+#     (imx219 = Raspberry Pi Camera V2, imx708 = Raspberry Pi Camera V3), so
+#     media-ctl is not used (never run `media-ctl -r` on this hardware).  The
+#     camera is selected by name with `cam -l` and its mode is printed.  The
+#     script only initialises; the stream is started separately, for example
+#     with gst-launch-1.0 and libcamerasrc.
 #===============================================================================
-set -e
+set -eE
 
-# Supported camera models
+# Supported camera models (CRU boards)
 SUPPORTED_MODELS=("ov5640" "ov5645" "ap1302" "ar1335")
+
+#-------------------------------------------------------------------------------
+# R-Car Gen4 (Sparrow-Hawk / V4H) settings, handled by libcamera.
+# Edit this block to add a camera or to change a value; the functions below do
+# not contain any camera specific value.
+#-------------------------------------------------------------------------------
+
+# Strings that must all appear in `media-ctl -p` to recognise the R-Car Gen4 graph
+V4H_TOPOLOGY_MARKERS=("rcar_csi2" "rcar_isp")
+
+# Camera models; the model name must appear in the matching `cam -l` line
+V4H_CAMERAS=("imx219" "imx708")
+
+# Description shown by --help
+declare -A V4H_CAMERA_DESC
+V4H_CAMERA_DESC["imx219"]="Raspberry Pi Camera V2 (connector J1)"
+V4H_CAMERA_DESC["imx708"]="Raspberry Pi Camera V3 (connector J2)"
+
+# Mode captured from the sensor by libcamera (WIDTHxHEIGHT). Use it in the
+# libcamerasrc caps of the stream; another size needs videoscale.
+# imx708: asking libcamerasrc for 1920x1080 directly fails with not-negotiated.
+declare -A V4H_CAMERA_SOURCE_SIZE
+V4H_CAMERA_SOURCE_SIZE["imx219"]="1920x1080"
+V4H_CAMERA_SOURCE_SIZE["imx708"]="2304x1296"
+
+# Pixel format and frame rate of the stream (printed by the script). A camera can override
+# them, for example: V4H_CAMERA_FRAMERATE["imx708"]="15/1"
+V4H_DEFAULT_FORMAT="BGRx"
+V4H_DEFAULT_FRAMERATE="30/1"
+declare -A V4H_CAMERA_FORMAT
+declare -A V4H_CAMERA_FRAMERATE
 
 # Default values
 DEFAULT_DEVICE_ID=0
 DEFAULT_CAPTURE_WIDTH="1920"
 DEFAULT_CAPTURE_HEIGHT="1080"
+
+# Options (set by parse_shell_args)
+DEVICE_ID=${DEFAULT_DEVICE_ID}
+CAMERA_REQUEST=auto
+WIDTH=""
+HEIGHT=""
 
 # Valid resolutions per camera model
 declare -A CAMERA_VALID_RESOLUTIONS
@@ -61,15 +112,28 @@ default_csi2=${csi2[0]:-"<none>"}
 default_cru=${cru[0]:-"<none>"}
 cru_output="CRU output"
 
+die() {
+    echo "ERROR: $*" >&2
+    exit 1
+}
+
+have() {
+    command -v "$1" >/dev/null 2>&1
+}
+
 # Usage
 function print_usage {
     local -A seen_models
     local resolution_info=""
+    local v4h_cam_info="" name
+    for name in "${V4H_CAMERAS[@]}"; do
+        v4h_cam_info+="                            ${name}: ${V4H_CAMERA_DESC[$name]:-no description}, source ${V4H_CAMERA_SOURCE_SIZE[$name]:-not set}"$'\n'
+    done
 
     for cam in "${cameras[@]}"; do
         local model=$(get_cam_model "$cam")
         # Only add if not already processed
-        if [[ -z "${seen_models[$model]}" ]]; then
+        if [[ -z "${seen_models[$model]:-}" ]]; then
             seen_models[$model]=1
             resolution_info+="  ${model}: ${CAMERA_VALID_RESOLUTIONS[$model]}"$'\n'
         fi
@@ -83,13 +147,28 @@ Options:
   --width WIDTH             Width of capture image
   --height HEIGHT           Height of capture image
 
+R-Car Gen4 (Sparrow-Hawk / V4H) options, camera handled by libcamera:
+  --camera NAME             auto or one of the models below (default: auto)
+${v4h_cam_info}
+  Without --width/--height the source size above is used. The script only
+  initialises (it does not start a stream); start the stream with
+  gst-launch-1.0 and libcamerasrc. The values are listed at the top of this
+  script (V4H_* settings).
+
 Detected cameras: ${cameras[*]}
 
 Available resolutions:
 ${resolution_info}
-Example: $0 --device 0 --width 1920 --height 1080
+Examples:
+  $0 --device 0 --width 1920 --height 1080
+  $0 --camera ${V4H_CAMERAS[0]}
+  $0 --camera ${V4H_CAMERAS[${#V4H_CAMERAS[@]}-1]}
 EOF
 }
+
+#===============================================================================
+# CRU boards (RZ/G2L): media-ctl based pipeline
+#===============================================================================
 
 # Validate resolution against camera model
 check_resolution() {
@@ -110,7 +189,7 @@ check_resolution() {
     echo "$fallback"
 }
 
-# Validate requested media device exists and contains a supported camera.
+# Validate requested media device exists.
 validate_device_index() {
     local device_id="$1"
 
@@ -130,8 +209,12 @@ validate_device_index() {
         done
         exit 2
     fi
+}
 
-    # Ensure this media device has at least one supported camera entity
+# Ensure the media device has at least one supported CRU camera entity
+validate_cru_camera() {
+    local device_id="$1"
+
     if ! media-ctl -d "/dev/media${device_id}" -p 2>/dev/null | grep -E -q "$(printf '%s|' "${SUPPORTED_MODELS[@]}" | sed 's/|$//')"; then
         echo "ERROR: /dev/media${device_id} does not appear to contain any supported cameras (${SUPPORTED_MODELS[*]})."
         echo "Inspect topology with:"
@@ -139,7 +222,6 @@ validate_device_index() {
         exit 3
     fi
 }
-
 
 # Create media pipeline
 create_pipeline() {
@@ -151,6 +233,9 @@ create_pipeline() {
     # Find which camera is actually on this media device
     local selected_camera=""
     for cam in "${cameras[@]}"; do
+        if [[ "$CAMERA_REQUEST" != auto && "$(get_cam_model "$cam")" != "$CAMERA_REQUEST" ]]; then
+            continue
+        fi
         if media-ctl -d "$media_device" -p 2>/dev/null | grep -q "$cam"; then
             selected_camera="$cam"
             break
@@ -166,7 +251,7 @@ create_pipeline() {
     local device_csi2=$(media-ctl -d "$media_device" -p | grep -E "^- entity.*csi" | sed 's/.*: \([^ ]*\) .*/\1/')
     local device_cru=$(media-ctl -d "$media_device" -p | grep -E "^- entity.*cru-ip" | sed 's/.*: \([^ ]*\) .*/\1/')
     local cru_output="CRU output"
-    
+
     echo "Using camera: $selected_camera"
     echo "Using CSI2: $device_csi2"
     echo "Using CRU: $device_cru"
@@ -211,12 +296,97 @@ create_pipeline() {
     echo "Pipeline successfully configured for ${width}x${height}"
 }
 
+#===============================================================================
+# R-Car Gen4 boards (Sparrow-Hawk / V4H): libcamera based pipeline
+#===============================================================================
+
+# True when every marker of V4H_TOPOLOGY_MARKERS is present in the media graph
+is_v4h_topology() {
+    local topology="$1" marker
+    for marker in "${V4H_TOPOLOGY_MARKERS[@]}"; do
+        [[ "$topology" == *"$marker"* ]] || return 1
+    done
+    return 0
+}
+
+# Print the model of V4H_CAMERAS found in a `cam -l` line
+camera_model_from_line() {
+    local line="$1" model
+    for model in "${V4H_CAMERAS[@]}"; do
+        if [[ "$line" == *"$model"* ]]; then
+            echo "$model"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Pick the camera by name from `cam -l`: sets CAMERA_MODEL and CAMERA_NAME
+# (the identifier between the last parentheses of the line, for example the
+# device tree path of the sensor). It does not depend on the /dev/video*
+# numbering.
+discover_libcamera() {
+    have cam || die "cam is not installed (libcamera tools are required)"
+
+    local listing
+    listing="$(cam -l 2>&1 || true)"
+    [[ -n "$listing" ]] || die "libcamera did not report any camera"
+
+    local line model path
+    while IFS= read -r line; do
+        model="$(camera_model_from_line "$line" || true)"
+        [[ -n "$model" ]] || continue
+        if [[ "$CAMERA_REQUEST" != auto && "$model" != "$CAMERA_REQUEST" ]]; then
+            continue
+        fi
+        path="$(sed -nE 's/.*\(([^()]*)\)[[:space:]]*$/\1/p' <<<"$line" | head -n1)"
+        [[ -n "$path" ]] || continue
+        CAMERA_MODEL="$model"
+        CAMERA_NAME="$path"
+        return 0
+    done <<<"$listing"
+
+    if [[ "$CAMERA_REQUEST" == auto ]]; then
+        die "no supported libcamera camera found (expected: ${V4H_CAMERAS[*]})"
+    fi
+    printf 'ERROR: requested camera %q was not found; cam -l output:\n%s\n' \
+        "$CAMERA_REQUEST" "$listing" >&2
+    exit 1
+}
+
+# Take the source mode, pixel format and frame rate of the camera from the
+# V4H_* tables and set the output size (default: the source size)
+set_default_size() {
+    local size="${V4H_CAMERA_SOURCE_SIZE[$CAMERA_MODEL]:-}"
+    [[ "$size" =~ ^[0-9]+x[0-9]+$ ]] || die "V4H_CAMERA_SOURCE_SIZE[$CAMERA_MODEL] must be WIDTHxHEIGHT (is '$size')"
+    SOURCE_WIDTH="${size%x*}"
+    SOURCE_HEIGHT="${size#*x}"
+    PIXEL_FORMAT="${V4H_CAMERA_FORMAT[$CAMERA_MODEL]:-$V4H_DEFAULT_FORMAT}"
+    FRAMERATE="${V4H_CAMERA_FRAMERATE[$CAMERA_MODEL]:-$V4H_DEFAULT_FRAMERATE}"
+
+    WIDTH="${WIDTH:-$SOURCE_WIDTH}"
+    HEIGHT="${HEIGHT:-$SOURCE_HEIGHT}"
+    [[ "$WIDTH" =~ ^[0-9]+$ && "$HEIGHT" =~ ^[0-9]+$ ]] || die "width and height must be positive integers"
+    (( WIDTH > 0 && HEIGHT > 0 )) || die "width and height must be greater than zero"
+}
+
+run_v4h() {
+    local topology="$1"
+
+    discover_libcamera
+    set_default_size
+    echo "R-Car Gen4 camera: ${CAMERA_MODEL} (${CAMERA_NAME})"
+    echo "Media graph: CSI2 -> ISP -> VIN (configured by libcamera; links left intact)"
+    echo "Sensor stream: ${SOURCE_WIDTH}x${SOURCE_HEIGHT} ${PIXEL_FORMAT}, framerate ${FRAMERATE}"
+    echo "Requested stream: ${WIDTH}x${HEIGHT} ${PIXEL_FORMAT}, framerate ${FRAMERATE}"
+}
+
+#===============================================================================
+# Arguments and main
+#===============================================================================
+
 # Parse arguments
 parse_shell_args() {
-    local device_id=${DEFAULT_DEVICE_ID}
-    local capture_width=${DEFAULT_CAPTURE_WIDTH}
-    local capture_height=${DEFAULT_CAPTURE_HEIGHT}
-
     while [[ "$#" -gt 0 ]]; do
         case "$1" in
             --device)
@@ -225,7 +395,7 @@ parse_shell_args() {
                     print_usage
                     exit 1
                 fi
-                device_id="$2"
+                DEVICE_ID="$2"
                 shift 2
                 ;;
             --width)
@@ -234,7 +404,7 @@ parse_shell_args() {
                     print_usage
                     exit 1
                 fi
-                capture_width="$2"
+                WIDTH="$2"
                 shift 2
                 ;;
             --height)
@@ -243,17 +413,37 @@ parse_shell_args() {
                     print_usage
                     exit 1
                 fi
-                capture_height="$2"
+                HEIGHT="$2"
                 shift 2
                 ;;
-            --help)    print_usage; exit 0;;
-            *)         echo "ERROR: Unknown parameter: $1"; print_usage; exit 1;;
+            --camera)
+                [[ -n "${2:-}" ]] || die "--camera requires a value"
+                CAMERA_REQUEST="$2"
+                shift 2
+                ;;
+            --help|-h)   print_usage; exit 0;;
+            *)           echo "ERROR: Unknown parameter: $1"; print_usage; exit 1;;
         esac
     done
+}
 
-    validate_device_index "$device_id"
-    create_pipeline "$device_id" "$capture_width" "$capture_height"
+main() {
+    parse_shell_args "$@"
+
+    validate_device_index "$DEVICE_ID"
+    have media-ctl || die "media-ctl is not installed"
+
+    local topology
+    topology="$(media-ctl -d "/dev/media${DEVICE_ID}" -p 2>/dev/null || true)"
+
+    if is_v4h_topology "$topology"; then
+        set -u -o pipefail
+        run_v4h "$topology"
+    else
+        validate_cru_camera "$DEVICE_ID"
+        create_pipeline "$DEVICE_ID" "${WIDTH:-$DEFAULT_CAPTURE_WIDTH}" "${HEIGHT:-$DEFAULT_CAPTURE_HEIGHT}"
+    fi
 }
 
 # Main
-parse_shell_args "$@"
+main "$@"
